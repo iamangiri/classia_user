@@ -1,0 +1,2 @@
+/Users/prakashkumar/Desktop/swift pratice/firstproject/classia_amc copy/android/app/.cxx/Debug/1o3m305w/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/prakashkumar/Desktop/swift pratice/firstproject/classia_amc copy/android/app/.cxx/Debug/1o3m305w/armeabi-v7a/CMakeFiles/rebuild_cache.dir
