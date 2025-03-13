@@ -4,6 +4,7 @@ import 'package:circle_bottom_navigation/circle_bottom_navigation.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../service/auth_service.dart';
 import '../main/home_screen.dart';
+import '../main/market_screen.dart';
 import '../main/profile_screen.dart';
 import '../main/trading_screen.dart';
 import '../main/wallet_screen.dart';
@@ -23,6 +24,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> screens = [
     HomeScreen(),
+    MarketScreen(),
     TradingScreen(),
     WalletScreen(),
     ProfileScreen(),
@@ -67,6 +69,10 @@ class _MainScreenState extends State<MainScreen> {
             title: 'Home',
           ),
           TabData(
+            icon: FontAwesomeIcons.chartLine, // Icon for Market
+            title: 'Market',
+          ),
+          TabData(
             icon: FontAwesomeIcons.horseHead, // Horse icon
             title: 'Trade',
           ),
@@ -94,9 +100,9 @@ class _MainScreenState extends State<MainScreen> {
         circleOutline: 10.0, // Outline of the circle
         shadowAllowance: 20.0, // Size of icon shadow
         hasElevationShadows: true, // Elevation shadows
-        blurShadowRadius:
-            8.0, // Size of bar shadow if hasElevationShadows is true
+        blurShadowRadius: 8.0, // Size of bar shadow if hasElevationShadows is true
       ),
+
     );
   }
 
