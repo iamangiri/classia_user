@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-
 import '../screenutills/trade_details_screen.dart';
 
 class TradingCard extends StatefulWidget {
@@ -26,7 +25,6 @@ class _TradingCardState extends State<TradingCard>
       vsync: this,
       duration: Duration(seconds: 3),
     );
-
     _updateAnimation();
   }
 
@@ -40,12 +38,10 @@ class _TradingCardState extends State<TradingCard>
 
   void _updateAnimation() {
     double normalizedValue = widget.value >= 0 ? (widget.value / 10) : 0;
-
     _animation = Tween<double>(
       begin: 0,
       end: normalizedValue.clamp(0.0, 1.0),
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-
     _controller.forward(from: 0);
   }
 
@@ -67,10 +63,21 @@ class _TradingCardState extends State<TradingCard>
           ),
         );
       },
-      child: Card(
-        color: Color.fromARGB(255, 241, 237, 237), // Light beige background
-        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.grey[900]!.withOpacity(0.6),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[700]!),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.white.withOpacity(0.1),
+              blurRadius: 5,
+              spreadRadius: 1,
+              offset: Offset(2, 3),
+            ),
+          ],
+        ),
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
@@ -84,60 +91,57 @@ class _TradingCardState extends State<TradingCard>
                     children: [
                       CircleAvatar(
                         radius: 22,
-                        backgroundColor: Colors.transparent,
+                        backgroundColor: Colors.grey[800],
                         child: widget.logo.isNotEmpty
                             ? ClipOval(
-                                child: Image.network(
-                                  widget.logo,
-                                  fit: BoxFit.cover,
-                                  loadingBuilder:
-                                      (context, child, loadingProgress) {
-                                    if (loadingProgress == null) {
-                                      return child;
-                                    } else {
-                                      return Center(
-                                          child: CircularProgressIndicator());
-                                    }
-                                  },
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Icon(Icons.image,
-                                        size:
-                                            40); // Default icon if image fails
-                                  },
-                                ),
-                              )
-                            : ColorFiltered(
-                                colorFilter: ColorFilter.mode(
-                                    Colors.grey,
-                                    BlendMode
-                                        .saturation), // Apply gray color filter
-                                child: Icon(Icons.image,
-                                    size: 40), // Default icon if no URL
-                              ),
+                          child: Image.network(
+                            widget.logo,
+                            fit: BoxFit.cover,
+                            width: 44,
+                            height: 44,
+                            loadingBuilder:
+                                (context, child, loadingProgress) {
+                              if (loadingProgress == null) {
+                                return child;
+                              } else {
+                                return Center(
+                                    child: CircularProgressIndicator(
+                                      valueColor:
+                                      AlwaysStoppedAnimation<Color>(
+                                          Colors.white),
+                                    ));
+                              }
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(Icons.image,
+                                  size: 40, color: Colors.grey);
+                            },
+                          ),
+                        )
+                            : Icon(Icons.image, size: 40, color: Colors.grey),
                       ),
                       SizedBox(width: 12),
                       Text(
                         widget.name,
                         style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87),
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
                       ),
                     ],
                   ),
                   Text(
                     "${widget.value.toStringAsFixed(2)}%",
                     style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: lineColor),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: lineColor,
+                    ),
                   ),
                 ],
               ),
-
               SizedBox(height: 12),
-
-              // Animated Progress Line with Golden Horse
+              // Animated Progress Line with Golden Horse Animation
               Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -147,10 +151,9 @@ class _TradingCardState extends State<TradingCard>
                     height: 8,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(4),
-                      color: Colors.grey[300], // Light gray background line
+                      color: Colors.grey[700], // Darker background for progress line
                     ),
                   ),
-
                   // Dynamic Progress Line
                   if (isPositive)
                     AnimatedBuilder(
@@ -167,21 +170,20 @@ class _TradingCardState extends State<TradingCard>
                         );
                       },
                     ),
-
-                  // Golden Horse Animation Moving Along Line
+                  // Golden Horse Animation Moving Along the Line
                   AnimatedBuilder(
                     animation: _animation,
                     builder: (context, child) {
                       double horsePosition =
-                          isPositive ? _animation.value * cardWidth : 0;
+                      isPositive ? _animation.value * cardWidth : 0;
                       return Positioned(
-                        left: horsePosition - 20, // Adjust for horse size
-                        top: -40, // Position above the line
+                        left: horsePosition - 20,
+                        top: -40,
                         child: SizedBox(
                           height: 100,
                           width: 100,
                           child: Transform.flip(
-                            flipX: true, // Flips the animation horizontally
+                            flipX: true,
                             child: Lottie.asset("assets/anim/trade-6.json"),
                           ),
                         ),

@@ -1,0 +1,2 @@
+/Users/prakashkumar/Desktop/swift pratice/firstproject/jockey_trading/android/app/.cxx/Debug/623g402m/x86_64/CMakeFiles/edit_cache.dir
+/Users/prakashkumar/Desktop/swift pratice/firstproject/jockey_trading/android/app/.cxx/Debug/623g402m/x86_64/CMakeFiles/rebuild_cache.dir

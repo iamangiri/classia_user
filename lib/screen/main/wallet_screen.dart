@@ -5,14 +5,18 @@ class WalletScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.black, // Dark background
       appBar: AppBar(
-        backgroundColor: Color(0xFF0A0E21),
-        title: Text("Wallet", style: TextStyle(
+        backgroundColor: Colors.black,
+        title: Text(
+          "Wallet",
+          style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: Colors.white70,),
+            color: Colors.white,
           ),
+        ),
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -21,7 +25,14 @@ class WalletScreen extends StatelessWidget {
           children: [
             _buildBalanceSection(),
             SizedBox(height: 20),
-            Text("Investments & Withdrawals", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+            Text(
+              "Investments & Withdrawals",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
             SizedBox(height: 12),
             Expanded(child: _buildInvestmentWithdrawList(context)),
           ],
@@ -34,26 +45,51 @@ class WalletScreen extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildBalanceCard("Total Invested", "₹50,000", Colors.blue[900]!),
+        _buildBalanceCard("Total Invested", "₹50,000", Colors.green[400]!),
+        SizedBox(width: 12),
         _buildBalanceCard("Total Withdrawn", "₹20,000", Colors.redAccent),
       ],
     );
   }
 
-  Widget _buildBalanceCard(String title, String amount, Color color) {
+  Widget _buildBalanceCard(String title, String amount, Color accentColor) {
     return Expanded(
-      child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        color: Colors.grey[200],
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey[900]!.withOpacity(0.6),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[700]!),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.white.withOpacity(0.1),
+              blurRadius: 5,
+              spreadRadius: 1,
+              offset: Offset(2, 3),
+            ),
+          ],
+        ),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black)),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white70,
+                ),
+              ),
               SizedBox(height: 8),
-              Text(amount, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+              Text(
+                amount,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: accentColor,
+                ),
+              ),
             ],
           ),
         ),
@@ -143,8 +179,11 @@ class WalletScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTransactionItem(BuildContext context, Map<String, String> transaction) {
+  Widget _buildTransactionItem(
+      BuildContext context, Map<String, String> transaction) {
     bool isInvestment = transaction['type'] == "Investment";
+    Color cardColor = Colors.grey[850]!;
+    Color textColor = Colors.white;
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -157,17 +196,49 @@ class WalletScreen extends StatelessWidget {
           ),
         );
       },
-      child: Card(
-        elevation: 3,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        color: isInvestment ? Colors.green[100] : Colors.red[100],
-        child: ListTile(
-          leading: CircleAvatar(
-            backgroundImage: NetworkImage(transaction['logo']!),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.grey[900]!.withOpacity(0.6),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[700]!),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.white.withOpacity(0.1),
+                blurRadius: 5,
+                spreadRadius: 1,
+                offset: Offset(2, 3),
+              ),
+            ],
           ),
-          title: Text(transaction['name']!, style: TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text(transaction['date']!, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
-          trailing: Text(transaction['amount']!, style: TextStyle(fontWeight: FontWeight.bold, color: isInvestment ? Colors.green : Colors.red)),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: Colors.grey[800],
+              backgroundImage: NetworkImage(transaction['logo']!),
+            ),
+            title: Text(
+              transaction['name']!,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
+            ),
+            subtitle: Text(
+              transaction['date']!,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[400],
+              ),
+            ),
+            trailing: Text(
+              transaction['amount']!,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isInvestment ? Colors.green[400] : Colors.red[400],
+              ),
+            ),
+          ),
         ),
       ),
     );
