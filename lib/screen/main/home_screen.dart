@@ -71,7 +71,7 @@ class HomeScreen extends StatelessWidget {
         backgroundColor: Colors.black, // Dark theme app bar
         title: Text(
           'Jockey Trading',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(fontSize: 22, color: Colors.white),
         ),
         centerTitle: true,
         elevation: 0,
