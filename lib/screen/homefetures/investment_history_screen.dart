@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../screenutills/trade_details_screen.dart';
 
-class WithdrawScreen extends StatefulWidget {
+class InvestmentHistoryScreen extends StatefulWidget {
   @override
-  _WithdrawScreenState createState() => _WithdrawScreenState();
+  _InvestmentHistoryScreenState createState() => _InvestmentHistoryScreenState();
 }
 
-class _WithdrawScreenState extends State<WithdrawScreen> {
+class _InvestmentHistoryScreenState extends State<InvestmentHistoryScreen> {
   String selectedFilter = "All";
   final List<String> filters = ["All", "1 Day", "1 Week", "1 Month", "3 Months"];
 
@@ -15,10 +15,10 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: Colors.white), // Makes the back icon white
         backgroundColor: Colors.black,
         title: Text(
-          "Withdrawals History",
+          "Investment History",
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
         ),
         centerTitle: true,
@@ -34,10 +34,10 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildWithdrawSummarySection(),
+            _buildInvestmentSummarySection(),
             SizedBox(height: 20),
             Text(
-              "Withdrawal History",
+              "Investment History",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             SizedBox(height: 12),
@@ -46,7 +46,7 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
               style: TextStyle(color: Colors.grey[400], fontSize: 14),
             ),
             SizedBox(height: 8),
-            Expanded(child: _buildWithdrawalList(context)),
+            Expanded(child: _buildInvestmentList(context)),
           ],
         ),
       ),
@@ -98,8 +98,8 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
     );
   }
 
-  Widget _buildWithdrawSummarySection() {
-    // Displaying a summary card for total withdrawn
+  Widget _buildInvestmentSummarySection() {
+    // Summary card for total invested amount
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -114,11 +114,11 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  Text("Total Withdrawn",
+                  Text("Total Invested",
                       style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white70)),
                   SizedBox(height: 8),
-                  Text("₹20,000",
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.redAccent)),
+                  Text("₹50,000",
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.greenAccent)),
                 ],
               ),
             ),
@@ -128,40 +128,40 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
     );
   }
 
-  Widget _buildWithdrawalList(BuildContext context) {
-    // Hard-coded withdrawal transactions list
+  Widget _buildInvestmentList(BuildContext context) {
+    // Hard-coded list of investment transactions
     List<Map<String, String>> transactions = [
       {
-        "name": "ICICI Prudential AMC",
+        "name": "HDFC Mutual Fund",
         "logo": "https://via.placeholder.com/50",
-        "amount": "₹8,000",
-        "date": "2025-02-09 15:45",
-        "type": "Withdrawal"
+        "amount": "₹10,000",
+        "date": "2025-02-10 10:30",
+        "type": "Investment"
       },
       {
-        "name": "Axis Mutual Fund",
+        "name": "SBI Mutual Fund",
         "logo": "https://via.placeholder.com/50",
-        "amount": "₹5,000",
-        "date": "2025-02-07 14:00",
-        "type": "Withdrawal"
+        "amount": "₹12,500",
+        "date": "2025-02-08 12:15",
+        "type": "Investment"
       },
       {
-        "name": "Aditya Birla Sun Life AMC",
+        "name": "Mirae Asset AMC",
         "logo": "https://via.placeholder.com/50",
-        "amount": "₹6,000",
-        "date": "2025-02-03 09:30",
-        "type": "Withdrawal"
+        "amount": "₹15,000",
+        "date": "2025-02-04 13:40",
+        "type": "Investment"
       },
       {
-        "name": "UTI Mutual Fund",
+        "name": "DSP Mutual Fund",
         "logo": "https://via.placeholder.com/50",
-        "amount": "₹4,500",
-        "date": "2025-02-01 08:45",
-        "type": "Withdrawal"
+        "amount": "₹10,500",
+        "date": "2025-02-02 17:10",
+        "type": "Investment"
       },
     ];
 
-    // Filter the transactions based on selectedFilter
+    // Filter the transactions based on the selected filter
     List<Map<String, String>> filteredTransactions = transactions.where((transaction) {
       if (selectedFilter == "All") return true;
 
@@ -214,8 +214,7 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
             leading: CircleAvatar(backgroundImage: NetworkImage(transaction['logo']!)),
             title: Text(transaction['name']!, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
             subtitle: Text(transaction['date']!, style: TextStyle(fontSize: 12, color: Colors.grey[400])),
-            trailing: Text(transaction['amount']!,
-                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.redAccent)),
+            trailing: Text(transaction['amount']!, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.greenAccent)),
           ),
         ),
       ),

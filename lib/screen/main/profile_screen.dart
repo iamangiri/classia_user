@@ -1,10 +1,12 @@
+import 'package:classia_amc/screen/homefetures/withdraw_screen.dart';
 import 'package:flutter/material.dart';
+
+import '../homefetures/investment_history_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
@@ -66,7 +68,10 @@ class ProfileScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(userName,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold,color: Colors.white)),
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white)),
             SizedBox(height: 4),
             Text(userEmail,
                 style: TextStyle(fontSize: 14, color: Colors.white70)),
@@ -77,7 +82,9 @@ class ProfileScreen extends StatelessWidget {
         IconButton(
           icon: Icon(Icons.edit, color: Colors.white),
           onPressed: () {
-            // Handle edit action here (e.g., navigate to edit profile page)
+            // Navigate to Edit Profile Screen
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => EditProfileScreen()));
           },
         ),
       ],
@@ -90,8 +97,8 @@ class ProfileScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Text(
         title,
-        style: TextStyle(
-            fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+        style:
+        TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
       ),
     );
   }
@@ -168,8 +175,7 @@ class ProfileScreen extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        // Handle each option tap
-        // Example: Navigate to respective screen
+        _navigateToOption(context, option['title']!);
       },
       child: Container(
         decoration: BoxDecoration(
@@ -181,19 +187,58 @@ class ProfileScreen extends StatelessWidget {
         ),
         margin: EdgeInsets.symmetric(vertical: 4),
         child: Card(
-         color: Colors.black,
+          color: Colors.black,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-
           child: ListTile(
             leading: Icon(iconData, color: Colors.white),
             title: Text(option['title']!,
-                style: TextStyle(fontSize: 16,color: Colors.white )),
+                style: TextStyle(fontSize: 16, color: Colors.white)),
           ),
         ),
       ),
     );
+  }
+
+  // Navigation logic based on option title
+  void _navigateToOption(BuildContext context, String optionTitle) {
+    Widget destination;
+    switch (optionTitle) {
+      case 'Investment History':
+        destination = InvestmentHistoryScreen();
+        break;
+      case 'Withdrawals':
+        destination = WithdrawScreen();
+        break;
+      case 'Security Settings':
+        destination = SecuritySettingsScreen();
+        break;
+      case 'Notification Settings':
+        destination = NotificationSettingsScreen();
+        break;
+      case 'Language':
+        destination = LanguageScreen();
+        break;
+      case 'Dark Mode':
+        destination = DarkModeScreen();
+        break;
+      case 'About Us':
+        destination = AboutUsScreen();
+        break;
+      case 'Help Center':
+        destination = HelpCenterScreen();
+        break;
+      default:
+        destination = Scaffold(
+          appBar: AppBar(title: Text(optionTitle), backgroundColor: Colors.black),
+          backgroundColor: Colors.black,
+          body: Center(
+            child: Text('Screen for $optionTitle', style: TextStyle(color: Colors.white)),
+          ),
+        );
+    }
+    Navigator.push(context, MaterialPageRoute(builder: (context) => destination));
   }
 
   // Logout Button
@@ -212,9 +257,125 @@ class ProfileScreen extends StatelessWidget {
         ),
         child: Text(
           "Logout",
-          style: TextStyle(
-              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
         ),
+      ),
+    );
+  }
+}
+
+// Dummy destination screens for navigation
+
+class EditProfileScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Edit Profile"),
+        backgroundColor: Colors.black,
+      ),
+      backgroundColor: Colors.black,
+      body: Center(
+        child: Text("Edit Profile Screen", style: TextStyle(color: Colors.white)),
+      ),
+    );
+  }
+}
+
+
+
+
+class SecuritySettingsScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Security Settings"),
+        backgroundColor: Colors.black,
+      ),
+      backgroundColor: Colors.black,
+      body: Center(
+        child: Text("Security Settings Screen", style: TextStyle(color: Colors.white)),
+      ),
+    );
+  }
+}
+
+class NotificationSettingsScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Notification Settings"),
+        backgroundColor: Colors.black,
+      ),
+      backgroundColor: Colors.black,
+      body: Center(
+        child: Text("Notification Settings Screen", style: TextStyle(color: Colors.white)),
+      ),
+    );
+  }
+}
+
+class LanguageScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Language"),
+        backgroundColor: Colors.black,
+      ),
+      backgroundColor: Colors.black,
+      body: Center(
+        child: Text("Language Screen", style: TextStyle(color: Colors.white)),
+      ),
+    );
+  }
+}
+
+class DarkModeScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Dark Mode"),
+        backgroundColor: Colors.black,
+      ),
+      backgroundColor: Colors.black,
+      body: Center(
+        child: Text("Dark Mode Screen", style: TextStyle(color: Colors.white)),
+      ),
+    );
+  }
+}
+
+class AboutUsScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("About Us"),
+        backgroundColor: Colors.black,
+      ),
+      backgroundColor: Colors.black,
+      body: Center(
+        child: Text("About Us Screen", style: TextStyle(color: Colors.white)),
+      ),
+    );
+  }
+}
+
+class HelpCenterScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Help Center"),
+        backgroundColor: Colors.black,
+      ),
+      backgroundColor: Colors.black,
+      body: Center(
+        child: Text("Help Center Screen", style: TextStyle(color: Colors.white)),
       ),
     );
   }

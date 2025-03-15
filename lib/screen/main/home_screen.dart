@@ -1,8 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:classia_amc/screen/homefetures/investment_history_screen.dart';
+import 'package:classia_amc/screen/homefetures/market_news.dart';
+import 'package:classia_amc/screen/main/wallet_screen.dart';
 import 'package:classia_amc/widget/custom_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
+import '../homefetures/withdraw_screen.dart';
+import 'market_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final List<String> sliderImages = [
@@ -53,14 +59,13 @@ class HomeScreen extends StatelessWidget {
     },
   ];
 
-
+  // Features list with title and icon.
   final List<Map<String, dynamic>> features = [
     {'title': 'Withdraw', 'icon': FontAwesomeIcons.wallet},
     {'title': 'Deposit', 'icon': FontAwesomeIcons.moneyBillWave},
     {'title': 'History', 'icon': FontAwesomeIcons.listAlt},
     {'title': 'Market News', 'icon': FontAwesomeIcons.newspaper},
-    {'title': 'Invest', 'icon': FontAwesomeIcons.chartLine}, // New
-
+    {'title': 'Invest', 'icon': FontAwesomeIcons.chartLine},
   ];
 
   @override
@@ -125,7 +130,7 @@ class HomeScreen extends StatelessWidget {
 
             SizedBox(height: 20),
 
-            // 🔹 Features Section with Horizontal List & Rounded Icons
+            // 🔹 Features Section with Horizontal List & Navigation
             Padding(
               padding: EdgeInsets.symmetric(vertical: 8),
               child: CustomHeading(text: 'Features', lineWidth: 40),
@@ -133,33 +138,34 @@ class HomeScreen extends StatelessWidget {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: features.map((feature) {
                   return Padding(
                     padding: EdgeInsets.symmetric(horizontal: 8), // Spacing between items
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[800], // Dark background
-                            shape: BoxShape.circle, // Circular shape
-                            border: Border.all(color: Colors.grey[600]!),
+                    child: InkWell(
+                      onTap: () => _navigateToFeature(feature['title'], context),
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[800], // Dark background
+                              shape: BoxShape.circle, // Circular shape
+                              border: Border.all(color: Colors.grey[600]!),
+                            ),
+                            child: FaIcon(feature['icon'], size: 28, color: Colors.white), // White icon
                           ),
-                          child: FaIcon(feature['icon'], size: 28, color: Colors.white), // White icon
-                        ),
-                        SizedBox(height: 6),
-                        Text(
-                          feature['title'],
-                          style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                        ),
-                      ],
+                          SizedBox(height: 6),
+                          Text(
+                            feature['title'],
+                            style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 }).toList(),
               ),
             ),
-
 
             SizedBox(height: 20),
 
@@ -170,8 +176,13 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   CustomHeading(text: 'Top Mutual Funds', lineWidth: 40),
                   TextButton(
-                    onPressed: () {},
-                    child: Text('View More', style: TextStyle(color: Colors.blueAccent)),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => MarketScreen()),
+                      );
+                    },
+                    child: Text('View More', style: TextStyle(color: Colors.amber)),
                   ),
                 ],
               ),
@@ -241,8 +252,40 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-
+  void _navigateToFeature(String title, BuildContext context) {
+    Widget destination;
+    switch (title) {
+      case 'Withdraw':
+        destination = WithdrawScreen();
+        break;
+      case 'Deposit':
+        destination = InvestmentHistoryScreen();
+        break;
+      case 'History':
+        destination = WalletScreen();
+        break;
+      case 'Market News':
+        destination = MarketNewsScreen();
+        break;
+      case 'Invest':
+        destination = InvestmentHistoryScreen();
+        break;
+      default:
+        destination = Scaffold(
+          appBar: AppBar(
+            title: Text(title),
+            backgroundColor: Colors.black,
+          ),
+          backgroundColor: Colors.black,
+          body: Center(child: Text('Screen for $title', style: TextStyle(color: Colors.white))),
+        );
+    }
+    Navigator.push(context, MaterialPageRoute(builder: (context) => destination));
+  }
 }
+
+
+
 
 
 
