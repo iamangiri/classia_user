@@ -2,8 +2,11 @@ import 'package:classia_amc/screen/homefetures/withdraw_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../profile/about_us_screen.dart';
+import '../profile/bank_info_screen.dart';
 import '../profile/customer_support_screen.dart';
 import '../homefetures/investment_history_screen.dart';
+import '../profile/kyc_screen.dart';
+import '../profile/learn_screen.dart';
 import '../profile/privicy_policy.dart';
 import '../profile/security_setting _screen.dart';
 
@@ -296,55 +299,7 @@ class EditProfileScreen extends StatelessWidget {
   }
 }
 
-class KYCVerificationScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("KYC Verification"),
-        backgroundColor: Colors.black,
-        iconTheme: IconThemeData(color: Colors.white),
-      ),
-      backgroundColor: Colors.black,
-      body: Center(
-        child: Text("KYC Verification Screen", style: TextStyle(color: Colors.white)),
-      ),
-    );
-  }
-}
 
-class BankInfoScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Bank Information"),
-        backgroundColor: Colors.black,
-        iconTheme: IconThemeData(color: Colors.white),
-      ),
-      backgroundColor: Colors.black,
-      body: Center(
-        child: Text("Bank Information Screen", style: TextStyle(color: Colors.white)),
-      ),
-    );
-  }
-}
 
-class LearnScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Learning Hub"),
-        backgroundColor: Colors.black,
-        iconTheme: IconThemeData(color: Colors.white),
-      ),
-      backgroundColor: Colors.black,
-      body: Center(
-        child: Text("Learn Screen", style: TextStyle(color: Colors.white)),
-      ),
-    );
-  }
-}
 
 
