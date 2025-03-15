@@ -1,7 +1,11 @@
 import 'package:classia_amc/screen/homefetures/withdraw_screen.dart';
 import 'package:flutter/material.dart';
 
+import '../profile/about_us_screen.dart';
+import '../profile/customer_support_screen.dart';
 import '../homefetures/investment_history_screen.dart';
+import '../profile/privicy_policy.dart';
+import '../profile/security_setting _screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   @override
@@ -103,12 +107,15 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // List of account-related options
+  // List of account-related options (updated with additional items)
   Widget _buildAccountOptionsList(BuildContext context) {
     List<Map<String, String>> accountOptions = [
       {"title": "Investment History", "icon": "history"},
       {"title": "Withdrawals", "icon": "withdrawal"},
       {"title": "Security Settings", "icon": "security"},
+      {"title": "KYC", "icon": "verified_user"},
+      {"title": "Bank Info", "icon": "account_balance"},
+      {"title": "Learn", "icon": "school"},
     ];
 
     return ListView.builder(
@@ -121,14 +128,12 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // List of preference-related options
+  // List of preference-related options (updated with Privacy Policy)
   Widget _buildPreferencesList(BuildContext context) {
     List<Map<String, String>> preferenceOptions = [
-      {"title": "Notification Settings", "icon": "notifications"},
-      {"title": "Language", "icon": "language"},
-      {"title": "Dark Mode", "icon": "dark_mode"},
       {"title": "About Us", "icon": "info"},
       {"title": "Help Center", "icon": "help"},
+      {"title": "Privacy Policy", "icon": "privacy"},
     ];
 
     return ListView.builder(
@@ -154,20 +159,26 @@ class ProfileScreen extends StatelessWidget {
       case 'security':
         iconData = Icons.security;
         break;
+      case 'verified_user':
+        iconData = Icons.verified_user;
+        break;
+      case 'account_balance':
+        iconData = Icons.account_balance;
+        break;
+      case 'school':
+        iconData = Icons.school;
+        break;
       case 'notifications':
         iconData = Icons.notifications;
-        break;
-      case 'language':
-        iconData = Icons.language;
-        break;
-      case 'dark_mode':
-        iconData = Icons.dark_mode;
         break;
       case 'info':
         iconData = Icons.info;
         break;
       case 'help':
         iconData = Icons.help;
+        break;
+      case 'privacy':
+        iconData = Icons.privacy_tip; // New icon for Privacy Policy
         break;
       default:
         iconData = Icons.help;
@@ -214,20 +225,23 @@ class ProfileScreen extends StatelessWidget {
       case 'Security Settings':
         destination = SecuritySettingsScreen();
         break;
-      case 'Notification Settings':
-        destination = NotificationSettingsScreen();
+      case 'KYC':
+        destination = KYCVerificationScreen();
         break;
-      case 'Language':
-        destination = LanguageScreen();
+      case 'Bank Info':
+        destination = BankInfoScreen();
         break;
-      case 'Dark Mode':
-        destination = DarkModeScreen();
+      case 'Learn':
+        destination = LearnScreen();
         break;
       case 'About Us':
         destination = AboutUsScreen();
         break;
       case 'Help Center':
-        destination = HelpCenterScreen();
+        destination = CustomerSupportScreen();
+        break;
+      case 'Privacy Policy':
+        destination = PrivacyPolicyScreen();
         break;
       default:
         destination = Scaffold(
@@ -282,101 +296,55 @@ class EditProfileScreen extends StatelessWidget {
   }
 }
 
-
-
-
-class SecuritySettingsScreen extends StatelessWidget {
+class KYCVerificationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Security Settings"),
+        title: Text("KYC Verification"),
         backgroundColor: Colors.black,
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       backgroundColor: Colors.black,
       body: Center(
-        child: Text("Security Settings Screen", style: TextStyle(color: Colors.white)),
+        child: Text("KYC Verification Screen", style: TextStyle(color: Colors.white)),
       ),
     );
   }
 }
 
-class NotificationSettingsScreen extends StatelessWidget {
+class BankInfoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Notification Settings"),
+        title: Text("Bank Information"),
         backgroundColor: Colors.black,
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       backgroundColor: Colors.black,
       body: Center(
-        child: Text("Notification Settings Screen", style: TextStyle(color: Colors.white)),
+        child: Text("Bank Information Screen", style: TextStyle(color: Colors.white)),
       ),
     );
   }
 }
 
-class LanguageScreen extends StatelessWidget {
+class LearnScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Language"),
+        title: Text("Learning Hub"),
         backgroundColor: Colors.black,
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       backgroundColor: Colors.black,
       body: Center(
-        child: Text("Language Screen", style: TextStyle(color: Colors.white)),
+        child: Text("Learn Screen", style: TextStyle(color: Colors.white)),
       ),
     );
   }
 }
 
-class DarkModeScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Dark Mode"),
-        backgroundColor: Colors.black,
-      ),
-      backgroundColor: Colors.black,
-      body: Center(
-        child: Text("Dark Mode Screen", style: TextStyle(color: Colors.white)),
-      ),
-    );
-  }
-}
 
-class AboutUsScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("About Us"),
-        backgroundColor: Colors.black,
-      ),
-      backgroundColor: Colors.black,
-      body: Center(
-        child: Text("About Us Screen", style: TextStyle(color: Colors.white)),
-      ),
-    );
-  }
-}
-
-class HelpCenterScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Help Center"),
-        backgroundColor: Colors.black,
-      ),
-      backgroundColor: Colors.black,
-      body: Center(
-        child: Text("Help Center Screen", style: TextStyle(color: Colors.white)),
-      ),
-    );
-  }
-}
