@@ -6,7 +6,6 @@ import 'package:classia_amc/screen/main/wallet_screen.dart';
 import 'package:classia_amc/widget/custom_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
 import '../homefetures/notification_screen.dart';
 import '../homefetures/withdraw_screen.dart';
 import 'market_screen.dart';
