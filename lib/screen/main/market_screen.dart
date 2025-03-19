@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../screenutills/fond_deatils_screen.dart';
 import '../../utills/constent/mutual_fond_data.dart';
 
 class MarketScreen extends StatefulWidget {
@@ -115,7 +116,7 @@ class _MarketScreenState extends State<MarketScreen> {
             scrollDirection: Axis.horizontal,
             itemCount: filteredFunds.length,
             separatorBuilder: (_, __) => SizedBox(width: 16),
-            itemBuilder: (context, index) => FundCard(fund: filteredFunds[index], isDarkMode: isDarkMode),
+            itemBuilder: (context, index) => FundCard(fund: filteredFunds[index], isDarkMode: true),
           ),
         ),
         SizedBox(height: 16),
@@ -124,80 +125,4 @@ class _MarketScreenState extends State<MarketScreen> {
   }
 }
 
-class FundCard extends StatelessWidget {
-  final Map<String, dynamic> fund;
-  final bool isDarkMode;
 
-  const FundCard({required this.fund, required this.isDarkMode});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {},
-      child: Container(
-        width: 200,
-        decoration: BoxDecoration(
-          color: isDarkMode ? Colors.grey[800] : Color(0xFFF8F9FA),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            )
-          ],
-        ),
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: isDarkMode ? Colors.grey[700] : Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    image: DecorationImage(
-                      image: NetworkImage(fund['logo']),
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text(fund['name'],
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: isDarkMode ? Colors.white : Color(0xFF212121))),
-                ),
-              ],
-            ),
-            SizedBox(height: 16),
-            Text('Returns: ${fund['returns']}',
-                style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: fund['returns'].contains('+')
-                        ? Color(0xFF4CAF50)
-                        : Color(0xFFF44336))),
-            Text('Min SIP: ${fund['minSip']}',
-                style: TextStyle(fontSize: 12, color: Colors.grey[400])),
-            Spacer(),
-            Row(
-              children: [
-                Icon(Icons.star, color: Color(0xFFFFC107), size: 18),
-                Text(' ${fund['rating']}',
-                    style: TextStyle(
-                        fontSize: 14,
-                        color: isDarkMode ? Colors.white70 : Color(0xFF212121))),
-              ],
-            )
-          ],
-        ),
-      ),
-    );
-  }
-}

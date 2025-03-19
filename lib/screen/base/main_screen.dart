@@ -1,6 +1,4 @@
-import 'package:circle_bottom_navigation/widgets/tab_data.dart';
 import 'package:flutter/material.dart';
-import 'package:circle_bottom_navigation/circle_bottom_navigation.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../service/auth_service.dart';
 import '../main/home_screen.dart';
@@ -8,7 +6,6 @@ import '../main/market_screen.dart';
 import '../main/profile_screen.dart';
 import '../main/trading_screen.dart';
 import '../main/wallet_screen.dart';
-
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -19,8 +16,8 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int currentPage = 0;
-  bool isAuthenticating = true; // To handle biometric authentication state
-  final AuthFingerprintService _authService = AuthFingerprintService(); // Biometric Auth Service
+  bool isAuthenticating = true; // For biometric authentication state
+  final AuthFingerprintService _authService = AuthFingerprintService();
 
   final List<Widget> screens = [
     HomeScreen(),
@@ -33,10 +30,10 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    _authenticateUser(); // Call biometric authentication before showing the screen
+    _authenticateUser();
   }
 
-  /// *Authenticate user before showing the screen*
+  /// Authenticate user before showing the screen
   Future<void> _authenticateUser() async {
     bool isAuthenticated = await _authService.authenticate();
 
@@ -52,75 +49,86 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  void _onItemTapped(int index) {
+    setState(() {
+      currentPage = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    // *Show authentication screen before loading app content*
+    // Show authentication screen before loading app content
     if (isAuthenticating) {
       return _buildAuthLoadingScreen();
     }
 
     return Scaffold(
-      body: screens[currentPage], // Show the screen based on selected tab
-      bottomNavigationBar: CircleBottomNavigation(
-        initialSelection: currentPage,
-        tabs: [
-          TabData(
-            icon: Icons.home,
-            title: 'Home',
+      body: screens[currentPage],
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.black,       // Black background
+        selectedItemColor: Colors.amber,       // Golden color for selected item
+        unselectedItemColor: Colors.grey,      // Grey for unselected items
+        selectedFontSize: 13,
+        unselectedFontSize: 13,
+        type: BottomNavigationBarType.fixed,
+        currentIndex: currentPage,
+        onTap: _onItemTapped,
+        items: [
+          BottomNavigationBarItem(
+            icon: FaIcon(
+              FontAwesomeIcons.house,
+              size: 24,
+            ),
+            label: 'Home',
           ),
-          TabData(
-            icon: FontAwesomeIcons.chartLine, // Icon for Market
-            title: 'Market',
+          BottomNavigationBarItem(
+            icon: FaIcon(
+              FontAwesomeIcons.chartLine,
+              size: 24,
+            ),
+            label: 'Market',
           ),
-          TabData(
-            icon: FontAwesomeIcons.horseHead, // Horse icon
-            title: 'Trade',
+          BottomNavigationBarItem(
+            icon: FaIcon(
+              FontAwesomeIcons.exchangeAlt,
+              size: 24,
+            ),
+            label: 'Trade',
           ),
-          TabData(
-            icon: FontAwesomeIcons.wallet,
-            title: 'Wallet',
+          BottomNavigationBarItem(
+            icon: FaIcon(
+              FontAwesomeIcons.wallet,
+              size: 24,
+            ),
+            label: 'Wallet',
           ),
-          TabData(
-            icon: Icons.person,
-            title: 'Profile',
+          BottomNavigationBarItem(
+            icon: FaIcon(
+              FontAwesomeIcons.user,
+              size: 24,
+            ),
+            label: 'Profile',
           ),
         ],
-        onTabChangedListener: (index) => setState(() {
-          currentPage = index;
-        }),
-        circleColor: Colors.amber, // Circle color
-        activeIconColor: Colors.black, // Active icon color
-        inactiveIconColor: Colors.grey, // Inactive icon color
-        textColor: Colors.black, // Text color for the title
-        barBackgroundColor: Colors.white, // Background color of the bottom bar
-        circleSize: 60.0, // Size of the inner circle
-        barHeight: 60.0, // Height of the bottom bar
-        arcHeight: 70.0, // External circle arc height
-        arcWidth: 90.0, // External circle arc width
-        circleOutline: 10.0, // Outline of the circle
-        shadowAllowance: 20.0, // Size of icon shadow
-        hasElevationShadows: true, // Elevation shadows
-        blurShadowRadius: 8.0, // Size of bar shadow if hasElevationShadows is true
       ),
-
     );
   }
 
-  /// *Authentication Loading Screen*
+  /// Authentication Loading Screen
   Widget _buildAuthLoadingScreen() {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Container(
-      
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.fingerprint, size: 100, color: Color(0xFF0A0E21)),
-              SizedBox(height: 10),
-              Text("Authenticating...", style: TextStyle(fontSize: 18, color: Colors.white70)),
-            ],
-          ),
+      backgroundColor: Colors.black,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.fingerprint, size: 100, color: Colors.white),
+            SizedBox(height: 10),
+            Text(
+              "Authenticating...",
+              style: TextStyle(fontSize: 18, color: Colors.white70),
+            ),
+          ],
         ),
       ),
     );

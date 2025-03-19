@@ -1,0 +1,2 @@
+/Users/prakashkumar/Desktop/swift pratice/firstproject/jockey_trading/android/app/.cxx/RelWithDebInfo/1512g6i7/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/prakashkumar/Desktop/swift pratice/firstproject/jockey_trading/android/app/.cxx/RelWithDebInfo/1512g6i7/armeabi-v7a/CMakeFiles/rebuild_cache.dir
