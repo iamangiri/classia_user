@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../utills/themes/light_app_theme.dart';
 import 'login_screen.dart';
 
@@ -33,14 +34,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black, // Dark background
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(160), // Adjust height as needed
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppTheme.lightTheme.primaryColor,
-                AppTheme.lightTheme.primaryColor,
+                Color(0xFFFFD700), // Golden color
+                Color(0xFFFFA500), // Orange-Gold gradient
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -58,7 +60,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 "Register",
                 style: TextStyle(
                     fontSize: 22,
-                    color: Colors.white,
+                    color: Colors.white, // White text for dark mode
                     fontWeight: FontWeight.bold),
               ),
             ],
@@ -81,15 +83,29 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ElevatedButton(
                 onPressed: _register,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.lightTheme.primaryColor,
                   padding: EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)
                   ),
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
                 ),
-                child: Center(
-                  child: Text("Register",
-                      style: TextStyle(fontSize: 16, color: Colors.white)),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Color(0xFFFFD700),
+                        Color(0xFFFFA500),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  child: Center(
+                    child: Text("Register",
+                        style: TextStyle(fontSize: 16, color: Colors.white)),
+                  ),
                 ),
               ),
               SizedBox(height: 20),
@@ -97,9 +113,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Already have an account? "),
+                  Text(
+                    "Already have an account? ",
+                    style: TextStyle(color: Colors.white),
+                  ),
                   TextButton(
                     onPressed: () {
+                      // You can also use GoRouter's context.go() if you're using named routes
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -110,7 +130,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     child: Text(
                       "Login",
                       style: TextStyle(
-                        color: AppTheme.lightTheme.primaryColor,
+                        color: Color(0xFFFFD700), // Golden color for accent
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -129,11 +149,23 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
         controller: controller,
+        style: TextStyle(color: Colors.white), // White text
         decoration: InputDecoration(
           labelText: label,
+          labelStyle: TextStyle(color: Colors.white), // White label
           hintText: hint,
+          hintStyle: TextStyle(color: Colors.white70), // Lighter white for hint
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.white),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.amber),
+          ),
           border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12)),
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
@@ -150,11 +182,23 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
         controller: emailController,
+        style: TextStyle(color: Colors.white), // White text
         decoration: InputDecoration(
           labelText: "Email",
+          labelStyle: TextStyle(color: Colors.white),
           hintText: "Enter email",
+          hintStyle: TextStyle(color: Colors.white70),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.white),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.amber),
+          ),
           border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12)),
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
         keyboardType: TextInputType.emailAddress,
         validator: (value) {
@@ -177,11 +221,23 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
         controller: phoneController,
+        style: TextStyle(color: Colors.white), // White text
         decoration: InputDecoration(
           labelText: "Phone Number",
+          labelStyle: TextStyle(color: Colors.white),
           hintText: "Enter phone number",
+          hintStyle: TextStyle(color: Colors.white70),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.white),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.amber),
+          ),
           border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12)),
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
         keyboardType: TextInputType.phone,
         validator: (value) {
@@ -203,15 +259,27 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       child: TextFormField(
         controller: passwordController,
         obscureText: !isPasswordVisible,
+        style: TextStyle(color: Colors.white), // White text
         decoration: InputDecoration(
           labelText: "Password",
+          labelStyle: TextStyle(color: Colors.white),
           hintText: "Enter password",
+          hintStyle: TextStyle(color: Colors.white70),
           border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12)),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.white),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.amber),
+          ),
           suffixIcon: IconButton(
             icon: Icon(
               isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-              color: Colors.grey,
+              color: Colors.white,
             ),
             onPressed: () {
               setState(() {
@@ -239,15 +307,27 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       child: TextFormField(
         controller: confirmPasswordController,
         obscureText: !isConfirmPasswordVisible,
+        style: TextStyle(color: Colors.white), // White text
         decoration: InputDecoration(
           labelText: "Confirm Password",
+          labelStyle: TextStyle(color: Colors.white),
           hintText: "Re-enter password",
+          hintStyle: TextStyle(color: Colors.white70),
           border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12)),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.white),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.amber),
+          ),
           suffixIcon: IconButton(
             icon: Icon(
               isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
-              color: Colors.grey,
+              color: Colors.white,
             ),
             onPressed: () {
               setState(() {

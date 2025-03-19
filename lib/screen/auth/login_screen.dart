@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:go_router/go_router.dart';
-
-import 'registration_screen.dart'; // Import GoRouter
+import 'package:lottie/lottie.dart';
+import 'registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,58 +17,54 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Set background color to white
+      backgroundColor: Colors.black, // Dark background
+    appBar:   PreferredSize(
+        preferredSize: Size.fromHeight(300), // Adjust height as needed
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFFFFD700), // Golden color
+                Color(0xFFFFA500), // Orange-Gold gradient
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(40),
+              bottomRight: Radius.circular(40),
+            ),
+          ),
+         child: Column(
+        children: [
+        Lottie.asset(
+        'assets/anim/anim_2.json',
+          height: MediaQuery.of(context).size.height * 0.3,
+        ),
+      ],
+    ),
+        ),
+      ),
       body: SafeArea(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start, // Align content to the top
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            // Golden Space above the Lottie Animation
-            Container(
-              width: double.infinity,
-              height: 60, // Height of the golden space
-              color: const Color(0xFFFFD700), // Golden color
-            ),
 
-            // Lottie Animation with gradient and rounded corners
-            Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFFFFD700), // Gold color
-                    Color(0xFFFFA500), // Orange-Gold gradient
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(50),
-                  bottomRight: Radius.circular(50),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Lottie.asset(
-                    'assets/anim/anim_2.json',
-                    height: MediaQuery.of(context).size.height * 0.3,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 90), // Adjusted space between animation and logo
-
-            // Phone Number Input Field (Modern design with smooth edges)
+            const SizedBox(height: 90), // Space between animation and input field
+            // Phone Number Input Field
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: TextField(
                 controller: _phoneController,
+                style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   labelText: 'Enter your phone number',
-                  prefixIcon: const Icon(Icons.phone),
+                  labelStyle: const TextStyle(color: Colors.white),
+                  hintStyle: const TextStyle(color: Colors.white70),
+                  prefixIcon: const Icon(Icons.phone, color: Colors.white),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30), // Rounded corners
-                    borderSide: const BorderSide(color: Colors.amber, width: 2), // Amber border color
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: const BorderSide(color: Colors.amber, width: 2),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(30),
@@ -84,10 +78,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 keyboardType: TextInputType.phone,
               ),
             ),
-
             const SizedBox(height: 30),
-
-            // Get Started Button with modern design and rounded corners
+            // Login Button
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: GestureDetector(
@@ -99,7 +91,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Use GoRouter for navigation
                     context.go('/otp_verify', extra: contact);
                   } else {
-                    // Show an error message if no phone number is entered
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Please enter a valid phone number'),
@@ -141,21 +132,25 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-
-            // Additional Row for Signup
+            // Row for Signup
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
                   "Don't have an account? ",
                   style: TextStyle(
-                    color: Colors.black,
+                    color: Colors.white,
                     fontSize: 14,
                   ),
                 ),
                 GestureDetector(
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => RegistrationScreen()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RegistrationScreen(),
+                      ),
+                    );
                   },
                   child: const Text(
                     "Signup",

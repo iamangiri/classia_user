@@ -1,5 +1,6 @@
 import 'package:classia_amc/screen/homefetures/withdraw_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../profile/about_us_screen.dart';
 import '../profile/bank_info_screen.dart';
@@ -264,6 +265,8 @@ class ProfileScreen extends StatelessWidget {
       child: ElevatedButton(
         onPressed: () {
           // Handle logout action
+          context.goNamed('splash');
+
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.redAccent,

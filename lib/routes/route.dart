@@ -8,7 +8,7 @@ import '../screen/onBoarding/splash_screen.dart';
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final router = GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation:  '/main' ,
+  initialLocation:  '/' ,
   routes: [
     GoRoute(
       path: '/',

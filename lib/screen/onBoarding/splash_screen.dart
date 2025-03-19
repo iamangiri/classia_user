@@ -12,7 +12,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     Future.delayed(Duration(seconds: 3), () {
-      // Use GoRouter's context.go() to navigate to the OnBoardingScreen
+      // Navigate to the OnBoardingScreen using GoRouter
       context.go('/onboarding');
     });
   }
@@ -20,7 +20,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.black, // Dark mode background color
       body: Center(
         child: TweenAnimationBuilder(
           duration: Duration(seconds: 1),

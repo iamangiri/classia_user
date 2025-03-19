@@ -17,6 +17,7 @@ class _OTPScreenState extends State<OTPScreen> {
   int _timeRemaining = 60;
   bool _isResendEnabled = false;
   bool _isLoading = false;
+  Timer? _timer;
 
   @override
   void initState() {
@@ -26,6 +27,7 @@ class _OTPScreenState extends State<OTPScreen> {
 
   @override
   void dispose() {
+    _timer?.cancel();
     for (var controller in _otpControllers) {
       controller.dispose();
     }
@@ -38,7 +40,7 @@ class _OTPScreenState extends State<OTPScreen> {
       _isResendEnabled = false;
     });
 
-    Timer.periodic(const Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_timeRemaining > 0) {
         setState(() => _timeRemaining--);
       } else {
@@ -60,18 +62,18 @@ class _OTPScreenState extends State<OTPScreen> {
       });
 
       // Once OTP is verified, navigate to the main screen
-      context.go('/main');  // Using GoRouter to navigate to the main screen
+      context.go('/main'); // Using GoRouter to navigate to the main screen
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black, // Dark background
       body: Container(
         width: double.infinity,
         height: double.infinity,
         padding: EdgeInsets.zero,
-        color: Colors.white,
         child: SingleChildScrollView(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -82,25 +84,26 @@ class _OTPScreenState extends State<OTPScreen> {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 9, 2, 29),
+                  color: Colors.white, // White text for dark mode
                 ),
               ),
               const SizedBox(height: 10),
               Text(
                 "Enter the OTP sent to +91 ${widget.contact}",
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16, color: Colors.black87),
+                style: const TextStyle(fontSize: 16, color: Colors.white70),
               ),
               const SizedBox(height: 20),
+              // OTP Input Container
               Container(
                 padding: const EdgeInsets.all(10),
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.grey[900], // Dark container color
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withOpacity(0.3),
                       blurRadius: 3,
                       offset: const Offset(0, 5),
                     ),
@@ -117,23 +120,27 @@ class _OTPScreenState extends State<OTPScreen> {
                         maxLength: 1,
                         textAlign: TextAlign.center,
                         keyboardType: TextInputType.number,
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                         decoration: InputDecoration(
                           counterText: '',
                           border: OutlineInputBorder(
                             borderSide: BorderSide(
-                              color: Color.fromARGB(255, 9, 2, 29),
+                              color: Colors.white,
                             ),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Color.fromARGB(255, 9, 2, 29),
+                            borderSide: const BorderSide(
+                              color: Colors.white,
                               width: 2,
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Color.fromARGB(255, 9, 2, 29),
+                            borderSide: const BorderSide(
+                              color: Colors.white,
                               width: 2.5,
                             ),
                           ),
@@ -152,7 +159,7 @@ class _OTPScreenState extends State<OTPScreen> {
               Text(
                 "Resend OTP in $_timeRemaining seconds",
                 style: TextStyle(
-                  color: _isResendEnabled ? Color.fromARGB(255, 9, 2, 29) : Colors.black87,
+                  color: _isResendEnabled ? Colors.amber : Colors.white70,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -162,7 +169,7 @@ class _OTPScreenState extends State<OTPScreen> {
                 child: Text(
                   "Resend OTP",
                   style: TextStyle(
-                    color: _isResendEnabled ? Color.fromARGB(255, 9, 2, 29) : Colors.grey,
+                    color: _isResendEnabled ? Colors.amber : Colors.grey,
                     fontWeight: FontWeight.bold,
                     decoration: TextDecoration.underline,
                   ),
@@ -186,7 +193,7 @@ class _OTPScreenState extends State<OTPScreen> {
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withOpacity(0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
@@ -196,18 +203,19 @@ class _OTPScreenState extends State<OTPScreen> {
                       child: _isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
                           : const Text(
-                              "Verify OTP",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
+                        "Verify OTP",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
               const SizedBox(height: 110),
+              // Bottom Lottie Animation Container
               Container(
                 width: double.infinity,
                 decoration: const BoxDecoration(

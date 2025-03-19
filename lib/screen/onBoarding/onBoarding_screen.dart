@@ -32,14 +32,14 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Set the background color to white
+      backgroundColor: Colors.black, // Dark background
       body: Stack(
         children: [
           PageView(
             controller: _controller,
             children: [
               _buildOnboardingPage(
-               'Welcome to Jocey Trading!',
+                'Welcome to Jocey Trading!',
                 'assets/anim/trade-4.json',
                 'We make trading simple and accessible for everyone.',
                 isLocal: true,
@@ -75,9 +75,8 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
                     context.goNamed('login'); // Use goNamed for named routes
                   },
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 30, vertical: 15),
-                    backgroundColor: Colors.amber, // Use golden theme color
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                    backgroundColor: Colors.amber, // Golden theme color
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -117,16 +116,19 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
               ? Lottie.asset(imagePath!, height: 300, width: 300)
               : Lottie.network(imagePath!, height: 300, width: 300),
           const SizedBox(height: 20),
-          Text(title,
-              style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black)), // Text color set to black
+          Text(
+            title,
+            style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white), // White text for dark mode
+          ),
           const SizedBox(height: 20),
           Text(
             description,
             style: const TextStyle(
-                fontSize: 16, color: Colors.black), // Text color set to black
+                fontSize: 16,
+                color: Colors.white), // White text for dark mode
             textAlign: TextAlign.center,
           ),
         ],
