@@ -6,6 +6,7 @@ import '../profile/about_us_screen.dart';
 import '../profile/bank_info_screen.dart';
 import '../profile/customer_support_screen.dart';
 import '../homefetures/investment_history_screen.dart';
+import '../profile/edit_profile_screen.dart';
 import '../profile/kyc_screen.dart';
 import '../profile/learn_screen.dart';
 import '../profile/privicy_policy.dart';
@@ -284,23 +285,8 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-// Dummy destination screens for navigation
 
-class EditProfileScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Edit Profile"),
-        backgroundColor: Colors.black,
-      ),
-      backgroundColor: Colors.black,
-      body: Center(
-        child: Text("Edit Profile Screen", style: TextStyle(color: Colors.white)),
-      ),
-    );
-  }
-}
+
 
 
 
