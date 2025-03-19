@@ -1,19 +1,14 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
 import '../screen/auth/login_screen.dart';
 import '../screen/auth/otp_verify_screen.dart';
 import '../screen/base/main_screen.dart';
 import '../screen/onBoarding/onBoarding_screen.dart';
 import '../screen/onBoarding/splash_screen.dart';
-
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
-
 final router = GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation:  '/' ,
+  initialLocation:  '/main' ,
   routes: [
     GoRoute(
       path: '/',
@@ -45,3 +40,4 @@ final router = GoRouter(
     ),
   ],
 );
+

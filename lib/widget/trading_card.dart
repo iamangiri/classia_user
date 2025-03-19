@@ -1,3 +1,24 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import '../screenutills/trade_details_screen.dart';
@@ -37,7 +58,7 @@ class _TradingCardState extends State<TradingCard>
   }
 
   void _updateAnimation() {
-    double normalizedValue = widget.value >= 0 ? (widget.value / 10) : 0;
+    double normalizedValue = widget.value >= 0 ? (widget.value / 100) : 0;
     _animation = Tween<double>(
       begin: 0,
       end: normalizedValue.clamp(0.0, 1.0),
@@ -48,7 +69,7 @@ class _TradingCardState extends State<TradingCard>
   @override
   Widget build(BuildContext context) {
     bool isPositive = widget.value >= 0;
-    Color lineColor = isPositive ? Colors.green[400]! : Colors.red[400]!;
+    Color textColor = isPositive ? Colors.tealAccent : Colors.redAccent;
     double cardWidth = MediaQuery.of(context).size.width * 0.7;
 
     return InkWell(
@@ -66,111 +87,118 @@ class _TradingCardState extends State<TradingCard>
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.grey[900]!.withOpacity(0.6),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[700]!),
+          color: Colors.grey[900],
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.white.withOpacity(0.1),
-              blurRadius: 5,
-              spreadRadius: 1,
-              offset: Offset(2, 3),
+              color: Colors.black.withOpacity(0.4),
+              blurRadius: 10,
+              spreadRadius: 2,
+              offset: Offset(0, 4),
             ),
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Name and Value Row
+              // Header Section
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
-                      CircleAvatar(
-                        radius: 22,
-                        backgroundColor: Colors.grey[800],
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.grey[800],
+                        ),
                         child: widget.logo.isNotEmpty
                             ? ClipOval(
                           child: Image.network(
                             widget.logo,
                             fit: BoxFit.cover,
-                            width: 44,
-                            height: 44,
-                            loadingBuilder:
-                                (context, child, loadingProgress) {
-                              if (loadingProgress == null) {
-                                return child;
-                              } else {
-                                return Center(
-                                    child: CircularProgressIndicator(
-                                      valueColor:
-                                      AlwaysStoppedAnimation<Color>(
-                                          Colors.white),
-                                    ));
-                              }
+                            loadingBuilder: (context, child, progress) {
+                              return progress == null
+                                  ? child
+                                  : CircularProgressIndicator(
+                                color: Colors.tealAccent,
+                              );
                             },
-                            errorBuilder: (context, error, stackTrace) {
-                              return Icon(Icons.image,
-                                  size: 40, color: Colors.grey);
-                            },
+                            errorBuilder: (_, __, ___) => Icon(
+                              Icons.account_balance,
+                              color: Colors.grey[600],
+                            ),
                           ),
                         )
-                            : Icon(Icons.image, size: 40, color: Colors.grey),
+                            : Icon(Icons.account_balance, color: Colors.grey[600]),
                       ),
                       SizedBox(width: 12),
                       Text(
                         widget.name,
                         style: TextStyle(
                           fontSize: 16,
+                          fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
                       ),
                     ],
                   ),
-                  Text(
-                    "${widget.value.toStringAsFixed(2)}%",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: lineColor,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        "${widget.value.toStringAsFixed(2)}%",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
+                      ),
+                      Text(
+                        isPositive ? "Growth" : "Decline",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-              SizedBox(height: 12),
-              // Animated Progress Line with Golden Horse Animation
+              SizedBox(height: 20),
+              // Progress Section
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // Background Line
                   Container(
                     width: cardWidth,
                     height: 8,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(4),
-                      color: Colors.grey[700], // Darker background for progress line
+                      color: Colors.grey[800],
                     ),
                   ),
-                  // Dynamic Progress Line
-                  if (isPositive)
-                    AnimatedBuilder(
-                      animation: _animation,
-                      builder: (context, child) {
-                        double progressWidth = _animation.value * cardWidth;
-                        return Container(
-                          width: progressWidth,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(4),
-                            color: lineColor,
+                  AnimatedBuilder(
+                    animation: _animation,
+                    builder: (context, child) {
+                      return Container(
+                        width: _animation.value * cardWidth,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          gradient: LinearGradient(
+                            colors: isPositive
+                                ? [Colors.tealAccent, Colors.teal[400]!]
+                                : [Colors.redAccent, Colors.red[400]!],
                           ),
-                        );
-                      },
-                    ),
-                  // Golden Horse Animation Moving Along the Line
+                        ),
+                      );
+                    },
+                  ),
                   AnimatedBuilder(
                     animation: _animation,
                     builder: (context, child) {
@@ -190,6 +218,7 @@ class _TradingCardState extends State<TradingCard>
                       );
                     },
                   ),
+
                 ],
               ),
             ],
@@ -199,3 +228,5 @@ class _TradingCardState extends State<TradingCard>
     );
   }
 }
+
+
