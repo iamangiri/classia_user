@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:go_router/go_router.dart'; // Import GoRouter
+import 'package:go_router/go_router.dart';
+
+import 'registration_screen.dart'; // Import GoRouter
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,21 +14,21 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   TextEditingController _phoneController = TextEditingController();
-    bool _isLoading = false;
+  bool _isLoading = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white, // Set background color to white
       body: SafeArea(
         child: Column(
-          mainAxisAlignment:
-              MainAxisAlignment.start, // Align content to the top
+          mainAxisAlignment: MainAxisAlignment.start, // Align content to the top
           children: [
             // Golden Space above the Lottie Animation
             Container(
               width: double.infinity,
               height: 60, // Height of the golden space
-              color: Color(0xFFFFD700), // Golden color
+              color: const Color(0xFFFFD700), // Golden color
             ),
 
             // Lottie Animation with gradient and rounded corners
@@ -56,8 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
 
-            const SizedBox(
-                height: 90), // Adjusted space between animation and logo
+            const SizedBox(height: 90), // Adjusted space between animation and logo
 
             // Phone Number Input Field (Modern design with smooth edges)
             Padding(
@@ -69,16 +70,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   prefixIcon: const Icon(Icons.phone),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(30), // Rounded corners
-                    borderSide: BorderSide(
-                        color: Colors.amber, width: 2), // Amber border color
+                    borderSide: const BorderSide(color: Colors.amber, width: 2), // Amber border color
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide(color: Colors.amber, width: 2),
+                    borderSide: const BorderSide(color: Colors.amber, width: 2),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide(color: Colors.amber, width: 2),
+                    borderSide: const BorderSide(color: Colors.amber, width: 2),
                   ),
                 ),
                 keyboardType: TextInputType.phone,
@@ -88,28 +88,25 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 30),
 
             // Get Started Button with modern design and rounded corners
-        
-
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: GestureDetector(
                 onTap: _isLoading
                     ? null
                     : () {
-                        String contact = _phoneController.text.trim();
-                        if (contact.isNotEmpty) {
-                          // Use GoRouter for navigation
-                          context.go('/otp_verify', extra: contact);
-                        } else {
-                          // Show an error message if no phone number is entered
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content:
-                                  Text('Please enter a valid phone number'),
-                            ),
-                          );
-                        }
-                      },
+                  String contact = _phoneController.text.trim();
+                  if (contact.isNotEmpty) {
+                    // Use GoRouter for navigation
+                    context.go('/otp_verify', extra: contact);
+                  } else {
+                    // Show an error message if no phone number is entered
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please enter a valid phone number'),
+                      ),
+                    );
+                  }
+                },
                 child: Container(
                   width: double.infinity,
                   height: 60,
@@ -133,16 +130,43 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : const Text(
-                            "Login",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
+                      "Login",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
                   ),
                 ),
               ),
+            ),
+
+            // Additional Row for Signup
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  "Don't have an account? ",
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 14,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => RegistrationScreen()));
+                  },
+                  child: const Text(
+                    "Signup",
+                    style: TextStyle(
+                      color: Color(0xFFFFD700), // Golden color
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
