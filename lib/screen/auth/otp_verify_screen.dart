@@ -99,11 +99,11 @@ class _OTPScreenState extends State<OTPScreen> {
                 padding: const EdgeInsets.all(10),
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 decoration: BoxDecoration(
-                  color: Colors.grey[900], // Dark container color
+                  color: Colors.black, // Dark container color
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black,
                       blurRadius: 3,
                       offset: const Offset(0, 5),
                     ),
