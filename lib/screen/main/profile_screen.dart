@@ -9,6 +9,7 @@ import '../homefetures/investment_history_screen.dart';
 import '../profile/edit_profile_screen.dart';
 import '../profile/kyc_screen.dart';
 import '../profile/learn_screen.dart';
+import '../profile/manage_folio_screen.dart';
 import '../profile/privicy_policy.dart';
 import '../profile/security_setting _screen.dart';
 
@@ -115,10 +116,10 @@ class ProfileScreen extends StatelessWidget {
   // List of account-related options (updated with additional items)
   Widget _buildAccountOptionsList(BuildContext context) {
     List<Map<String, String>> accountOptions = [
-      {"title": "Investment History", "icon": "history"},
-      {"title": "Withdrawals", "icon": "withdrawal"},
-      {"title": "Security Settings", "icon": "security"},
+
       {"title": "KYC", "icon": "verified_user"},
+      {"title": "Manage Folio", "icon": "folio"},
+      {"title": "Security Settings", "icon": "security"},
       {"title": "Bank Info", "icon": "account_balance"},
       {"title": "Learn", "icon": "school"},
     ];
@@ -158,8 +159,8 @@ class ProfileScreen extends StatelessWidget {
       case 'history':
         iconData = Icons.history;
         break;
-      case 'withdrawal':
-        iconData = Icons.account_balance_wallet;
+      case 'folio':
+        iconData = Icons.folder_open;
         break;
       case 'security':
         iconData = Icons.security;
@@ -221,6 +222,8 @@ class ProfileScreen extends StatelessWidget {
   void _navigateToOption(BuildContext context, String optionTitle) {
     Widget destination;
     switch (optionTitle) {
+      case 'Manage Folio':
+        destination = ManageFolioScreen();
       case 'Investment History':
         destination = InvestmentHistoryScreen();
         break;
