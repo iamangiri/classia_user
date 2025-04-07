@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../../service/auth_service.dart';
+import '../../service/localauth/auth_service.dart';
 import '../main/home_screen.dart';
 import '../main/market_screen.dart';
 import '../main/profile_screen.dart';

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../service/apiservice/auth_service.dart';
 import '../../utills/themes/light_app_theme.dart';
 import 'login_screen.dart';
 
@@ -21,15 +22,37 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   bool isPasswordVisible = false;
   bool isConfirmPasswordVisible = false;
 
-  void _register() {
-    if (_formKey.currentState!.validate()) {
-      // Place your registration logic here.
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Registration Successful!")),
+  void _register() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    // call the service
+    final result = await AuthService.registerUser(
+      name:     fullNameController.text.trim(),
+      email:    emailController.text.trim(),
+      mobile:   phoneController.text.trim(),
+      password: passwordController.text,
+    );
+
+    final msg = result['message'] as String;
+    final ok  = result['status']  as bool;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: ok ? Colors.green : Colors.red,
+      ),
+    );
+
+    if (ok) {
+      // registration succeeded (statusCode == 201 && status == true)
+      // e.g. navigate to login or home
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => LoginScreen()),
       );
-      // Optionally navigate to another screen after registration.
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -170,6 +193,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         validator: (value) {
           if (value == null || value.isEmpty) {
             return "Please enter $label";
+          }
+          if (value.trim().length < 5) {
+            return "Name must be at least 5 characters long";
           }
           return null;
         },
