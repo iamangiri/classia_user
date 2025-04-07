@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../service/apiservice/auth_service.dart';
-import '../../utills/themes/light_app_theme.dart';
 import 'login_screen.dart';
 
 class RegistrationScreen extends StatefulWidget {

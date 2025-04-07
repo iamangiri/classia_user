@@ -1,171 +1,238 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
+import '../../service/apiservice/auth_service.dart';
 import 'registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
-
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _identifierController = TextEditingController();
+  final TextEditingController _passwordController   = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    final id = _identifierController.text.trim();
+    final isEmail = id.contains('@');
+    final result = await AuthService.loginUser(
+      email:  isEmail ? id : null,
+      mobile: !isEmail ? id : null,
+      password: _passwordController.text,
+    );
+
+    setState(() => _isLoading = false);
+
+    final ok  = result['status'] as bool;
+    final msg = result['message'] as String;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: ok ? Colors.green : Colors.red,
+      ),
+    );
+
+    if (ok) {
+      // on success, navigate to your home/dashboard:
+      context.go('/home');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Dark background
-    appBar:   PreferredSize(
-        preferredSize: Size.fromHeight(300), // Adjust height as needed
+      backgroundColor: Colors.black,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(300),
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Color(0xFFFFD700), // Golden color
-                Color(0xFFFFA500), // Orange-Gold gradient
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              colors: [ Color(0xFFFFD700), Color(0xFFFFA500) ],
+              begin: Alignment.topLeft, end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(40),
-              bottomRight: Radius.circular(40),
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(40)),
+          ),
+          child: Center(
+            child: Lottie.asset(
+              'assets/anim/anim_2.json',
+              height: MediaQuery.of(context).size.height * 0.3,
             ),
           ),
-         child: Column(
-        children: [
-        Lottie.asset(
-        'assets/anim/anim_2.json',
-          height: MediaQuery.of(context).size.height * 0.3,
-        ),
-      ],
-    ),
         ),
       ),
       body: SafeArea(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
+      child: SingleChildScrollView(
+      reverse: true,
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              SizedBox(height: 60),
 
-            const SizedBox(height: 90), // Space between animation and input field
-            // Phone Number Input Field
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: TextField(
-                controller: _phoneController,
-                style: const TextStyle(color: Colors.white),
+              // Identifier field
+              TextFormField(
+                controller: _identifierController,
+                style: TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  labelText: 'Enter your phone number',
-                  labelStyle: const TextStyle(color: Colors.white),
-                  hintStyle: const TextStyle(color: Colors.white70),
-                  prefixIcon: const Icon(Icons.phone, color: Colors.white),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: const BorderSide(color: Colors.amber, width: 2),
-                  ),
+                  labelText: 'Email or Phone',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  hintText: 'you@example.com or 0123456789',
+                  hintStyle: TextStyle(color: Colors.white30),
+                  prefixIcon: Icon(Icons.person, color: Colors.white70),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(30),
-                    borderSide: const BorderSide(color: Colors.amber, width: 2),
+                    borderSide: BorderSide(color: Colors.amber, width: 2),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(30),
-                    borderSide: const BorderSide(color: Colors.amber, width: 2),
+                    borderSide: BorderSide(color: Colors.amber, width: 2),
                   ),
-                ),
-                keyboardType: TextInputType.phone,
-              ),
-            ),
-            const SizedBox(height: 30),
-            // Login Button
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: GestureDetector(
-                onTap: _isLoading
-                    ? null
-                    : () {
-                  String contact = _phoneController.text.trim();
-                  if (contact.isNotEmpty) {
-                    // Use GoRouter for navigation
-                    context.go('/otp_verify', extra: contact);
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please enter a valid phone number'),
-                      ),
-                    );
-                  }
-                },
-                child: Container(
-                  width: double.infinity,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFFFFD700),
-                        Color(0xFFFFA500),
-                      ],
-                    ),
+                  errorBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
+                    borderSide: BorderSide(color: Colors.red, width: 2),
                   ),
-                  child: Center(
-                    child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                      "Login",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide(color: Colors.redAccent, width: 2),
+                  ),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                validator: (val) {
+                  if (val == null || val.isEmpty) {
+                    return 'Please enter email or phone';
+                  }
+                  final t = val.trim();
+                  if (t.contains('@')) {
+                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(t))
+                      return 'Enter a valid email';
+                  } else if (!RegExp(r'^[0-9]{10}$').hasMatch(t)) {
+                    return 'Enter a valid 10‑digit phone';
+                  }
+                  return null;
+                },
+              ),
+
+              SizedBox(height: 16),
+
+              // Password field
+              TextFormField(
+                controller: _passwordController,
+                obscureText: true,
+                style: TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  prefixIcon: Icon(Icons.lock, color: Colors.white70),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide(color: Colors.amber, width: 2),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide(color: Colors.amber, width: 2),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide(color: Colors.red, width: 2),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide(color: Colors.redAccent, width: 2),
+                  ),
+                ),
+                validator: (val) {
+                  if (val == null || val.isEmpty) return 'Please enter password';
+                  if (val.length < 6) return 'Password must be ≥ 6 chars';
+                  return null;
+                },
+              ),
+
+              // Forgot Password aligned right
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () { /* your logic */ },
+                  child: Text('Forgot Password?',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 24),
+
+              // Login button
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _login,
+                  style: ElevatedButton.styleFrom(
+                    shape: StadiumBorder(),
+                    padding: EdgeInsets.zero,
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                  ),
+                  child: Ink(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
                       ),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Center(
+                      child: _isLoading
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text('Login',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          )),
                     ),
                   ),
                 ),
               ),
-            ),
-            // Row for Signup
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  "Don't have an account? ",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
+
+              SizedBox(height: 16),
+
+              // Signup link
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("Don't have an account? ",
+                      style: TextStyle(color: Colors.white70)),
+                  GestureDetector(
+                    onTap: () => context.push('/register'),
+                    child: Text("Signup",
+                        style: TextStyle(
+                          color: Color(0xFFFFD700),
+                          fontWeight: FontWeight.bold,
+                        )),
                   ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => RegistrationScreen(),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    "Signup",
-                    style: TextStyle(
-                      color: Color(0xFFFFD700), // Golden color
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+
+              SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
+    ),
+    ),
     );
   }
 }
