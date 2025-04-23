@@ -1,7 +1,7 @@
-import 'package:classia_amc/screen/auth/email_verification_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../service/apiservice/auth_service.dart';
-import 'login_screen.dart';
+
 
 class RegistrationScreen extends StatefulWidget {
   @override
@@ -39,11 +39,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         backgroundColor: ok ? Colors.green : Colors.red,
       ),
     );
-
     if (ok) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => EmailVerificationScreen(initialPhone: phoneController.text.trim(),initialEmail: emailController.text.trim(),)),
+      final email = emailController.text.trim();
+      final phone = phoneController.text.trim(); // or wherever you stored it
+      context.goNamed(
+        'email_verify',
+        extra: {
+          'email': email,
+          'phone': phone ?? '',
+        },
       );
     }
   }
@@ -130,7 +134,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ),
                   TextButton(
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => LoginScreen()));
+                      context.goNamed('login');
                     },
                     child: Text(
                       "Login",

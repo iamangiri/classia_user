@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import '../../service/apiservice/auth_service.dart';
-import '../base/main_screen.dart';
-import 'email_verification_screen.dart';
-import 'moblie_verification_screen.dart';
-import 'registration_screen.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -237,10 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               style: TextStyle(color: Colors.black54)),
                           GestureDetector(
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => RegistrationScreen()),
-                              );
+                              context.goNamed('register');
                             },
 
                             child: Text("Signup",

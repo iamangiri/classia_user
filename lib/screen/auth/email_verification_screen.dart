@@ -1,4 +1,3 @@
-import 'package:classia_amc/screen/auth/moblie_verification_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
@@ -82,9 +81,14 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       });
 
       if (success) {
-        // Navigate to LoginScreen upon successful verification
-        context.go('/mobile_verify');
+        final phone = widget.initialPhone;
+        // Using named navigation:
+        context.goNamed(
+          'mobile_verify',
+          extra: phone,
+        );
       }
+
     } catch (e) {
       setState(() => _statusMessage = 'Error verifying OTP: \$e');
     } finally {

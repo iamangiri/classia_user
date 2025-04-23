@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../screen/auth/login_screen.dart';
 import '../screen/auth/otp_verify_screen.dart';
 import '../screen/auth/email_verification_screen.dart';   // ← import it
+import '../screen/auth/registration_screen.dart';
 import '../screen/base/main_screen.dart';
 import '../screen/onBoarding/onBoarding_screen.dart';
 import '../screen/onBoarding/splash_screen.dart';
@@ -30,7 +31,13 @@ final router = GoRouter(
     GoRoute(
       path: '/login',
       name: 'login',
-      builder: (context, state) => LoginScreen(),
+      builder: (context, state) => const LoginScreen(),
+    ),
+
+    GoRoute(
+      path: '/register',
+      name: 'register',
+      builder: (context, state) => RegistrationScreen(),
     ),
 
     GoRoute(
@@ -43,29 +50,31 @@ final router = GoRouter(
     ),
 
     GoRoute(
-      path: '/email_verify',         // ← new path
-      name: 'email_verify',          // ← give it a name
+      path: '/email_verify',
+      name: 'email_verify',
       builder: (context, state) {
-        final email = state.extra as String?;
+        final extra = state.extra as Map<String, String>?;
+
         return EmailVerificationScreen(
-          // optionally, you could add a constructor param to pre-fill:
-          // initialEmail: email ?? '',
+          initialEmail: extra?['email'],
+          initialPhone: extra?['phone'],
         );
       },
     ),
 
 
     GoRoute(
-      path: '/mobile_verify',         // ← new path
-      name: 'mobile_verify',          // ← give it a name
+      path: '/mobile_verify',
+      name: 'mobile_verify',
       builder: (context, state) {
-        final email = state.extra as String?;
+        // state.extra is whatever you passed in extra: …
+        final phone = state.extra as String?;
         return MobileVerificationScreen(
-          // optionally, you could add a constructor param to pre-fill:
-          // initialEmail: email ?? '',
+          initialPhone: phone,
         );
       },
     ),
+
 
     GoRoute(
       path: '/main',

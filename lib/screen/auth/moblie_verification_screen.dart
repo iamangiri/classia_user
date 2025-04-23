@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import '../../service/apiservice/auth_service.dart';
-import 'login_screen.dart';
 
 class MobileVerificationScreen extends StatefulWidget {
   final String? initialPhone;
@@ -26,15 +25,12 @@ class _MobileVerificationScreenState extends State<MobileVerificationScreen> {
   @override
   void initState() {
     super.initState();
-    _phoneController = TextEditingController(
-      text: widget.initialPhone?.trim() ?? '',
-    );
+    _phoneController = TextEditingController(text: widget.initialPhone ?? '');
   }
 
   @override
   void dispose() {
     _phoneController.dispose();
-    _otpController.dispose();
     super.dispose();
   }
 

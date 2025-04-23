@@ -1,3 +1,4 @@
+import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../service/localauth/auth_service.dart';
@@ -30,6 +31,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
+    UserConstants.loadUserData();
     _authenticateUser();
   }
 

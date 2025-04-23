@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:classia_amc/utills/constent/app_constant.dart';
 import 'package:http/http.dart' as http;
 
+import '../../utills/constent/user_constant.dart';
+
 class AuthService {
   static Future<Map<String, dynamic>> registerUser({
     required String name,
@@ -44,33 +46,35 @@ class AuthService {
     String? mobile,
     required String password,
   }) async {
-    final url = Uri.parse('${AppConstant.API_URL}/auth/login');
+    final url  = Uri.parse('${AppConstant.API_URL}/auth/login');
     final body = <String, String>{ 'password': password };
-
-    if (email != null && email.isNotEmpty) {
-      body['email'] = email;
-    } else if (mobile != null && mobile.isNotEmpty) {
-      body['mobile'] = mobile;
+    if (email?.isNotEmpty == true) {
+      body['email'] = email!;
+    } else if (mobile?.isNotEmpty == true) {
+      body['mobile'] = mobile!;
     }
 
     final response = await http.post(
       url,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: body,
     );
-     print(response.body);
-     print(response.statusCode);
-    final json = jsonDecode(response.body) as Map<String, dynamic>;
+
+    final jsonResp = jsonDecode(response.body) as Map<String, dynamic>;
+    final data     = jsonResp['data'] as Map<String, dynamic>?;
+
+    // Persist only if login successful
+    if ((jsonResp['status'] as bool? ?? false) && data != null) {
+      await UserConstants.storeUserData(data);
+    }
+
     return {
       'statusCode': response.statusCode,
-      'status':     json['status']  ?? false,
-      'message':    json['message'] ?? 'Unknown error',
-      'data':       json['data'],
+      'status':     jsonResp['status']  ?? false,
+      'message':    jsonResp['message'] ?? 'Unknown error',
+      'data':       data,
     };
   }
-
 
 
 
