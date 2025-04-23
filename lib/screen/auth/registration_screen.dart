@@ -10,10 +10,9 @@ class RegistrationScreen extends StatefulWidget {
 class _RegistrationScreenState extends State<RegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers for user registration fields
   final TextEditingController fullNameController = TextEditingController();
-  final TextEditingController emailController    = TextEditingController();
-  final TextEditingController phoneController    = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
 
@@ -23,16 +22,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   void _register() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // call the service
     final result = await AuthService.registerUser(
-      name:     fullNameController.text.trim(),
-      email:    emailController.text.trim(),
-      mobile:   phoneController.text.trim(),
+      name: fullNameController.text.trim(),
+      email: emailController.text.trim(),
+      mobile: phoneController.text.trim(),
       password: passwordController.text,
     );
 
     final msg = result['message'] as String;
-    final ok  = result['status']  as bool;
+    final ok = result['status'] as bool;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -42,8 +40,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
 
     if (ok) {
-      // registration succeeded (statusCode == 201 && status == true)
-      // e.g. navigate to login or home
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => LoginScreen()),
@@ -51,20 +47,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.black, // Dark background
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(160), // Adjust height as needed
+        preferredSize: Size.fromHeight(160),
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Color(0xFFFFD700), // Golden color
-                Color(0xFFFFA500), // Orange-Gold gradient
-              ],
+              colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -73,18 +67,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               bottomRight: Radius.circular(40),
             ),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(height: 50), // For status bar spacing
-              Text(
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.only(top: 60),
+              child: Text(
                 "Register",
                 style: TextStyle(
-                    fontSize: 22,
-                    color: Colors.white, // White text for dark mode
-                    fontWeight: FontWeight.bold),
+                  fontSize: 22,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -95,7 +89,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           child: Column(
             children: [
               SizedBox(height: 20),
-              _buildTextField("Full Name", "Enter your full name", fullNameController),
+              _buildTextField("Full Name", "Enter full name", fullNameController),
               _buildEmailField(),
               _buildPhoneNumberField(),
               _buildPasswordField(),
@@ -106,7 +100,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
@@ -115,43 +109,32 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   width: double.infinity,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [
-                        Color(0xFFFFD700),
-                        Color(0xFFFFA500),
-                      ],
+                      colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   padding: EdgeInsets.symmetric(vertical: 14),
                   child: Center(
-                    child: Text("Register",
-                        style: TextStyle(fontSize: 16, color: Colors.white)),
+                    child: Text("Register", style: TextStyle(fontSize: 16, color: Colors.white)),
                   ),
                 ),
               ),
               SizedBox(height: 20),
-              // Already have an account? Login.
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     "Already have an account? ",
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: isDark ? Colors.white : Colors.black),
                   ),
                   TextButton(
                     onPressed: () {
-                      // You can also use GoRouter's context.go() if you're using named routes
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => LoginScreen(),
-                        ),
-                      );
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => LoginScreen()));
                     },
                     child: Text(
                       "Login",
                       style: TextStyle(
-                        color: Color(0xFFFFD700), // Golden color for accent
+                        color: Color(0xFFFFD700),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -166,33 +149,19 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   Widget _buildTextField(String label, String hint, TextEditingController controller) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
         controller: controller,
-        style: TextStyle(color: Colors.white), // White text
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(color: Colors.white), // White label
-          hintText: hint,
-          hintStyle: TextStyle(color: Colors.white70), // Lighter white for hint
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.white),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.amber),
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
+        style: TextStyle(color: isDark ? Colors.white : Colors.black),
+        decoration: _inputDecoration(label, hint),
         validator: (value) {
           if (value == null || value.isEmpty) {
             return "Please enter $label";
           }
-          if (value.trim().length < 5) {
+          if (label == "Full Name" && value.trim().length < 5) {
             return "Name must be at least 5 characters long";
           }
           return null;
@@ -206,32 +175,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
         controller: emailController,
-        style: TextStyle(color: Colors.white), // White text
-        decoration: InputDecoration(
-          labelText: "Email",
-          labelStyle: TextStyle(color: Colors.white),
-          hintText: "Enter email",
-          hintStyle: TextStyle(color: Colors.white70),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.white),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.amber),
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
+        style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+        decoration: _inputDecoration("Email", "Enter email"),
         keyboardType: TextInputType.emailAddress,
         validator: (value) {
-          if (value == null || value.isEmpty) {
-            return "Please enter your email";
-          }
-          if (!RegExp(
-              r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-              .hasMatch(value)) {
+          if (value == null || value.isEmpty) return "Please enter your email";
+          if (!RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$").hasMatch(value)) {
             return "Enter a valid email";
           }
           return null;
@@ -245,32 +194,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
         controller: phoneController,
-        style: TextStyle(color: Colors.white), // White text
-        decoration: InputDecoration(
-          labelText: "Phone Number",
-          labelStyle: TextStyle(color: Colors.white),
-          hintText: "Enter phone number",
-          hintStyle: TextStyle(color: Colors.white70),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.white),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.amber),
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
+        style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+        decoration: _inputDecoration("Phone Number", "Enter phone number"),
         keyboardType: TextInputType.phone,
         validator: (value) {
-          if (value == null || value.isEmpty) {
-            return "Please enter your phone number";
-          }
-          if (!RegExp(r"^[0-9]{10}$").hasMatch(value)) {
-            return "Enter a valid 10-digit phone number";
-          }
+          if (value == null || value.isEmpty) return "Please enter your phone number";
+          if (!RegExp(r"^[0-9]{10}$").hasMatch(value)) return "Enter a valid 10-digit number";
           return null;
         },
       ),
@@ -283,28 +212,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       child: TextFormField(
         controller: passwordController,
         obscureText: !isPasswordVisible,
-        style: TextStyle(color: Colors.white), // White text
-        decoration: InputDecoration(
-          labelText: "Password",
-          labelStyle: TextStyle(color: Colors.white),
-          hintText: "Enter password",
-          hintStyle: TextStyle(color: Colors.white70),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.white),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.amber),
-          ),
+        style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+        decoration: _inputDecoration("Password", "Enter password").copyWith(
           suffixIcon: IconButton(
-            icon: Icon(
-              isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-              color: Colors.white,
-            ),
+            icon: Icon(isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+            color: Theme.of(context).iconTheme.color,
             onPressed: () {
               setState(() {
                 isPasswordVisible = !isPasswordVisible;
@@ -313,12 +225,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           ),
         ),
         validator: (value) {
-          if (value == null || value.isEmpty) {
-            return "Please enter your password";
-          }
-          if (value.length < 6) {
-            return "Password must be at least 6 characters";
-          }
+          if (value == null || value.isEmpty) return "Please enter your password";
+          if (value.length < 6) return "Password must be at least 6 characters";
           return null;
         },
       ),
@@ -331,28 +239,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       child: TextFormField(
         controller: confirmPasswordController,
         obscureText: !isConfirmPasswordVisible,
-        style: TextStyle(color: Colors.white), // White text
-        decoration: InputDecoration(
-          labelText: "Confirm Password",
-          labelStyle: TextStyle(color: Colors.white),
-          hintText: "Re-enter password",
-          hintStyle: TextStyle(color: Colors.white70),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.white),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.amber),
-          ),
+        style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+        decoration: _inputDecoration("Confirm Password", "Re-enter password").copyWith(
           suffixIcon: IconButton(
-            icon: Icon(
-              isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
-              color: Colors.white,
-            ),
+            icon: Icon(isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off),
+            color: Theme.of(context).iconTheme.color,
             onPressed: () {
               setState(() {
                 isConfirmPasswordVisible = !isConfirmPasswordVisible;
@@ -361,14 +252,32 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           ),
         ),
         validator: (value) {
-          if (value == null || value.isEmpty) {
-            return "Please confirm your password";
-          }
-          if (value != passwordController.text) {
-            return "Passwords do not match";
-          }
+          if (value == null || value.isEmpty) return "Please confirm your password";
+          if (value != passwordController.text) return "Passwords do not match";
           return null;
         },
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration(String label, String hint) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: isDark ? Colors.white : Colors.black),
+      hintText: hint,
+      hintStyle: TextStyle(color: isDark ? Colors.white70 : Colors.grey),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: isDark ? Colors.white : Colors.black54),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.amber),
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
       ),
     );
   }

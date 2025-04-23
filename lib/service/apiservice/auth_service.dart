@@ -1,6 +1,7 @@
 // auth_service.dart
 
 import 'dart:convert';
+import 'package:classia_amc/utills/constent/app_constant.dart';
 import 'package:http/http.dart' as http;
 
 class AuthService {
@@ -10,7 +11,7 @@ class AuthService {
     required String mobile,
     required String password,
   }) async {
-    final url = Uri.parse('https://api.classiacapital.com/auth/signup');
+    final url = Uri.parse('${AppConstant.API_URL}/auth/signup');
 
     final response = await http.post(
       url,
@@ -43,7 +44,7 @@ class AuthService {
     String? mobile,
     required String password,
   }) async {
-    final url = Uri.parse('https://api.classiacapital.com/auth/login');
+    final url = Uri.parse('${AppConstant.API_URL}/auth/login');
     final body = <String, String>{ 'password': password };
 
     if (email != null && email.isNotEmpty) {
@@ -59,7 +60,8 @@ class AuthService {
       },
       body: body,
     );
-
+     print(response.body);
+     print(response.statusCode);
     final json = jsonDecode(response.body) as Map<String, dynamic>;
     return {
       'statusCode': response.statusCode,

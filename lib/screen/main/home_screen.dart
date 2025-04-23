@@ -6,6 +6,7 @@ import 'package:classia_amc/screen/main/wallet_screen.dart';
 import 'package:classia_amc/widget/custom_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../calcutator/sip_calcutator.dart';
 import '../homefetures/notification_screen.dart';
 import '../homefetures/withdraw_screen.dart';
 import 'market_screen.dart';
@@ -107,9 +108,21 @@ class HomeScreen extends StatelessWidget {
         elevation: 0,
         actions: [
           IconButton(
+            icon: Icon(Icons.calculate, color: Colors.white),  // Calculator icon
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => InvestmentCalculator()),
+              );
+            },
+          ),
+          IconButton(
             icon: Icon(Icons.notifications, color: Colors.white),
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationsScreen()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => NotificationsScreen()),
+              );
             },
           ),
         ],

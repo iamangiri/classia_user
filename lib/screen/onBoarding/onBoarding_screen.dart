@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:go_router/go_router.dart';  // Import GoRouter
+import 'package:go_router/go_router.dart';
 import '../auth/login_screen.dart';
 
 class OnBoardingScreen extends StatefulWidget {
@@ -32,7 +32,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Dark background
+      backgroundColor: Colors.white, // Light mode background
       body: Stack(
         children: [
           PageView(
@@ -71,12 +71,11 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
                 padding: const EdgeInsets.all(20.0),
                 child: ElevatedButton(
                   onPressed: () {
-                    // Navigate to LoginScreen using GoRouter
-                    context.goNamed('login'); // Use goNamed for named routes
+                    context.goNamed('login');
                   },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                    backgroundColor: Colors.amber, // Golden theme color
+                    backgroundColor: Colors.amber, // Golden button
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -96,7 +95,10 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
             child: SmoothPageIndicator(
               controller: _controller,
               count: 4,
-              effect: const WormEffect(activeDotColor: Colors.amber),
+              effect: const WormEffect(
+                activeDotColor: Colors.amber,
+                dotColor: Colors.grey,
+              ),
             ),
           ),
         ],
@@ -119,16 +121,18 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
           Text(
             title,
             style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white), // White text for dark mode
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black, // Black text for light mode
+            ),
           ),
           const SizedBox(height: 20),
           Text(
             description,
             style: const TextStyle(
-                fontSize: 16,
-                color: Colors.white), // White text for dark mode
+              fontSize: 16,
+              color: Colors.black87, // Slightly softer black
+            ),
             textAlign: TextAlign.center,
           ),
         ],

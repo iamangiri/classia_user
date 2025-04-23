@@ -20,7 +20,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Dark mode background color
+      backgroundColor: Colors.white, // Light mode background color
       body: Center(
         child: TweenAnimationBuilder(
           duration: Duration(seconds: 1),
@@ -32,8 +32,8 @@ class _SplashScreenState extends State<SplashScreen> {
             );
           },
           child: Image.asset(
-            'assets/images/splash-2.png', // Ensure this matches your asset path
-            width: 150, // Adjust size if needed
+            'assets/images/splash-2.png', // Make sure this image looks good on white
+            width: 150,
           ),
         ),
       ),
