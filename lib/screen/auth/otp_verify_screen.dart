@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:go_router/go_router.dart'; // Import GoRouter for navigation
+import 'package:go_router/go_router.dart';
 
 class OTPScreen extends StatefulWidget {
   final String contact;

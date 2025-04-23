@@ -71,4 +71,75 @@ class AuthService {
     };
   }
 
+
+
+
+  static Future<Map<String, dynamic>> sendOtp({
+    String? mobile,
+    String? email,
+  }) async {
+    final uri = Uri.parse('${AppConstant.API_URL}/auth/send/otp');
+    final response = await http.post(
+      uri,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: {
+        if (mobile != null) 'mobile': mobile,
+        if (email  != null) 'email':  email,
+      },
+    );
+    print(response.statusCode);
+    print(response.body);
+    final jsonBody = json.decode(response.body) as Map<String, dynamic>;
+
+    // Always return the decoded JSON, regardless of status code.
+    // jsonBody['status'] is your boolean, jsonBody['message'] is your server message.
+    return {
+      'statusCode': response.statusCode,
+      'status':     jsonBody['status']  ?? false,
+      'message':    jsonBody['message'] ?? 'Unknown error',
+      'data':       jsonBody['data'],
+    };
+  }
+
+
+  static Future<Map<String, dynamic>> verifyOtp({
+    String? mobile,
+    String? email,
+    required String code,
+  }) async {
+    final uri = Uri.parse('${AppConstant.API_URL}/auth/verify/otp');
+    final response = await http.patch(
+      uri,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: {
+        if (mobile != null) 'mobile': mobile,
+        if (email  != null) 'email':  email,
+        'code': code,
+      },
+    );
+
+    print(response.statusCode);
+    print(response.body);
+    // Decode the body regardless of status code
+    final jsonBody = json.decode(response.body) as Map<String, dynamic>;
+
+    return {
+      'statusCode': response.statusCode,
+      'status':     jsonBody['status']  ?? false,
+      'message':    jsonBody['message'] ?? 'Unknown error',
+      'data':       jsonBody['data'],
+    };
+
+
+
+  }
+
+
+
+
+
+
+
 }

@@ -1,3 +1,4 @@
+import 'package:classia_amc/screen/auth/email_verification_screen.dart';
 import 'package:flutter/material.dart';
 import '../../service/apiservice/auth_service.dart';
 import 'login_screen.dart';
@@ -42,7 +43,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     if (ok) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => LoginScreen()),
+        MaterialPageRoute(builder: (_) => EmailVerificationScreen(initialPhone: phoneController.text.trim(),initialEmail: emailController.text.trim(),)),
       );
     }
   }

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import '../../service/apiservice/auth_service.dart';
+import '../base/main_screen.dart';
+import 'email_verification_screen.dart';
+import 'moblie_verification_screen.dart';
 import 'registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -21,18 +24,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    final id = _identifierController.text.trim();
+    final id      = _identifierController.text.trim();
     final isEmail = id.contains('@');
-    final result = await AuthService.loginUser(
-      email: isEmail ? id : null,
+    final result  = await AuthService.loginUser(
+      email:  isEmail ? id : null,
       mobile: !isEmail ? id : null,
       password: _passwordController.text,
     );
 
     setState(() => _isLoading = false);
 
-    final ok = result['status'] as bool;
-    final msg = result['message'] as String;
+    final ok         = result['status']     as bool;
+    final msg        = result['message']    as String;
+    final statusCode = result['statusCode'] as int;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -42,9 +46,31 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (ok) {
-      context.go('/home');
+      // Fully logged in
+      context.goNamed('main');  // or '/home'
+    }
+    else if (statusCode == 401) {
+      // Not verified yet — use the server message to pick the screen
+      final lower = msg.toLowerCase();
+      if (lower.contains('mobile')) {
+        context.goNamed(
+          'mobile_verify',
+        );
+      } else if (lower.contains('email')) {
+        context.goNamed(
+          'email_verify'
+        );
+      }
     }
   }
+
+
+  // Future<void> _login() async {
+  //   context.go('/main');
+  // }
+
+
+
 
   @override
   Widget build(BuildContext context) {
