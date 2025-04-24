@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:classia_amc/themes/app_colors.dart';
-import 'package:classia_amc/widget/custom_app_bar.dart';
-
-import '../../widget/learn_app_bar.dart';
+import 'package:classia_amc/widget/learn_app_bar.dart';
 
 class LearnScreen extends StatefulWidget {
   @override
@@ -14,6 +12,10 @@ class _LearnScreenState extends State<LearnScreen> with SingleTickerProviderStat
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   late TabController _tabController;
+  final ScrollController _scrollController = ScrollController();
+  String _sortBy = 'title'; // Default sorting
+  bool _showBookmarkedOnly = false;
+  bool _showCompletedOnly = false;
 
   final List<Map<String, dynamic>> topics = [
     {
@@ -106,16 +108,31 @@ class _LearnScreenState extends State<LearnScreen> with SingleTickerProviderStat
   void dispose() {
     _tabController.dispose();
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
   List<Map<String, dynamic>> get _filteredTopics {
     final selectedDifficulty = ['All', 'Beginner', 'Intermediate', 'Advanced'][_tabController.index];
-    return topics.where((topic) {
+    var filtered = topics.where((topic) {
       final matchesSearch = topic['title'].toLowerCase().contains(_searchQuery.toLowerCase());
       final matchesDifficulty = selectedDifficulty == 'All' || topic['details']['difficulty'] == selectedDifficulty;
-      return matchesSearch && matchesDifficulty;
+      final matchesBookmark = !_showBookmarkedOnly || _bookmarks[topic['title']]!;
+      final matchesCompletion = !_showCompletedOnly || _progress[topic['title']]! >= 1.0;
+      return matchesSearch && matchesDifficulty && matchesBookmark && matchesCompletion;
     }).toList();
+
+    filtered.sort((a, b) {
+      if (_sortBy == 'progress') {
+        return _progress[b['title']]!.compareTo(_progress[a['title']]!);
+      } else if (_sortBy == 'difficulty') {
+        const order = {'Beginner': 1, 'Intermediate': 2, 'Advanced': 3};
+        return order[a['details']['difficulty']]!.compareTo(order[b['details']['difficulty']]!);
+      }
+      return a['title'].compareTo(b['title']);
+    });
+
+    return filtered;
   }
 
   @override
@@ -126,9 +143,20 @@ class _LearnScreenState extends State<LearnScreen> with SingleTickerProviderStat
         title: 'Learn',
         searchController: _searchController,
         showSearch: true,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.filter_list, color: AppColors.primaryGold),
+            onPressed: _showFilterModal,
+          ),
+          IconButton(
+            icon: Icon(Icons.refresh, color: AppColors.primaryGold),
+            onPressed: _confirmResetProgress,
+          ),
+        ],
       ),
       body: Column(
         children: [
+          _buildClippedHeader(),
           Container(
             color: AppColors.cardBackground,
             child: TabBar(
@@ -153,6 +181,67 @@ class _LearnScreenState extends State<LearnScreen> with SingleTickerProviderStat
     );
   }
 
+  Widget _buildClippedHeader() {
+    return ClipPath(
+      clipper: CustomHeaderClipper(),
+      child: Container(
+        height: 120.h,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.primaryGold.withOpacity(0.8), AppColors.accent],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Explore Topics',
+                style: TextStyle(
+                  color: AppColors.buttonText,
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Expanded(
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: topics.length,
+                  itemBuilder: (context, index) => GestureDetector(
+                    onTap: () => _scrollToTopic(index),
+                    child: Container(
+                      margin: EdgeInsets.symmetric(horizontal: 8.w),
+                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                      decoration: BoxDecoration(
+                        color: AppColors.cardBackground.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(16.r),
+                        border: Border.all(color: AppColors.buttonText.withOpacity(0.5)),
+                      ),
+                      child: Center(
+                        child: Text(
+                          topics[index]['title'],
+                          style: TextStyle(
+                            color: AppColors.buttonText,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildContent() {
     if (_filteredTopics.isEmpty) {
       return Center(
@@ -171,6 +260,7 @@ class _LearnScreenState extends State<LearnScreen> with SingleTickerProviderStat
     }
 
     return ListView.builder(
+      controller: _scrollController,
       padding: EdgeInsets.all(16.w),
       itemCount: _filteredTopics.length,
       itemBuilder: (context, index) => _buildTopicCard(_filteredTopics[index]),
@@ -178,22 +268,28 @@ class _LearnScreenState extends State<LearnScreen> with SingleTickerProviderStat
   }
 
   Widget _buildTopicCard(Map<String, dynamic> topic) {
-    return Container(
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
       margin: EdgeInsets.only(bottom: 16.h),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12.r),
+        gradient: LinearGradient(
+          colors: [AppColors.cardBackground, topic['color'].withOpacity(0.1)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 6.r,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8.r,
+            offset: Offset(0, 4),
           ),
         ],
       ),
       child: InkWell(
         onTap: () => _navigateToDetail(topic),
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(16.r),
         child: Stack(
           children: [
             Padding(
@@ -214,7 +310,7 @@ class _LearnScreenState extends State<LearnScreen> with SingleTickerProviderStat
                               style: TextStyle(
                                 color: AppColors.primaryText,
                                 fontSize: 18.sp,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                             SizedBox(height: 8.h),
@@ -264,14 +360,14 @@ class _LearnScreenState extends State<LearnScreen> with SingleTickerProviderStat
           height: 50.h,
           child: CircularProgressIndicator(
             value: _progress[topic['title']],
-            strokeWidth: 4,
-            backgroundColor: AppColors.border,
+            strokeWidth: 5,
+            backgroundColor: AppColors.border.withOpacity(0.3),
             valueColor: AlwaysStoppedAnimation<Color>(topic['color']),
           ),
         ),
         Text(
           '${(_progress[topic['title']]! * 100).toInt()}%',
-          style: TextStyle(color: AppColors.primaryText, fontSize: 12.sp),
+          style: TextStyle(color: AppColors.primaryText, fontSize: 12.sp, fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -294,15 +390,15 @@ class _LearnScreenState extends State<LearnScreen> with SingleTickerProviderStat
     }
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(4.r),
-        border: Border.all(color: color),
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(6.r),
+        border: Border.all(color: color.withOpacity(0.5)),
       ),
       child: Text(
         difficulty,
-        style: TextStyle(color: color, fontSize: 12.sp),
+        style: TextStyle(color: color, fontSize: 12.sp, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -313,8 +409,9 @@ class _LearnScreenState extends State<LearnScreen> with SingleTickerProviderStat
       runSpacing: 8.h,
       children: keyPoints.take(3).map((point) => Chip(
         label: Text(point, style: TextStyle(color: AppColors.secondaryText, fontSize: 12.sp)),
-        backgroundColor: AppColors.cardBackground,
-        side: BorderSide(color: AppColors.border),
+        backgroundColor: AppColors.cardBackground.withOpacity(0.8),
+        side: BorderSide(color: AppColors.border.withOpacity(0.5)),
+        elevation: 2,
       )).toList(),
     );
   }
@@ -322,46 +419,66 @@ class _LearnScreenState extends State<LearnScreen> with SingleTickerProviderStat
   Widget _buildProgressFab() {
     final totalProgress = _progress.values.fold(0.0, (sum, progress) => sum + progress) / _progress.length;
 
-    return FloatingActionButton(
-      backgroundColor: AppColors.primaryGold,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          CircularProgressIndicator(
-            value: totalProgress,
-            strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.buttonText),
-          ),
-          Text(
-            '${(totalProgress * 100).toInt()}%',
-            style: TextStyle(color: AppColors.buttonText, fontSize: 12.sp),
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryGold.withOpacity(0.3),
+            blurRadius: 10.r,
+            spreadRadius: 2,
           ),
         ],
       ),
-      onPressed: () => _showOverallProgress(),
+      child: FloatingActionButton(
+        backgroundColor: AppColors.primaryGold.withOpacity(0.9),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            CircularProgressIndicator(
+              value: totalProgress,
+              strokeWidth: 3,
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.buttonText),
+              backgroundColor: AppColors.buttonText.withOpacity(0.3),
+            ),
+            Text(
+              '${(totalProgress * 100).toInt()}%',
+              style: TextStyle(color: AppColors.buttonText, fontSize: 14.sp, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        onPressed: () => _showOverallProgress(),
+      ),
     );
   }
 
   void _showOverallProgress() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16.r))),
+      backgroundColor: Colors.transparent,
       builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+        ),
         padding: EdgeInsets.all(16.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               'Learning Progress',
-              style: TextStyle(color: AppColors.primaryText, fontSize: 20.sp, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppColors.primaryText,
+                fontSize: 20.sp,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             SizedBox(height: 16.h),
             ...topics.map((topic) => ListTile(
               title: Text(topic['title'], style: TextStyle(color: AppColors.primaryText)),
               subtitle: LinearProgressIndicator(
                 value: _progress[topic['title']],
-                backgroundColor: AppColors.border,
+                backgroundColor: AppColors.border.withOpacity(0.3),
                 valueColor: AlwaysStoppedAnimation<Color>(topic['color']),
               ),
               trailing: Text(
@@ -375,6 +492,98 @@ class _LearnScreenState extends State<LearnScreen> with SingleTickerProviderStat
     );
   }
 
+  void _showFilterModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+        ),
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Filter & Sort',
+              style: TextStyle(
+                color: AppColors.primaryText,
+                fontSize: 20.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            DropdownButton<String>(
+              value: _sortBy,
+              items: [
+                DropdownMenuItem(value: 'title', child: Text('Sort by Title')),
+                DropdownMenuItem(value: 'progress', child: Text('Sort by Progress')),
+                DropdownMenuItem(value: 'difficulty', child: Text('Sort by Difficulty')),
+              ],
+              onChanged: (value) => setState(() => _sortBy = value!),
+              isExpanded: true,
+              style: TextStyle(color: AppColors.primaryText, fontSize: 16.sp),
+            ),
+            CheckboxListTile(
+              title: Text('Show Bookmarked Only', style: TextStyle(color: AppColors.primaryText)),
+              value: _showBookmarkedOnly,
+              onChanged: (value) => setState(() => _showBookmarkedOnly = value!),
+              activeColor: AppColors.primaryGold,
+            ),
+            CheckboxListTile(
+              title: Text('Show Completed Only', style: TextStyle(color: AppColors.primaryText)),
+              value: _showCompletedOnly,
+              onChanged: (value) => setState(() => _showCompletedOnly = value!),
+              activeColor: AppColors.primaryGold,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmResetProgress() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.cardBackground,
+        title: Text('Reset Progress', style: TextStyle(color: AppColors.primaryText)),
+        content: Text('Are you sure you want to reset all progress?', style: TextStyle(color: AppColors.secondaryText)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: AppColors.secondaryText)),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _progress.updateAll((key, value) => 0.0);
+              });
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Progress reset successfully!'),
+                  backgroundColor: AppColors.primaryGold,
+                ),
+              );
+            },
+            child: Text('Reset', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _scrollToTopic(int index) {
+    final offset = index * (200.h + 16.h); // Approximate card height + margin
+    _scrollController.animateTo(
+      offset,
+      duration: Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+  }
+
   void _navigateToDetail(Map<String, dynamic> topic) {
     Navigator.push(
       context,
@@ -384,10 +593,35 @@ class _LearnScreenState extends State<LearnScreen> with SingleTickerProviderStat
           onProgressUpdate: (newProgress) => setState(() => _progress[topic['title']] = newProgress),
           isBookmarked: _bookmarks[topic['title']]!,
           onBookmarkToggle: () => setState(() => _bookmarks[topic['title']] = !_bookmarks[topic['title']]!),
+          onShare: () => _shareTopic(topic),
         ),
       ),
     );
   }
+
+  void _shareTopic(Map<String, dynamic> topic) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Sharing ${topic['title']}'),
+        backgroundColor: AppColors.primaryGold,
+      ),
+    );
+  }
+}
+
+class CustomHeaderClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0, size.height - 30.h);
+    path.quadraticBezierTo(size.width / 2, size.height, size.width, size.height - 30.h);
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
 
 class LearnDetailsScreen extends StatefulWidget {
@@ -395,6 +629,7 @@ class LearnDetailsScreen extends StatefulWidget {
   final Function(double) onProgressUpdate;
   final bool isBookmarked;
   final Function() onBookmarkToggle;
+  final Function() onShare;
 
   const LearnDetailsScreen({
     Key? key,
@@ -402,6 +637,7 @@ class LearnDetailsScreen extends StatefulWidget {
     required this.onProgressUpdate,
     required this.isBookmarked,
     required this.onBookmarkToggle,
+    required this.onShare,
   }) : super(key: key);
 
   @override
@@ -436,6 +672,10 @@ class _LearnDetailsScreenState extends State<LearnDetailsScreen> {
               color: AppColors.primaryGold,
             ),
             onPressed: widget.onBookmarkToggle,
+          ),
+          IconButton(
+            icon: Icon(Icons.share, color: AppColors.primaryGold),
+            onPressed: widget.onShare,
           ),
         ],
       ),
@@ -602,7 +842,6 @@ class _LearnDetailsScreenState extends State<LearnDetailsScreen> {
         subtitle: Text(resource['url']!, style: TextStyle(color: AppColors.secondaryText, fontSize: 12.sp)),
         trailing: Icon(Icons.open_in_new, color: AppColors.primaryGold, size: 16.sp),
         onTap: () {
-          // Implement URL launching (e.g., url_launcher)
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Opening ${resource['url']}'), backgroundColor: AppColors.primaryGold),
           );
@@ -627,7 +866,6 @@ class _LearnDetailsScreenState extends State<LearnDetailsScreen> {
   }
 
   void _startQuiz() {
-    // Simulate quiz completion
     _updateProgress(_currentProgress + 0.2);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

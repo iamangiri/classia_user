@@ -1,7 +1,10 @@
 import 'package:classia_amc/screen/homefetures/withdraw_screen.dart';
+import 'package:classia_amc/widget/common_app_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import '../../themes/app_colors.dart';
+import 'package:classia_amc/themes/app_colors.dart';
+import 'package:classia_amc/widget/custom_app_bar.dart';
 import '../profile/about_us_screen.dart';
 import '../profile/bank_info_screen.dart';
 import '../profile/customer_support_screen.dart';
@@ -13,41 +16,29 @@ import '../profile/manage_folio_screen.dart';
 import '../profile/privicy_policy.dart';
 import '../profile/security_setting _screen.dart';
 
-
 class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.screenBackground, // Light background (e.g., white)
-      appBar: AppBar(
-        backgroundColor: AppColors.primaryGold, // Gold for branding
-        title: Text(
-          "Profile",
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: AppColors.primaryText, // Dark text for contrast
-          ),
-        ),
-        centerTitle: true,
+      backgroundColor: AppColors.screenBackground,
+      appBar: CommonAppBar(
+        title:'Profle'
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Profile Section
             _buildProfileSection(context),
-            SizedBox(height: 20),
-            // Account Section
-            _buildSectionTitle("Account"),
+            SizedBox(height: 20.h),
+            _buildSectionTitle('Account'),
             _buildAccountOptionsList(context),
-            SizedBox(height: 20),
-            // Preferences Section
-            _buildSectionTitle("Preferences"),
+            SizedBox(height: 20.h),
+            _buildSectionTitle('Preferences'),
             _buildPreferencesList(context),
-            SizedBox(height: 20),
-            // Logout Section
+            SizedBox(height: 20.h),
             _buildLogoutButton(context),
           ],
         ),
@@ -55,7 +46,8 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // Profile section with Avatar and Edit button
+
+
   Widget _buildProfileSection(BuildContext context) {
     String userName = "Aman Giri"; // Replace with actual username
     String userEmail = "aman@trader.com"; // Replace with actual email
@@ -114,34 +106,32 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // Section Title
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: EdgeInsets.symmetric(vertical: 8.h),
       child: Text(
         title,
         style: TextStyle(
-          fontSize: 18,
+          fontSize: 18.sp,
           fontWeight: FontWeight.bold,
-          color: AppColors.headingText, // Darker heading text
+          color: AppColors.primaryText,
         ),
       ),
     );
   }
 
-  // List of account-related options
   Widget _buildAccountOptionsList(BuildContext context) {
-    List<Map<String, String>> accountOptions = [
-      {"title": "KYC", "icon": "verified_user"},
-      {"title": "Manage Folio", "icon": "folio"},
-      {"title": "Security Settings", "icon": "security"},
-      {"title": "Bank Info", "icon": "account_balance"},
-      {"title": "Learn", "icon": "school"},
+    final List<Map<String, String>> accountOptions = [
+      {'title': 'KYC', 'icon': 'verified_user'},
+      {'title': 'Manage Folio', 'icon': 'folio'},
+      {'title': 'Security Settings', 'icon': 'security'},
+      {'title': 'Bank Info', 'icon': 'account_balance'},
+      {'title': 'Learn', 'icon': 'school'},
     ];
 
     return ListView.builder(
       shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: accountOptions.length,
       itemBuilder: (context, index) {
         return _buildOptionItem(context, accountOptions[index]);
@@ -149,17 +139,16 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // List of preference-related options
   Widget _buildPreferencesList(BuildContext context) {
-    List<Map<String, String>> preferenceOptions = [
-      {"title": "About Us", "icon": "info"},
-      {"title": "Help Center", "icon": "help"},
-      {"title": "Privacy Policy", "icon": "privacy"},
+    final List<Map<String, String>> preferenceOptions = [
+      {'title': 'About Us', 'icon': 'info'},
+      {'title': 'Help Center', 'icon': 'help'},
+      {'title': 'Privacy Policy', 'icon': 'privacy'},
     ];
 
     return ListView.builder(
       shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: preferenceOptions.length,
       itemBuilder: (context, index) {
         return _buildOptionItem(context, preferenceOptions[index]);
@@ -167,13 +156,9 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // Individual option item with an icon and title
   Widget _buildOptionItem(BuildContext context, Map<String, String> option) {
     IconData iconData;
     switch (option['icon']) {
-      case 'history':
-        iconData = Icons.history;
-        break;
       case 'folio':
         iconData = Icons.folder_open;
         break;
@@ -189,9 +174,6 @@ class ProfileScreen extends StatelessWidget {
       case 'school':
         iconData = Icons.school;
         break;
-      case 'notifications':
-        iconData = Icons.notifications;
-        break;
       case 'info':
         iconData = Icons.info;
         break;
@@ -205,98 +187,163 @@ class ProfileScreen extends StatelessWidget {
         iconData = Icons.help;
     }
 
-    return InkWell(
+    return GestureDetector(
       onTap: () {
         _navigateToOption(context, option['title']!);
       },
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 4),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: EdgeInsets.symmetric(vertical: 4.h),
+        padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
-          color: AppColors.backgroundColor, // Light card background
-          borderRadius: BorderRadius.circular(12),
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(12.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 6.r,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        child: ListTile(
-          leading: Icon(iconData, color: AppColors.primaryText), // Dark icons
-          title: Text(
-            option['title']!,
-            style: TextStyle(fontSize: 16, color: AppColors.primaryText),
-          ),
+        child: Row(
+          children: [
+            Icon(iconData, color: AppColors.primaryGold, size: 24.sp),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Text(
+                option['title']!,
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  color: AppColors.primaryText,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, color: AppColors.secondaryText, size: 16.sp),
+          ],
         ),
       ),
     );
   }
 
-  // Navigation logic based on option title
   void _navigateToOption(BuildContext context, String optionTitle) {
     Widget destination;
     switch (optionTitle) {
       case 'Manage Folio':
-        destination = ManageFolioScreen();
+        destination = const ManageFolioScreen();
         break;
       case 'Investment History':
-        destination = InvestmentHistoryScreen();
+        destination =  InvestmentHistoryScreen();
         break;
       case 'Withdrawals':
-        destination = WithdrawScreen();
+        destination =  WithdrawScreen();
         break;
       case 'Security Settings':
-        destination = SecuritySettingsScreen();
+        destination = const SecuritySettingsScreen();
         break;
       case 'KYC':
-        destination = KYCVerificationScreen();
+        destination = const KYCVerificationScreen();
         break;
       case 'Bank Info':
-        destination = BankInfoScreen();
+        destination =  BankInfoScreen();
         break;
       case 'Learn':
-        destination = LearnScreen();
+        destination =  LearnScreen();
         break;
       case 'About Us':
-        destination = AboutUsScreen();
+        destination =  AboutUsScreen();
         break;
       case 'Help Center':
         destination = CustomerSupportScreen();
         break;
       case 'Privacy Policy':
-        destination = PrivacyPolicyScreen();
+        destination =  PrivacyPolicyScreen();
         break;
       default:
         destination = Scaffold(
           appBar: AppBar(
-            title: Text(optionTitle),
-            backgroundColor: AppColors.primaryGold,
+            title: Text(
+              optionTitle,
+              style: TextStyle(color: AppColors.primaryText, fontSize: 18.sp),
+            ),
           ),
           backgroundColor: AppColors.screenBackground,
           body: Center(
-            child: Text('Screen for $optionTitle',
-                style: TextStyle(color: AppColors.primaryText)),
+            child: Text(
+              'Screen for $optionTitle',
+              style: TextStyle(color: AppColors.primaryText, fontSize: 16.sp),
+            ),
           ),
         );
     }
     Navigator.push(context, MaterialPageRoute(builder: (context) => destination));
   }
 
-  // Logout Button
   Widget _buildLogoutButton(BuildContext context) {
     return Center(
-      child: ElevatedButton(
-        onPressed: () {
-          context.goNamed('splash');
+      child: OutlinedButton(
+        onPressed: () async {
+          final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              backgroundColor: AppColors.cardBackground,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+              title: Text(
+                'Confirm Logout',
+                style: TextStyle(color: AppColors.primaryText, fontSize: 18.sp),
+              ),
+              content: Text(
+                'Are you sure you want to log out?',
+                style: TextStyle(color: AppColors.secondaryText, fontSize: 16.sp),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: AppColors.primaryGold, fontSize: 14.sp),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text(
+                    'Logout',
+                    style: TextStyle(color: AppColors.error, fontSize: 14.sp),
+                  ),
+                ),
+              ],
+            ),
+          );
+
+          if (confirmed ?? false) {
+            if (context.mounted) {
+              context.goNamed('splash');
+            }
+          }
         },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.error, // Error color for logout
-          padding: EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: AppColors.error),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12.r),
           ),
+          padding: EdgeInsets.symmetric(horizontal: 40.w, vertical: 12.h),
+          minimumSize: Size(200.w, 48.h),
         ),
-        child: Text(
-          "Logout",
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppColors.buttonText, // Light text on button
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.logout, color: AppColors.error, size: 20.sp),
+            SizedBox(width: 8.w),
+            Text(
+              'Logout',
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.error,
+              ),
+            ),
+          ],
         ),
       ),
     );

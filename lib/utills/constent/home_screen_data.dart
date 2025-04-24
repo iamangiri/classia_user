@@ -45,12 +45,11 @@ class HomeScreenData {
   ];
 
   static final List<Map<String, dynamic>> features = [
-    {'title': 'Withdraw',     'icon': FontAwesomeIcons.wallet},
-    {'title': 'Deposit',      'icon': FontAwesomeIcons.moneyBillWave},
-    {'title': 'Learn', 'icon': FontAwesomeIcons.graduationCap},
+    {'title': 'Launchpad',    'icon': FontAwesomeIcons.rocket},
     {'title': 'Market News',  'icon': FontAwesomeIcons.newspaper},
-    {'title': 'Invest',       'icon': FontAwesomeIcons.chartLine},
-    {'title': 'Trending',     'icon': FontAwesomeIcons.fire},
+    {'title': 'Deposit',      'icon': FontAwesomeIcons.moneyBillWave},
+    {'title': 'Withdraw',     'icon': FontAwesomeIcons.wallet},
+    {'title': 'Learn',        'icon': FontAwesomeIcons.graduationCap},
   ];
 
   static final List<Map<String, String>> trendingFunds = [

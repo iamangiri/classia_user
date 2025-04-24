@@ -2,97 +2,106 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:classia_amc/screen/homefetures/investment_history_screen.dart';
 import 'package:classia_amc/screen/homefetures/market_news.dart';
-import 'package:classia_amc/screen/main/profile_screen.dart';
-import 'package:classia_amc/screen/main/wallet_screen.dart';
+import 'package:classia_amc/screen/main/profile_heath_screen.dart';
 import 'package:classia_amc/screen/profile/learn_screen.dart';
 import 'package:classia_amc/utills/constent/home_screen_data.dart';
 import 'package:classia_amc/widget/custom_heading.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../screenutills/fund_deatils_screen.dart';
 import '../../themes/app_colors.dart';
 import '../../widget/custom_app_bar.dart';
-import '../homefetures/notification_screen.dart';
+import '../homefetures/lunchpad_screen.dart';
 import '../homefetures/withdraw_screen.dart';
 import 'market_screen.dart';
 
-
 class HomeScreen extends StatelessWidget {
+  const HomeScreen({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.screenBackground,
       appBar: CustomAppBar(
-        title: 'Jockey Trading',
+        title:
+          'Jockey Trading',
       ),
       body: RefreshIndicator(
-        onRefresh: () async => await Future.delayed(Duration(seconds: 1)),
+        onRefresh: () async => await Future.delayed(const Duration(seconds: 1)),
         child: SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 10.h),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Carousel Slider
               ClipRRect(
-                borderRadius: BorderRadius.circular(15),
+                borderRadius: BorderRadius.circular(15.r),
                 child: CarouselSlider(
                   options: CarouselOptions(
-                    height: 200,
+                    height: 150.h,
                     autoPlay: true,
                     enlargeCenterPage: true,
-                    aspectRatio: 16 / 9,
+                    aspectRatio: 16 / 5,
                     viewportFraction: 0.9,
                   ),
                   items: HomeScreenData.sliderImages.map((image) {
-                    return Stack(
-                      children: [
-                        Positioned.fill(
-                          child: CachedNetworkImage(
-                            imageUrl: image,
-                            fit: BoxFit.cover,
-                            errorWidget: (context, url, error) => Container(
-                              color: AppColors.border,
-                              child: Icon(Icons.image, color: AppColors.disabled),
-                            ),
-                          ),
-                        ),
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  AppColors.disabled.withOpacity(0.3),
-                                  Colors.transparent
-                                ],
-                                begin: Alignment.bottomCenter,
-                                end: Alignment.topCenter,
+                    return Container(
+                      margin: EdgeInsets.symmetric(horizontal: 5.w),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15.r),
+                      ),
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: CachedNetworkImage(
+                              imageUrl: image,
+                              fit: BoxFit.cover,
+                              errorWidget: (context, url, error) => Container(
+                                color: AppColors.border,
+                                child: Icon(Icons.image, color: AppColors.disabled),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                          Positioned.fill(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppColors.disabled.withOpacity(0.3),
+                                    Colors.transparent,
+                                  ],
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     );
                   }).toList(),
                 ),
               ),
-              SizedBox(height: 24),
+
+              SizedBox(height: 24.h),
 
               // Features Section
-              CustomHeading(text: 'Features', lineWidth: 40),
-              SizedBox(height: 12),
+              CustomHeading(text: 'Features', lineWidth: 40.w),
+              SizedBox(height: 12.h),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: HomeScreenData.features.map((feature) {
                     return Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      padding: EdgeInsets.symmetric(horizontal: 10.w),
                       child: InkWell(
-                        onTap: () => _navigateToFeature(feature['title'], context),
+                        onTap: () => _navigateToFeature(feature['title']!, context),
                         child: Column(
                           children: [
                             Container(
-                              padding: EdgeInsets.all(14),
+                              padding: EdgeInsets.all(14.w),
                               decoration: BoxDecoration(
                                 color: AppColors.cardBackground,
                                 shape: BoxShape.circle,
@@ -105,17 +114,17 @@ class HomeScreen extends StatelessWidget {
                                 ],
                               ),
                               child: FaIcon(
-                                feature['icon'],
+                                feature['icon'] as IconData,
                                 size: 28,
                                 color: AppColors.primaryGold,
                               ),
                             ),
-                            SizedBox(height: 8),
+                            SizedBox(height: 8.h),
                             Text(
-                              feature['title'],
+                              feature['title']!,
                               style: TextStyle(
                                 color: AppColors.primaryText,
-                                fontSize: 13,
+                                fontSize: 13.sp,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -126,43 +135,43 @@ class HomeScreen extends StatelessWidget {
                   }).toList(),
                 ),
               ),
-              SizedBox(height: 24),
+              SizedBox(height: 24.h),
 
               // Trending Funds Section
-              CustomHeading(text: 'Trending Funds', lineWidth: 40),
-              SizedBox(height: 12),
-              Container(
-                height: 150,
+              CustomHeading(text: 'Trending Funds', lineWidth: 40.w),
+              SizedBox(height: 12.h),
+              SizedBox(
+                height: 150.h,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: HomeScreenData.trendingFunds.length,
                   itemBuilder: (context, index) {
                     final fund = HomeScreenData.trendingFunds[index];
                     return Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      padding: EdgeInsets.symmetric(horizontal: 8.w),
                       child: InkWell(
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => FundDetailsScreen(fund: fund!),
+                              builder: (context) => FundDetailsScreen(fund: fund),
                             ),
                           );
                         },
                         child: Container(
-                          width: 170,
+                          width: 170.w,
                           decoration: BoxDecoration(
                             color: AppColors.cardBackground,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(12.r),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.05),
                                 blurRadius: 6,
-                                offset: Offset(0, 2),
+                                offset: const Offset(0, 2),
                               ),
                             ],
                           ),
-                          padding: EdgeInsets.all(12),
+                          padding: EdgeInsets.all(12.w),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -171,50 +180,50 @@ class HomeScreen extends StatelessWidget {
                                   ClipOval(
                                     child: CachedNetworkImage(
                                       imageUrl: fund['logo']!,
-                                      width: 32,
-                                      height: 32,
+                                      width: 32.w,
+                                      height: 32.h,
                                       fit: BoxFit.cover,
                                       errorWidget: (context, url, error) => Container(
-                                        width: 32,
-                                        height: 32,
+                                        width: 32.w,
+                                        height: 32.h,
                                         color: AppColors.border,
                                         child: Icon(
                                           Icons.image,
                                           color: AppColors.disabled,
-                                          size: 20,
+                                          size: 20.sp,
                                         ),
                                       ),
                                     ),
                                   ),
-                                  SizedBox(width: 8),
+                                  SizedBox(width: 8.w),
                                   Expanded(
                                     child: Text(
                                       fund['symbol']!,
                                       style: TextStyle(
                                         color: AppColors.primaryText,
-                                        fontSize: 14,
+                                        fontSize: 14.sp,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 8),
+                              SizedBox(height: 8.h),
                               Text(
                                 fund['company']!,
                                 style: TextStyle(
                                   color: AppColors.secondaryText,
-                                  fontSize: 12,
+                                  fontSize: 12.sp,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              Spacer(),
+                              const Spacer(),
                               Text(
                                 '₹${fund['price']}',
                                 style: TextStyle(
                                   color: AppColors.primaryGold,
-                                  fontSize: 14,
+                                  fontSize: 14.sp,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -224,7 +233,7 @@ class HomeScreen extends StatelessWidget {
                                   color: fund['change']!.startsWith('+')
                                       ? AppColors.success
                                       : AppColors.error,
-                                  fontSize: 12,
+                                  fontSize: 12.sp,
                                 ),
                               ),
                             ],
@@ -235,35 +244,38 @@ class HomeScreen extends StatelessWidget {
                   },
                 ),
               ),
-              SizedBox(height: 24),
+              SizedBox(height: 24.h),
 
               // Top Mutual Funds Section
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  CustomHeading(text: 'Top Mutual Funds', lineWidth: 40),
+                  CustomHeading(text: 'Top Mutual Funds', lineWidth: 40.w),
                   TextButton(
-                    onPressed: () =>
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => MarketScreen())),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) =>  MarketScreen()),
+                    ),
                     child: Text(
                       'View More',
                       style: TextStyle(
                         color: AppColors.primaryGold,
+                        fontSize: 14.sp,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 12),
+              SizedBox(height: 12.h),
               GridView.builder(
                 shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
+                physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 0.9, // Adjusted for taller cards
+                  crossAxisSpacing: 12.w,
+                  mainAxisSpacing: 12.h,
+                  childAspectRatio: 0.9,
                 ),
                 itemCount: HomeScreenData.mutualFunds.length,
                 itemBuilder: (context, index) {
@@ -280,16 +292,16 @@ class HomeScreen extends StatelessWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         color: AppColors.cardBackground,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(12.r),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.05),
                             blurRadius: 6,
-                            offset: Offset(0, 2),
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                      padding: EdgeInsets.all(12),
+                      padding: EdgeInsets.all(12.w),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -298,50 +310,50 @@ class HomeScreen extends StatelessWidget {
                               ClipOval(
                                 child: CachedNetworkImage(
                                   imageUrl: fund['logo']!,
-                                  width: 32,
-                                  height: 32,
+                                  width: 32.w,
+                                  height: 32.h,
                                   fit: BoxFit.cover,
                                   errorWidget: (context, url, error) => Container(
-                                    width: 32,
-                                    height: 32,
+                                    width: 32.w,
+                                    height: 32.h,
                                     color: AppColors.border,
                                     child: Icon(
                                       Icons.image,
                                       color: AppColors.disabled,
-                                      size: 20,
+                                      size: 20.sp,
                                     ),
                                   ),
                                 ),
                               ),
-                              SizedBox(width: 8),
+                              SizedBox(width: 8.w),
                               Expanded(
                                 child: Text(
                                   fund['symbol']!,
                                   style: TextStyle(
                                     color: AppColors.primaryText,
-                                    fontSize: 14,
+                                    fontSize: 14.sp,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                          SizedBox(height: 8),
+                          SizedBox(height: 8.h),
                           Text(
                             fund['company']!,
                             style: TextStyle(
                               color: AppColors.secondaryText,
-                              fontSize: 12,
+                              fontSize: 12.sp,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          Spacer(),
+                          const Spacer(),
                           Text(
                             '₹${fund['price']}',
                             style: TextStyle(
                               color: AppColors.primaryGold,
-                              fontSize: 14,
+                              fontSize: 14.sp,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -351,7 +363,7 @@ class HomeScreen extends StatelessWidget {
                               color: fund['change']!.startsWith('+')
                                   ? AppColors.success
                                   : AppColors.error,
-                              fontSize: 12,
+                              fontSize: 12.sp,
                             ),
                           ),
                         ],
@@ -364,7 +376,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
       ),
-      floatingActionButton: _buildProgressFab(),
+      floatingActionButton: _buildProgressFab(context),
     );
   }
 
@@ -372,37 +384,42 @@ class HomeScreen extends StatelessWidget {
     Widget destination;
     switch (title) {
       case 'Withdraw':
-        destination = WithdrawScreen();
+        destination =  WithdrawScreen();
         break;
       case 'Deposit':
-        destination = InvestmentHistoryScreen();
+        destination =  InvestmentHistoryScreen();
         break;
       case 'Learn':
-        destination = LearnScreen();
+        destination =  LearnScreen();
         break;
       case 'Market News':
-        destination = MarketNewsScreen();
+        destination =  MarketNewsScreen();
         break;
-      case 'Invest':
-        destination = InvestmentHistoryScreen();
+      case 'Launchpad':
+        destination = LaunchpadScreen();
         break;
       default:
         destination = Scaffold(
           appBar: AppBar(
-            title: Text(title, style: TextStyle(color: AppColors.primaryText)),
-            backgroundColor: AppColors.primaryGold,
+            title: Text(
+              title,
+              style: TextStyle(color: AppColors.primaryText, fontSize: 18.sp),
+            ),
           ),
           backgroundColor: AppColors.screenBackground,
           body: Center(
-            child: Text('Screen for $title', style: TextStyle(color: AppColors.primaryText)),
+            child: Text(
+              'Screen for $title',
+              style: TextStyle(color: AppColors.primaryText, fontSize: 16.sp),
+            ),
           ),
         );
     }
     Navigator.push(context, MaterialPageRoute(builder: (context) => destination));
   }
 
-  Widget _buildProgressFab() {
-    final totalProgress = 0.50;
+  Widget _buildProgressFab(BuildContext context) {
+    const totalProgress = 0.50;
     return FloatingActionButton(
       backgroundColor: AppColors.primaryGold,
       elevation: 4,
@@ -419,12 +436,18 @@ class HomeScreen extends StatelessWidget {
             '${(totalProgress * 100).toInt()}%',
             style: TextStyle(
               color: AppColors.primaryText,
+              fontSize: 14.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
         ],
       ),
-      onPressed: () {},
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ProfileHealthScreen()),
+        );
+      },
     );
   }
 }

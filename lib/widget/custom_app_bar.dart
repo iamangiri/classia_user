@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../screen/homefetures/notification_screen.dart';
 import '../screen/main/profile_screen.dart';
+import '../screen/profile/customer_support_screen.dart';
 import '../themes/app_colors.dart';
 
 
@@ -46,6 +47,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           icon: Icon(Icons.support_agent, color: AppColors.primaryText),
           onPressed: onSupportPressed ?? () {
             // TODO: Implement customer support action
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CustomerSupportScreen()),
+            );
           },
         ),
         IconButton(

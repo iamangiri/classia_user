@@ -27,7 +27,7 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
     return Scaffold(
       backgroundColor: AppColors.screenBackground,
       appBar: CustomAppBar(
-        title: 'Investment Calculator',
+        title: 'Plan & Invest',
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
