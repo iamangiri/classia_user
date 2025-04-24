@@ -1,10 +1,11 @@
+import 'package:classia_amc/themes/app_colors.dart';
 import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../service/localauth/auth_service.dart';
+import '../calcutator/sip_calcutator.dart';
 import '../main/home_screen.dart';
 import '../main/market_screen.dart';
-import '../main/profile_screen.dart';
 import '../main/trading_screen.dart';
 import '../main/wallet_screen.dart';
 
@@ -25,7 +26,7 @@ class _MainScreenState extends State<MainScreen> {
     MarketScreen(),
     TradingScreen(),
     WalletScreen(),
-    ProfileScreen(),
+    InvestmentCalculator(), // This is the SIP calculator screen
   ];
 
   @override
@@ -38,13 +39,11 @@ class _MainScreenState extends State<MainScreen> {
   /// Authenticate user before showing the screen
   Future<void> _authenticateUser() async {
     bool isAuthenticated = await _authService.authenticate();
-
     if (!isAuthenticated) {
       // If authentication fails, navigate back to login
       Navigator.pop(context);
       return;
     }
-
     // If authentication is successful, proceed to initialize the app
     setState(() {
       isAuthenticating = false;
@@ -67,9 +66,9 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       body: screens[currentPage],
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,       // Black background
-        selectedItemColor: Colors.amber,       // Golden color for selected item
-        unselectedItemColor: Colors.grey,      // Grey for unselected items
+        backgroundColor: AppColors.backgroundColor, // Black background
+        selectedItemColor: AppColors.primaryGold, // Golden color for selected item
+        unselectedItemColor: Colors.grey, // Grey for unselected items
         selectedFontSize: 13,
         unselectedFontSize: 13,
         type: BottomNavigationBarType.fixed,
@@ -92,10 +91,10 @@ class _MainScreenState extends State<MainScreen> {
           ),
           BottomNavigationBarItem(
             icon: FaIcon(
-              FontAwesomeIcons.exchangeAlt,
+              FontAwesomeIcons.bolt,
               size: 24,
             ),
-            label: 'Trade',
+            label: 'JT',
           ),
           BottomNavigationBarItem(
             icon: FaIcon(
@@ -104,12 +103,13 @@ class _MainScreenState extends State<MainScreen> {
             ),
             label: 'Wallet',
           ),
+          // Updated to represent the SIP Calculator
           BottomNavigationBarItem(
             icon: FaIcon(
-              FontAwesomeIcons.user,
+              FontAwesomeIcons.calculator,
               size: 24,
             ),
-            label: 'Profile',
+            label: 'Calculator',
           ),
         ],
       ),

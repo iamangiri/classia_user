@@ -2,164 +2,53 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:classia_amc/screen/homefetures/investment_history_screen.dart';
 import 'package:classia_amc/screen/homefetures/market_news.dart';
+import 'package:classia_amc/screen/main/profile_screen.dart';
 import 'package:classia_amc/screen/main/wallet_screen.dart';
+import 'package:classia_amc/utills/constent/home_screen_data.dart';
 import 'package:classia_amc/widget/custom_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../calcutator/sip_calcutator.dart';
+import '../../themes/app_colors.dart';
+import '../../widget/custom_app_bar.dart';
 import '../homefetures/notification_screen.dart';
 import '../homefetures/withdraw_screen.dart';
 import 'market_screen.dart';
 
 
 class HomeScreen extends StatelessWidget {
-  final List<String> sliderImages = [
-    'https://i.ytimg.com/vi/oU9Xq9rdRVg/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLBMlvA48DeFnUOB8TEiEceFiMJHjA',
-    'https://www.alliedmarketresearch.com/assets/sampleimages/multiple-toe-socks-market-1691677648.png',
-    'https://www.alliedmarketresearch.com/assets/sampleimages/multiple-toe-socks-market-1691677648.png',
-  ];
-
-  final List<Map<String, String>> mutualFunds = [
-    {
-      'name': 'SBI Bluechip Fund',
-      'logo': 'https://www.sbimf.com/Assets/images/sbi-mf-logo.svg'
-    },
-    {
-      'name': 'HDFC Equity Fund',
-      'logo': 'https://www.hdfcfund.com/images/logo.png'
-    },
-    {
-      'name': 'ICICI Prudential Fund',
-      'logo': 'https://www.icicipruamc.com/images/ipru-logo.png'
-    },
-    {
-      'name': 'Axis Long Term Equity',
-      'logo': 'https://www.axismf.com/images/logo.svg'
-    },
-    {
-      'name': 'Kotak Standard Multicap',
-      'logo': 'https://www.kotakmutual.com/images/logo.png'
-    },
-    {
-      'name': 'Mirae Asset Emerging',
-      'logo': 'https://miraeassetmf.co.in/images/mirae-asset-logo.png'
-    },
-    {
-      'name': 'UTI Nifty Index Fund',
-      'logo': 'https://www.utimf.com/Images/UTI_Mutual_Fund.svg'
-    },
-    {
-      'name': 'DSP Tax Saver Fund',
-      'logo': 'https://www.dspim.com/images/dsp-logo.svg'
-    },
-    {
-      'name': 'Aditya Birla Sun Life',
-      'logo': 'https://mutualfund.adityabirlacapital.com/images/absl-logo.png'
-    },
-    {
-      'name': 'Tata Equity P/E Fund',
-      'logo': 'https://www.tatamutualfund.com/images/tata-mf-logo.png'
-    },
-  ];
-
-  // Features list with title and icon.
-  final List<Map<String, dynamic>> features = [
-    {'title': 'Withdraw', 'icon': FontAwesomeIcons.wallet},
-    {'title': 'Deposit', 'icon': FontAwesomeIcons.moneyBillWave},
-    {'title': 'History', 'icon': FontAwesomeIcons.listAlt},
-    {'title': 'Market News', 'icon': FontAwesomeIcons.newspaper},
-    {'title': 'Invest', 'icon': FontAwesomeIcons.chartLine},
-    {'title': 'Trending', 'icon': FontAwesomeIcons.fire}, // New feature
-  ];
-
-  // Trending funds section (dummy data)
-  final List<Map<String, String>> trendingFunds = [
-    {
-      'symbol': 'HDFC',
-      'company': 'HDFC Equity Fund',
-      'logo': 'https://www.hdfcfund.com/images/logo.png',
-      'price': '124.75',
-      'change': '+0.95%'
-    },
-    {
-      'symbol': 'ICICI',
-      'company': 'ICICI Prudential Fund',
-      'logo': 'https://www.icicipruamc.com/images/ipru-logo.png',
-      'price': '98.20',
-      'change': '-0.45%'
-    },
-    {
-      'symbol': 'AXIS',
-      'company': 'Axis Long Term Equity',
-      'logo': 'https://www.axismf.com/images/logo.svg',
-      'price': '210.30',
-      'change': '+1.15%'
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Dark mode background
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: Text('Jockey Trading', style: TextStyle(fontSize: 22, color: Colors.white)),
-        centerTitle: true,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.calculate, color: Colors.white),  // Calculator icon
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => InvestmentCalculator()),
-              );
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.notifications, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => NotificationsScreen()),
-              );
-            },
-          ),
-        ],
-      ),
+      backgroundColor: AppColors.backgroundColor,
+      appBar: CustomAppBar(title: 'Jockey Trading',),
       body: RefreshIndicator(
-        onRefresh: () async {
-          // Implement refresh logic if needed
-          await Future.delayed(Duration(seconds: 1));
-        },
+        onRefresh: () async => await Future.delayed(Duration(seconds: 1)),
         child: SingleChildScrollView(
           physics: AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Carousel Slider with gradient overlay
+              // Carousel Slider
               ClipRRect(
                 borderRadius: BorderRadius.circular(15),
                 child: CarouselSlider(
                   options: CarouselOptions(
-                    height: 180,
+                    height: 200,
                     autoPlay: true,
                     enlargeCenterPage: true,
                     aspectRatio: 16 / 9,
                     viewportFraction: 0.9,
                   ),
-                  items: sliderImages.map((image) {
+                  items: HomeScreenData.sliderImages.map((image) {
                     return Stack(
                       children: [
-                        Positioned.fill(
-                          child: Image.network(image, fit: BoxFit.cover),
-                        ),
+                        Positioned.fill(child: Image.network(image, fit: BoxFit.cover)),
                         Positioned.fill(
                           child: Container(
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
-                                colors: [Colors.black.withOpacity(0.5), Colors.transparent],
+                                colors: [AppColors.disabled.withOpacity(0.3), Colors.transparent],
                                 begin: Alignment.bottomCenter,
                                 end: Alignment.topCenter,
                               ),
@@ -171,33 +60,34 @@ class HomeScreen extends StatelessWidget {
                   }).toList(),
                 ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 24),
+
               // Features Section
               CustomHeading(text: 'Features', lineWidth: 40),
-              SizedBox(height: 8),
+              SizedBox(height: 12),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  children: features.map((feature) {
+                  children: HomeScreenData.features.map((feature) {
                     return Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      padding: EdgeInsets.symmetric(horizontal: 10),
                       child: InkWell(
                         onTap: () => _navigateToFeature(feature['title'], context),
                         child: Column(
                           children: [
                             Container(
-                              padding: EdgeInsets.all(12),
+                              padding: EdgeInsets.all(14),
                               decoration: BoxDecoration(
-                                color: Colors.grey[800],
+                                color: AppColors.screenBackground,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Colors.grey[600]!),
+                                boxShadow: [BoxShadow(color: AppColors.border,  spreadRadius: 1)],
                               ),
-                              child: FaIcon(feature['icon'], size: 28, color: Colors.white),
+                              child: FaIcon(feature['icon'], size: 28, color: AppColors.primaryGold),
                             ),
-                            SizedBox(height: 6),
+                            SizedBox(height: 8),
                             Text(
                               feature['title'],
-                              style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                              style: TextStyle(color: AppColors.primaryText, fontSize: 13, fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
@@ -206,25 +96,26 @@ class HomeScreen extends StatelessWidget {
                   }).toList(),
                 ),
               ),
-              SizedBox(height: 20),
-              // Trending Funds Section (Replaces Trending Stocks)
+              SizedBox(height: 24),
+
+              // Trending Funds Section
               CustomHeading(text: 'Trending Funds', lineWidth: 40),
-              SizedBox(height: 8),
+              SizedBox(height: 12),
               Container(
-                height: 120,
+                height: 130,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: trendingFunds.length,
+                  itemCount: HomeScreenData.trendingFunds.length,
                   itemBuilder: (context, index) {
-                    final fund = trendingFunds[index];
+                    final fund = HomeScreenData.trendingFunds[index];
                     return Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Container(
-                        width: 150,
+                        width: 160,
                         decoration: BoxDecoration(
-                          color: Colors.grey[900]!.withOpacity(0.7),
+                          color: AppColors.screenBackground,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey[700]!),
+                          border: Border.all(color: AppColors.border),
                         ),
                         padding: EdgeInsets.all(12),
                         child: Column(
@@ -238,25 +129,24 @@ class HomeScreen extends StatelessWidget {
                                     width: 30,
                                     height: 30,
                                     fit: BoxFit.cover,
-                                    errorWidget: (context, url, error) => Icon(Icons.image, color: Colors.grey, size: 24),
+                                    errorWidget: (context, url, error) => Icon(Icons.image, color: AppColors.disabled, size: 24),
                                   ),
                                 ),
                                 SizedBox(width: 8),
-                                Text(
-                                  fund['symbol']!,
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                ),
+                                Text(fund['symbol']!, style: TextStyle(color: AppColors.primaryText, fontWeight: FontWeight.bold)),
                               ],
                             ),
-                            SizedBox(height: 8),
-                            Text(fund['company']!, style: TextStyle(color: Colors.white70, fontSize: 12)),
+                            SizedBox(height: 10),
+                            Text(fund['company']!, style: TextStyle(color: AppColors.secondaryText, fontSize: 12)),
                             Spacer(),
-                            Text('₹${fund['price']}',
-                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                            Text(fund['change']!,
-                                style: TextStyle(
-                                    color: fund['change']!.startsWith('+') ? Colors.greenAccent : Colors.redAccent,
-                                    fontSize: 12)),
+                            Text('₹${fund['price']}', style: TextStyle(color: AppColors.primaryGold, fontWeight: FontWeight.bold)),
+                            Text(
+                              fund['change']!,
+                              style: TextStyle(
+                                color: fund['change']!.startsWith('+') ? AppColors.success : AppColors.error,
+                                fontSize: 12,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -264,70 +154,62 @@ class HomeScreen extends StatelessWidget {
                   },
                 ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 24),
+
               // Top Mutual Funds Section
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CustomHeading(text: 'Top Mutual Funds', lineWidth: 40),
                   TextButton(
-                    onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => MarketScreen()));
-                    },
-                    child: Text('View More', style: TextStyle(color: Colors.amber)),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => MarketScreen())),
+                    child: Text('View More', style: TextStyle(color: AppColors.primaryGold, fontWeight: FontWeight.w600)),
                   ),
                 ],
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 12),
               GridView.builder(
                 shrinkWrap: true,
                 physics: NeverScrollableScrollPhysics(),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 1.5,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 1.4,
                 ),
-                itemCount: mutualFunds.length,
+                itemCount: HomeScreenData.mutualFunds.length,
                 itemBuilder: (context, index) {
                   return Container(
                     decoration: BoxDecoration(
-                      color: Colors.grey[900]!.withOpacity(0.6),
+                      color: AppColors.screenBackground,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey[700]!),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.white.withOpacity(0.1),
-                          blurRadius: 5,
-                          spreadRadius: 1,
-                          offset: Offset(2, 3),
-                        ),
-                      ],
+                      boxShadow: [BoxShadow(color: AppColors.border,  spreadRadius: 1)],
                     ),
+                    padding: EdgeInsets.all(12),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         ClipOval(
                           child: CachedNetworkImage(
-                            imageUrl: mutualFunds[index]['logo']!,
-                            width: 60,
-                            height: 60,
+                            imageUrl: HomeScreenData.mutualFunds[index]['logo']!,
+                            width: 45,
+                            height: 45,
                             fit: BoxFit.cover,
                             errorWidget: (context, url, error) => Container(
-                              width: 60,
-                              height: 60,
-                              color: Colors.black,
-                              child: Icon(Icons.image, color: Colors.grey, size: 30),
+                              width: 45,
+                              height: 45,
+                              color: AppColors.border,
+                              child: Icon(Icons.image, color: AppColors.disabled, size: 30),
                             ),
                           ),
                         ),
-                        SizedBox(height: 8),
+                        SizedBox(height: 10),
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 8),
                           child: Text(
-                            mutualFunds[index]['name']!,
+                            HomeScreenData.mutualFunds[index]['name']!,
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primaryText),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -363,39 +245,34 @@ class HomeScreen extends StatelessWidget {
       case 'Invest':
         destination = InvestmentHistoryScreen();
         break;
-
       default:
         destination = Scaffold(
-          appBar: AppBar(
-            title: Text(title),
-            backgroundColor: Colors.black,
-          ),
-          backgroundColor: Colors.black,
-          body: Center(child: Text('Screen for $title', style: TextStyle(color: Colors.white))),
+          appBar: AppBar(title: Text(title, style: TextStyle(color: AppColors.primaryText)), backgroundColor: AppColors.primaryGold),
+          backgroundColor: AppColors.screenBackground,
+          body: Center(child: Text('Screen for $title', style: TextStyle(color: AppColors.primaryText))),
         );
     }
     Navigator.push(context, MaterialPageRoute(builder: (context) => destination));
   }
 
   Widget _buildProgressFab() {
-    // Dummy overall progress. You can calculate real progress based on data.
     final totalProgress = 0.50;
     return FloatingActionButton(
-      backgroundColor: Colors.tealAccent,
+      backgroundColor: AppColors.primaryGold,
+      elevation: 4,
       child: Stack(
         alignment: Alignment.center,
         children: [
           CircularProgressIndicator(
             value: totalProgress,
-            strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+            strokeWidth: 3,
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryText),
+            backgroundColor: AppColors.screenBackground.withOpacity(0.5),
           ),
-          Text('${(totalProgress * 100).toInt()}%', style: TextStyle(color: Colors.black)),
+          Text('${(totalProgress * 100).toInt()}%', style: TextStyle(color: AppColors.primaryText, fontWeight: FontWeight.bold)),
         ],
       ),
-      onPressed: () {
-        // Additional functionality can be added here.
-      },
+      onPressed: () {},
     );
   }
 }
