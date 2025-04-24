@@ -7,46 +7,40 @@ class HomeScreenData {
     'https://www.alliedmarketresearch.com/assets/sampleimages/multiple-toe-socks-market-1691677648.png',
   ];
 
-  static final List<Map<String, String>> mutualFunds = [
+
+
+  static List<Map<String, String>> mutualFunds = [
     {
+      'logo': 'https://via.placeholder.com/50',
       'name': 'SBI Bluechip Fund',
-      'logo': 'https://www.sbimf.com/Assets/images/sbi-mf-logo.svg'
+      'symbol': 'SBI',
+      'company': 'SBI Mutual Fund',
+      'price': '1800.00',
+      'change': '+3.5%',
     },
     {
-      'name': 'HDFC Equity Fund',
-      'logo': 'https://www.hdfcfund.com/images/logo.png'
+      'logo': 'https://via.placeholder.com/50',
+      'name': 'Axis Midcap Fund',
+      'symbol': 'AXIS',
+      'company': 'Axis Mutual Fund',
+      'price': '1400.00',
+      'change': '-1.8%',
     },
     {
-      'name': 'ICICI Prudential Fund',
-      'logo': 'https://www.icicipruamc.com/images/ipru-logo.png'
+      'logo': 'https://via.placeholder.com/50',
+      'name': 'Mirae Asset Fund',
+      'symbol': 'MIRAE',
+      'company': 'Mirae Asset',
+      'price': '1600.00',
+      'change': '+4.2%',
     },
     {
-      'name': 'Axis Long Term Equity',
-      'logo': 'https://www.axismf.com/images/logo.svg'
-    },
-    {
-      'name': 'Kotak Standard Multicap',
-      'logo': 'https://www.kotakmutual.com/images/logo.png'
-    },
-    {
-      'name': 'Mirae Asset Emerging',
-      'logo': 'https://miraeassetmf.co.in/images/mirae-asset-logo.png'
-    },
-    {
-      'name': 'UTI Nifty Index Fund',
-      'logo': 'https://www.utimf.com/Images/UTI_Mutual_Fund.svg'
-    },
-    {
-      'name': 'DSP Tax Saver Fund',
-      'logo': 'https://www.dspim.com/images/dsp-logo.svg'
-    },
-    {
-      'name': 'Aditya Birla Sun Life',
-      'logo': 'https://mutualfund.adityabirlacapital.com/images/absl-logo.png'
-    },
-    {
-      'name': 'Tata Equity P/E Fund',
-      'logo': 'https://www.tatamutualfund.com/images/tata-mf-logo.png'
+      'logo': 'https://via.placeholder.com/50',
+      'name': 'Kotak Equity Fund',
+      'symbol': 'KOTAK',
+      'company': 'Kotak Mahindra',
+      'price': '1300.00',
+      'change': '-0.9%',
     },
   ];
 

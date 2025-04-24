@@ -1,7 +1,7 @@
 import 'package:classia_amc/screen/homefetures/withdraw_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
+import '../../themes/app_colors.dart';
 import '../profile/about_us_screen.dart';
 import '../profile/bank_info_screen.dart';
 import '../profile/customer_support_screen.dart';
@@ -13,19 +13,20 @@ import '../profile/manage_folio_screen.dart';
 import '../profile/privicy_policy.dart';
 import '../profile/security_setting _screen.dart';
 
+
 class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.screenBackground, // Light background (e.g., white)
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.primaryGold, // Gold for branding
         title: Text(
           "Profile",
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: AppColors.primaryText, // Dark text for contrast
           ),
         ),
         centerTitle: true,
@@ -65,11 +66,14 @@ class ProfileScreen extends StatelessWidget {
         // Profile Avatar
         CircleAvatar(
           radius: 40,
-          backgroundColor: Colors.grey,
+          backgroundColor: AppColors.border, // Light border color
           child: Text(
             userName[0], // Show first letter of user's name
             style: TextStyle(
-                fontSize: 30, fontWeight: FontWeight.bold, color: Colors.white),
+              fontSize: 30,
+              fontWeight: FontWeight.bold,
+              color: AppColors.primaryText, // Dark text for contrast
+            ),
           ),
         ),
         SizedBox(width: 16),
@@ -77,24 +81,33 @@ class ProfileScreen extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(userName,
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white)),
+            Text(
+              userName,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryText, // Dark text
+              ),
+            ),
             SizedBox(height: 4),
-            Text(userEmail,
-                style: TextStyle(fontSize: 14, color: Colors.white70)),
+            Text(
+              userEmail,
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.secondaryText, // Lighter secondary text
+              ),
+            ),
           ],
         ),
         Spacer(),
         // Edit Icon
         IconButton(
-          icon: Icon(Icons.edit, color: Colors.white),
+          icon: Icon(Icons.edit, color: AppColors.accent), // Accent color for edit
           onPressed: () {
-            // Navigate to Edit Profile Screen
-            Navigator.push(context,
-                MaterialPageRoute(builder: (context) => EditProfileScreen()));
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => EditProfileScreen()),
+            );
           },
         ),
       ],
@@ -107,16 +120,18 @@ class ProfileScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Text(
         title,
-        style:
-        TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: AppColors.headingText, // Darker heading text
+        ),
       ),
     );
   }
 
-  // List of account-related options (updated with additional items)
+  // List of account-related options
   Widget _buildAccountOptionsList(BuildContext context) {
     List<Map<String, String>> accountOptions = [
-
       {"title": "KYC", "icon": "verified_user"},
       {"title": "Manage Folio", "icon": "folio"},
       {"title": "Security Settings", "icon": "security"},
@@ -134,7 +149,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // List of preference-related options (updated with Privacy Policy)
+  // List of preference-related options
   Widget _buildPreferencesList(BuildContext context) {
     List<Map<String, String>> preferenceOptions = [
       {"title": "About Us", "icon": "info"},
@@ -184,7 +199,7 @@ class ProfileScreen extends StatelessWidget {
         iconData = Icons.help;
         break;
       case 'privacy':
-        iconData = Icons.privacy_tip; // New icon for Privacy Policy
+        iconData = Icons.privacy_tip;
         break;
       default:
         iconData = Icons.help;
@@ -195,23 +210,16 @@ class ProfileScreen extends StatelessWidget {
         _navigateToOption(context, option['title']!);
       },
       child: Container(
+        margin: EdgeInsets.symmetric(vertical: 4),
         decoration: BoxDecoration(
-          border: Border.all(
-            color: Colors.white70, // Theme color border
-            width: 1,
-          ),
+          color: AppColors.backgroundColor, // Light card background
           borderRadius: BorderRadius.circular(12),
         ),
-        margin: EdgeInsets.symmetric(vertical: 4),
-        child: Card(
-          color: Colors.black,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: ListTile(
-            leading: Icon(iconData, color: Colors.white),
-            title: Text(option['title']!,
-                style: TextStyle(fontSize: 16, color: Colors.white)),
+        child: ListTile(
+          leading: Icon(iconData, color: AppColors.primaryText), // Dark icons
+          title: Text(
+            option['title']!,
+            style: TextStyle(fontSize: 16, color: AppColors.primaryText),
           ),
         ),
       ),
@@ -224,6 +232,7 @@ class ProfileScreen extends StatelessWidget {
     switch (optionTitle) {
       case 'Manage Folio':
         destination = ManageFolioScreen();
+        break;
       case 'Investment History':
         destination = InvestmentHistoryScreen();
         break;
@@ -253,10 +262,14 @@ class ProfileScreen extends StatelessWidget {
         break;
       default:
         destination = Scaffold(
-          appBar: AppBar(title: Text(optionTitle), backgroundColor: Colors.black),
-          backgroundColor: Colors.black,
+          appBar: AppBar(
+            title: Text(optionTitle),
+            backgroundColor: AppColors.primaryGold,
+          ),
+          backgroundColor: AppColors.screenBackground,
           body: Center(
-            child: Text('Screen for $optionTitle', style: TextStyle(color: Colors.white)),
+            child: Text('Screen for $optionTitle',
+                style: TextStyle(color: AppColors.primaryText)),
           ),
         );
     }
@@ -268,12 +281,10 @@ class ProfileScreen extends StatelessWidget {
     return Center(
       child: ElevatedButton(
         onPressed: () {
-          // Handle logout action
           context.goNamed('splash');
-
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.redAccent,
+          backgroundColor: AppColors.error, // Error color for logout
           padding: EdgeInsets.symmetric(horizontal: 40, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -281,17 +292,13 @@ class ProfileScreen extends StatelessWidget {
         ),
         child: Text(
           "Logout",
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.buttonText, // Light text on button
+          ),
         ),
       ),
     );
   }
 }
-
-
-
-
-
-
-
-

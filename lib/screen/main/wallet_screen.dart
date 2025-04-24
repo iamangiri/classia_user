@@ -1,3 +1,5 @@
+import 'package:classia_amc/themes/app_colors.dart';
+import 'package:classia_amc/widget/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import '../../screenutills/trade_details_screen.dart';
 
@@ -13,20 +15,9 @@ class _WalletScreenState extends State<WalletScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: Text(
-          "Wallet",
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.filter_list, color: Colors.white),
-            onPressed: () => _showFilterOptions(context),
-          ),
-        ],
+      backgroundColor: AppColors.screenBackground,
+      appBar: CustomAppBar(
+        title: 'Wallet',
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -35,16 +26,32 @@ class _WalletScreenState extends State<WalletScreen> {
           children: [
             _buildBalanceSection(),
             SizedBox(height: 20),
-            Text(
-              "Investments & Withdrawals",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-            ),
-            SizedBox(height: 12),
-            Text(
-              "Filter: $selectedFilter",
-              style: TextStyle(color: Colors.grey[400], fontSize: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Investments & Withdrawals",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.headingText,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.filter_list, color: AppColors.accent),
+                  onPressed: () => _showFilterOptions(context),
+                ),
+              ],
             ),
             SizedBox(height: 8),
+            Text(
+              "Filter: $selectedFilter",
+              style: TextStyle(
+                color: AppColors.secondaryText,
+                fontSize: 14,
+              ),
+            ),
+            SizedBox(height: 12),
             Expanded(child: _buildInvestmentWithdrawList(context)),
           ],
         ),
@@ -55,41 +62,58 @@ class _WalletScreenState extends State<WalletScreen> {
   void _showFilterOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.grey[900],
+      backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
       ),
       builder: (context) {
         return Container(
           width: double.infinity,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text("Select Filter", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                SizedBox(height: 12),
-                Wrap(
-                  spacing: 10,
-                  children: filters.map((filter) {
-                    return ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: selectedFilter == filter ? Colors.blue : Colors.grey[800],
-                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          selectedFilter = filter;
-                        });
-                        Navigator.pop(context);
-                      },
-                      child: Text(filter, style: TextStyle(color: Colors.white)),
-                    );
-                  }).toList(),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Select Filter",
+                style: TextStyle(
+                  color: AppColors.primaryText,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
-              ],
-            ),
+              ),
+              SizedBox(height: 12),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: filters.map((filter) {
+                  return ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: selectedFilter == filter
+                          ? AppColors.accent
+                          : AppColors.border,
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        selectedFilter = filter;
+                      });
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      filter,
+                      style: TextStyle(
+                        color: selectedFilter == filter
+                            ? AppColors.buttonText
+                            : AppColors.primaryText,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
           ),
         );
       },
@@ -100,9 +124,9 @@ class _WalletScreenState extends State<WalletScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildBalanceCard("Total Invested", "₹50,000", Colors.green[400]!),
+        _buildBalanceCard("Total Invested", "₹50,000", AppColors.success),
         SizedBox(width: 12),
-        _buildBalanceCard("Total Withdrawn", "₹20,000", Colors.redAccent),
+        _buildBalanceCard("Total Withdrawn", "₹20,000", AppColors.error),
       ],
     );
   }
@@ -111,18 +135,32 @@ class _WalletScreenState extends State<WalletScreen> {
     return Expanded(
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.grey[900]!.withOpacity(0.6),
+          color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[700]!),
+
         ),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white70)),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.secondaryText,
+                ),
+              ),
               SizedBox(height: 8),
-              Text(amount, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: accentColor)),
+              Text(
+                amount,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: accentColor,
+                ),
+              ),
             ],
           ),
         ),
@@ -131,7 +169,6 @@ class _WalletScreenState extends State<WalletScreen> {
   }
 
   Widget _buildInvestmentWithdrawList(BuildContext context) {
-    // Hard-coded transactions list
     List<Map<String, String>> transactions = [
       {
         "name": "HDFC Mutual Fund",
@@ -163,11 +200,9 @@ class _WalletScreenState extends State<WalletScreen> {
       },
     ];
 
-    // Filter the transactions based on selectedFilter
     List<Map<String, String>> filteredTransactions = transactions.where((transaction) {
       if (selectedFilter == "All") return true;
 
-      // Convert the date string into a valid ISO format
       DateTime transactionDate = DateTime.parse(transaction['date']!.replaceFirst(' ', 'T'));
       DateTime now = DateTime.now();
 
@@ -206,18 +241,39 @@ class _WalletScreenState extends State<WalletScreen> {
         );
       },
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.grey[900]!.withOpacity(0.6),
+            color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[700]!),
+
           ),
           child: ListTile(
-            leading: CircleAvatar(backgroundImage: NetworkImage(transaction['logo']!)),
-            title: Text(transaction['name']!, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-            subtitle: Text(transaction['date']!, style: TextStyle(fontSize: 12, color: Colors.grey[400])),
-            trailing: Text(transaction['amount']!, style: TextStyle(fontWeight: FontWeight.bold, color: isInvestment ? Colors.green[400] : Colors.red[400])),
+            leading: CircleAvatar(
+              backgroundImage: NetworkImage(transaction['logo']!),
+              radius: 20,
+            ),
+            title: Text(
+              transaction['name']!,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryText,
+              ),
+            ),
+            subtitle: Text(
+              transaction['date']!,
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.secondaryText,
+              ),
+            ),
+            trailing: Text(
+              transaction['amount']!,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isInvestment ? AppColors.success : AppColors.error,
+              ),
+            ),
           ),
         ),
       ),

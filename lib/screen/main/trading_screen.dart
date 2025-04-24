@@ -1,5 +1,7 @@
+import 'package:classia_amc/themes/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import '../../widget/custom_app_bar.dart';
 import '../../widget/trading_card.dart';
 
 class TradingScreen extends StatefulWidget {
@@ -35,25 +37,8 @@ class _TradingScreenState extends State<TradingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Dark background for dark mode
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: Text(
-          'Live Trading',
-          style: TextStyle(
-            fontSize: 22,
-              fontWeight: FontWeight.bold, color: Colors.white
-          ),
-        ),
-        centerTitle: true,
-        shadowColor: Colors.black,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.notifications, color: Colors.white),
-            onPressed: () {},
-          ),
-        ],
-      ),
+      backgroundColor: AppColors.backgroundColor, // Dark background for dark mode
+      appBar: CustomAppBar(title: 'Jockey Trading',),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: ListView.builder(

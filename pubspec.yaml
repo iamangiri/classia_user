@@ -46,6 +46,7 @@ dependencies:
   image_picker: ^1.1.2
   file_picker: ^9.2.1
   shared_preferences: ^2.5.3
+  flutter_screenutil: ^5.9.3
 
 dev_dependencies:
   flutter_test:
@@ -83,6 +84,10 @@ flutter:
     - assets/anim/anim_2.json
     - assets/anim/trade-6.json
     - assets/images/logo.jpeg
+    - assets/anim/anim-3.json
+    - assets/anim/anim-2.json
+    - assets/anim/anim-1.json
+    - assets/anim/anim-4.json
 
 flutter_icons:
   android: true

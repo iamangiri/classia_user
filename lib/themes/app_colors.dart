@@ -38,7 +38,7 @@ AppColors._(); // Private constructor to prevent instantiation
   static const Color focusedBorder = primaryGold; // Gold for focused or highlighted borders
 
   // Accent and button colors
-  static const Color accent = Color(0xFF4169E1); // Royal blue as a complementary accent
+  static const Color accent =primaryGold ; // Royal blue as a complementary accent
   static const Color buttonBackground = primaryGold; // Gold for buttons
   static const Color buttonText = Colors.white; // White text on buttons
 

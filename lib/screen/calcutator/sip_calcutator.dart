@@ -1,5 +1,6 @@
 import 'dart:math';
-
+import 'package:classia_amc/themes/app_colors.dart';
+import 'package:classia_amc/widget/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -24,9 +25,9 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
     final totalValue = investedAmount + returns;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Investment Calculator'),
-        elevation: 0,
+      backgroundColor: AppColors.screenBackground,
+      appBar: CustomAppBar(
+        title: 'Investment Calculator',
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
@@ -50,8 +51,8 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
   Widget _buildToggleButtons() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(8),
+        color: AppColors.border,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
@@ -61,8 +62,8 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: isSIPSelected ? Colors.blue : Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
+                  color: isSIPSelected ? AppColors.accent : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
                   child: Text(
@@ -70,7 +71,9 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: isSIPSelected ? Colors.white : Colors.grey[600],
+                      color: isSIPSelected
+                          ? AppColors.buttonText
+                          : AppColors.secondaryText,
                     ),
                   ),
                 ),
@@ -83,8 +86,8 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: !isSIPSelected ? Colors.blue : Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
+                  color: !isSIPSelected ? AppColors.accent : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
                   child: Text(
@@ -92,7 +95,9 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: !isSIPSelected ? Colors.white : Colors.grey[600],
+                      color: !isSIPSelected
+                          ? AppColors.buttonText
+                          : AppColors.secondaryText,
                     ),
                   ),
                 ),
@@ -134,6 +139,7 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
       ],
     );
   }
+
   Widget _buildInputField({
     required String label,
     required double value,
@@ -149,33 +155,48 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: TextStyle(fontSize: 14)),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.secondaryText,
+              ),
+            ),
             SizedBox(
               width: 120,
               child: TextFormField(
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.end,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryText,
+                ),
                 decoration: InputDecoration(
                   prefixText: prefix,
                   suffixText: suffix,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppColors.border),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.blue, width: 2), // Blue border on focus
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppColors.accent, width: 2),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.grey.shade400, width: 1), // Default border
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppColors.border, width: 1),
                   ),
                   contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
                 ),
                 controller: TextEditingController(text: value.toStringAsFixed(0)),
-              )
-              ,
+                onChanged: (text) {
+                  final newValue = double.tryParse(text) ?? value;
+                  if (newValue >= min && newValue <= max) {
+                    onChanged(newValue);
+                  }
+                },
+              ),
             ),
           ],
         ),
@@ -185,25 +206,27 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
           max: max,
           divisions: (max - min).toInt(),
           label: value.toStringAsFixed(0),
-          onChanged: (newValue) => onChanged(newValue),
-          activeColor: Colors.blue,
-          inactiveColor: Colors.grey[200],
+          onChanged: (newValue) {
+            onChanged(newValue);
+            setState(() {});
+          },
+          activeColor: AppColors.accent,
+          inactiveColor: AppColors.border,
         ),
         SizedBox(height: 16),
       ],
     );
   }
 
-
   Widget _buildResults(double invested, double returns, double total) {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.black.withOpacity(0.05),
             spreadRadius: 2,
             blurRadius: 8,
           ),
@@ -212,9 +235,9 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
       child: Column(
         children: [
           _buildResultRow('Invested amount', invested),
-          Divider(),
+          Divider(color: AppColors.border),
           _buildResultRow('Est. returns', returns),
-          Divider(),
+          Divider(color: AppColors.border),
           _buildResultRow('Total value', total),
         ],
       ),
@@ -227,13 +250,16 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey[600])),
+          Text(
+            label,
+            style: TextStyle(color: AppColors.secondaryText),
+          ),
           Text(
             '₹${_currencyFormat.format(value)}',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.blue,
+              color: AppColors.accent,
             ),
           ),
         ],
@@ -263,13 +289,21 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
       width: double.infinity,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primaryGold,
           padding: EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
         onPressed: () {},
-        child: Text('INVEST NOW', style: TextStyle(fontSize: 16)),
+        child: Text(
+          'INVEST NOW',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.buttonText,
+          ),
+        ),
       ),
     );
   }
@@ -283,8 +317,7 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
           (1 + monthlyRate) -
           monthlyInvestment * months;
     } else {
-      return monthlyInvestment *
-          pow(1 + expectedReturn / 100, timePeriod) -
+      return monthlyInvestment * pow(1 + expectedReturn / 100, timePeriod) -
           monthlyInvestment;
     }
   }
@@ -302,11 +335,11 @@ class PieChartPainter extends CustomPainter {
     final radius = size.width / 2;
 
     final investedPaint = Paint()
-      ..color = Colors.blue[100]!
+      ..color = AppColors.border
       ..style = PaintingStyle.fill;
 
     final returnsPaint = Paint()
-      ..color = Colors.blue
+      ..color = AppColors.accent
       ..style = PaintingStyle.fill;
 
     // Draw invested arc

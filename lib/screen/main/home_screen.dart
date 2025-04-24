@@ -8,6 +8,7 @@ import 'package:classia_amc/utills/constent/home_screen_data.dart';
 import 'package:classia_amc/widget/custom_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../../screenutills/fund_deatils_screen.dart';
 import '../../themes/app_colors.dart';
 import '../../widget/custom_app_bar.dart';
 import '../homefetures/notification_screen.dart';
@@ -19,8 +20,10 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundColor,
-      appBar: CustomAppBar(title: 'Jockey Trading',),
+      backgroundColor: AppColors.screenBackground,
+      appBar: CustomAppBar(
+        title: 'Jockey Trading',
+      ),
       body: RefreshIndicator(
         onRefresh: () async => await Future.delayed(Duration(seconds: 1)),
         child: SingleChildScrollView(
@@ -43,12 +46,24 @@ class HomeScreen extends StatelessWidget {
                   items: HomeScreenData.sliderImages.map((image) {
                     return Stack(
                       children: [
-                        Positioned.fill(child: Image.network(image, fit: BoxFit.cover)),
+                        Positioned.fill(
+                          child: CachedNetworkImage(
+                            imageUrl: image,
+                            fit: BoxFit.cover,
+                            errorWidget: (context, url, error) => Container(
+                              color: AppColors.border,
+                              child: Icon(Icons.image, color: AppColors.disabled),
+                            ),
+                          ),
+                        ),
                         Positioned.fill(
                           child: Container(
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
-                                colors: [AppColors.disabled.withOpacity(0.3), Colors.transparent],
+                                colors: [
+                                  AppColors.disabled.withOpacity(0.3),
+                                  Colors.transparent
+                                ],
                                 begin: Alignment.bottomCenter,
                                 end: Alignment.topCenter,
                               ),
@@ -78,16 +93,30 @@ class HomeScreen extends StatelessWidget {
                             Container(
                               padding: EdgeInsets.all(14),
                               decoration: BoxDecoration(
-                                color: AppColors.screenBackground,
+                                color: AppColors.cardBackground,
                                 shape: BoxShape.circle,
-                                boxShadow: [BoxShadow(color: AppColors.border,  spreadRadius: 1)],
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.border.withOpacity(0.5),
+                                    spreadRadius: 1,
+                                    blurRadius: 4,
+                                  ),
+                                ],
                               ),
-                              child: FaIcon(feature['icon'], size: 28, color: AppColors.primaryGold),
+                              child: FaIcon(
+                                feature['icon'],
+                                size: 28,
+                                color: AppColors.primaryGold,
+                              ),
                             ),
                             SizedBox(height: 8),
                             Text(
                               feature['title'],
-                              style: TextStyle(color: AppColors.primaryText, fontSize: 13, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                color: AppColors.primaryText,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ],
                         ),
@@ -102,7 +131,7 @@ class HomeScreen extends StatelessWidget {
               CustomHeading(text: 'Trending Funds', lineWidth: 40),
               SizedBox(height: 12),
               Container(
-                height: 130,
+                height: 150,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: HomeScreenData.trendingFunds.length,
@@ -110,44 +139,95 @@ class HomeScreen extends StatelessWidget {
                     final fund = HomeScreenData.trendingFunds[index];
                     return Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Container(
-                        width: 160,
-                        decoration: BoxDecoration(
-                          color: AppColors.screenBackground,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        padding: EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                ClipOval(
-                                  child: CachedNetworkImage(
-                                    imageUrl: fund['logo']!,
-                                    width: 30,
-                                    height: 30,
-                                    fit: BoxFit.cover,
-                                    errorWidget: (context, url, error) => Icon(Icons.image, color: AppColors.disabled, size: 24),
-                                  ),
-                                ),
-                                SizedBox(width: 8),
-                                Text(fund['symbol']!, style: TextStyle(color: AppColors.primaryText, fontWeight: FontWeight.bold)),
-                              ],
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FundDetailsScreen(fund: fund!),
                             ),
-                            SizedBox(height: 10),
-                            Text(fund['company']!, style: TextStyle(color: AppColors.secondaryText, fontSize: 12)),
-                            Spacer(),
-                            Text('₹${fund['price']}', style: TextStyle(color: AppColors.primaryGold, fontWeight: FontWeight.bold)),
-                            Text(
-                              fund['change']!,
-                              style: TextStyle(
-                                color: fund['change']!.startsWith('+') ? AppColors.success : AppColors.error,
-                                fontSize: 12,
+                          );
+                        },
+                        child: Container(
+                          width: 170,
+                          decoration: BoxDecoration(
+                            color: AppColors.cardBackground,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                          padding: EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  ClipOval(
+                                    child: CachedNetworkImage(
+                                      imageUrl: fund['logo']!,
+                                      width: 32,
+                                      height: 32,
+                                      fit: BoxFit.cover,
+                                      errorWidget: (context, url, error) => Container(
+                                        width: 32,
+                                        height: 32,
+                                        color: AppColors.border,
+                                        child: Icon(
+                                          Icons.image,
+                                          color: AppColors.disabled,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      fund['symbol']!,
+                                      style: TextStyle(
+                                        color: AppColors.primaryText,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                fund['company']!,
+                                style: TextStyle(
+                                  color: AppColors.secondaryText,
+                                  fontSize: 12,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Spacer(),
+                              Text(
+                                '₹${fund['price']}',
+                                style: TextStyle(
+                                  color: AppColors.primaryGold,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                fund['change']!,
+                                style: TextStyle(
+                                  color: fund['change']!.startsWith('+')
+                                      ? AppColors.success
+                                      : AppColors.error,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );
@@ -162,8 +242,15 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   CustomHeading(text: 'Top Mutual Funds', lineWidth: 40),
                   TextButton(
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => MarketScreen())),
-                    child: Text('View More', style: TextStyle(color: AppColors.primaryGold, fontWeight: FontWeight.w600)),
+                    onPressed: () =>
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => MarketScreen())),
+                    child: Text(
+                      'View More',
+                      style: TextStyle(
+                        color: AppColors.primaryGold,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -175,46 +262,99 @@ class HomeScreen extends StatelessWidget {
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 1.4,
+                  childAspectRatio: 0.75, // Adjusted for taller cards
                 ),
                 itemCount: HomeScreenData.mutualFunds.length,
                 itemBuilder: (context, index) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.screenBackground,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [BoxShadow(color: AppColors.border,  spreadRadius: 1)],
-                    ),
-                    padding: EdgeInsets.all(12),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ClipOval(
-                          child: CachedNetworkImage(
-                            imageUrl: HomeScreenData.mutualFunds[index]['logo']!,
-                            width: 45,
-                            height: 45,
-                            fit: BoxFit.cover,
-                            errorWidget: (context, url, error) => Container(
-                              width: 45,
-                              height: 45,
-                              color: AppColors.border,
-                              child: Icon(Icons.image, color: AppColors.disabled, size: 30),
-                            ),
-                          ),
+                  final fund = HomeScreenData.mutualFunds[index];
+                  return InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FundDetailsScreen(fund: fund),
                         ),
-                        SizedBox(height: 10),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8),
-                          child: Text(
-                            HomeScreenData.mutualFunds[index]['name']!,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primaryText),
-                            maxLines: 2,
+                      );
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.cardBackground,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 6,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      padding: EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              ClipOval(
+                                child: CachedNetworkImage(
+                                  imageUrl: fund['logo']!,
+                                  width: 32,
+                                  height: 32,
+                                  fit: BoxFit.cover,
+                                  errorWidget: (context, url, error) => Container(
+                                    width: 32,
+                                    height: 32,
+                                    color: AppColors.border,
+                                    child: Icon(
+                                      Icons.image,
+                                      color: AppColors.disabled,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  fund['symbol']!,
+                                  style: TextStyle(
+                                    color: AppColors.primaryText,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            fund['company']!,
+                            style: TextStyle(
+                              color: AppColors.secondaryText,
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
+                          Spacer(),
+                          Text(
+                            '₹${fund['price']}',
+                            style: TextStyle(
+                              color: AppColors.primaryGold,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            fund['change']!,
+                            style: TextStyle(
+                              color: fund['change']!.startsWith('+')
+                                  ? AppColors.success
+                                  : AppColors.error,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },
@@ -247,9 +387,14 @@ class HomeScreen extends StatelessWidget {
         break;
       default:
         destination = Scaffold(
-          appBar: AppBar(title: Text(title, style: TextStyle(color: AppColors.primaryText)), backgroundColor: AppColors.primaryGold),
+          appBar: AppBar(
+            title: Text(title, style: TextStyle(color: AppColors.primaryText)),
+            backgroundColor: AppColors.primaryGold,
+          ),
           backgroundColor: AppColors.screenBackground,
-          body: Center(child: Text('Screen for $title', style: TextStyle(color: AppColors.primaryText))),
+          body: Center(
+            child: Text('Screen for $title', style: TextStyle(color: AppColors.primaryText)),
+          ),
         );
     }
     Navigator.push(context, MaterialPageRoute(builder: (context) => destination));
@@ -269,7 +414,13 @@ class HomeScreen extends StatelessWidget {
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryText),
             backgroundColor: AppColors.screenBackground.withOpacity(0.5),
           ),
-          Text('${(totalProgress * 100).toInt()}%', style: TextStyle(color: AppColors.primaryText, fontWeight: FontWeight.bold)),
+          Text(
+            '${(totalProgress * 100).toInt()}%',
+            style: TextStyle(
+              color: AppColors.primaryText,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
       onPressed: () {},
