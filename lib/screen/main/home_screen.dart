@@ -4,6 +4,7 @@ import 'package:classia_amc/screen/homefetures/investment_history_screen.dart';
 import 'package:classia_amc/screen/homefetures/market_news.dart';
 import 'package:classia_amc/screen/main/profile_screen.dart';
 import 'package:classia_amc/screen/main/wallet_screen.dart';
+import 'package:classia_amc/screen/profile/learn_screen.dart';
 import 'package:classia_amc/utills/constent/home_screen_data.dart';
 import 'package:classia_amc/widget/custom_heading.dart';
 import 'package:flutter/material.dart';
@@ -262,7 +263,7 @@ class HomeScreen extends StatelessWidget {
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 0.75, // Adjusted for taller cards
+                  childAspectRatio: 0.9, // Adjusted for taller cards
                 ),
                 itemCount: HomeScreenData.mutualFunds.length,
                 itemBuilder: (context, index) {
@@ -376,8 +377,8 @@ class HomeScreen extends StatelessWidget {
       case 'Deposit':
         destination = InvestmentHistoryScreen();
         break;
-      case 'History':
-        destination = WalletScreen();
+      case 'Learn':
+        destination = LearnScreen();
         break;
       case 'Market News':
         destination = MarketNewsScreen();

@@ -47,7 +47,7 @@ class HomeScreenData {
   static final List<Map<String, dynamic>> features = [
     {'title': 'Withdraw',     'icon': FontAwesomeIcons.wallet},
     {'title': 'Deposit',      'icon': FontAwesomeIcons.moneyBillWave},
-    {'title': 'History',      'icon': FontAwesomeIcons.listAlt},
+    {'title': 'Learn', 'icon': FontAwesomeIcons.graduationCap},
     {'title': 'Market News',  'icon': FontAwesomeIcons.newspaper},
     {'title': 'Invest',       'icon': FontAwesomeIcons.chartLine},
     {'title': 'Trending',     'icon': FontAwesomeIcons.fire},
