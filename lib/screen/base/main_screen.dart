@@ -119,16 +119,16 @@ class _MainScreenState extends State<MainScreen> {
   /// Authentication Loading Screen
   Widget _buildAuthLoadingScreen() {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.fingerprint, size: 100, color: Colors.white),
+            Icon(Icons.fingerprint, size: 100, color: AppColors.primaryText),
             SizedBox(height: 10),
             Text(
               "Authenticating...",
-              style: TextStyle(fontSize: 18, color: Colors.white70),
+              style: TextStyle(fontSize: 16, fontWeight:FontWeight.bold,color: AppColors.primaryText),
             ),
           ],
         ),

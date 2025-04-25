@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:classia_amc/themes/app_colors.dart';
 import 'package:classia_amc/widget/custom_app_bar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../profile/about_us_screen.dart';
 import '../profile/bank_info_screen.dart';
 import '../profile/customer_support_screen.dart';
@@ -306,12 +307,20 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
                 TextButton(
-                  onPressed: () => Navigator.pop(context, true),
+                  onPressed: () async {
+                    // 1. Get the prefs instance
+                    final prefs = await SharedPreferences.getInstance();
+                    // 2. Clear everything (all keys)
+                    await prefs.clear();
+                    // 3. Pop this dialog/screen (and signal “true” if needed)
+                    Navigator.pop(context, true);
+                  },
                   child: Text(
                     'Logout',
                     style: TextStyle(color: AppColors.error, fontSize: 14.sp),
                   ),
                 ),
+
               ],
             ),
           );
