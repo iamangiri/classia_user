@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import '../../utills/constent/user_constant.dart';
 
 class AuthService {
+
   static Future<Map<String, dynamic>> registerUser({
     required String name,
     required String email,
@@ -128,16 +129,49 @@ class AuthService {
     print(response.body);
     // Decode the body regardless of status code
     final jsonBody = json.decode(response.body) as Map<String, dynamic>;
-
     return {
       'statusCode': response.statusCode,
       'status':     jsonBody['status']  ?? false,
       'message':    jsonBody['message'] ?? 'Unknown error',
       'data':       jsonBody['data'],
     };
+  }
 
 
+  static Future<Map<String, dynamic>> forgotPasswordSendOtp(String mobile) async {
+    final response = await http.post(
+      Uri.parse('${AppConstant.API_URL}/auth/forgot/password/send/otp'),
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: {'mobile': mobile},
+    );
+    print(response.statusCode);
+    print(response.body);
+    return jsonDecode(response.body);
+  }
 
+  static Future<Map<String, dynamic>> forgotPasswordVerifyOtp(String mobile, String code) async {
+    final response = await http.patch(
+      Uri.parse('${AppConstant.API_URL}/auth/forgot/password/verify/otp'),
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: {'mobile': mobile, 'code': code},
+    );
+    print(response.statusCode);
+    print(response.body);
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> resetPassword(String token, String password) async {
+    final response = await http.patch(
+      Uri.parse('${AppConstant.API_URL}/auth/reset/password'),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Bearer $token',
+      },
+      body: {'password': password},
+    );
+    print(response.statusCode);
+    print(response.body);
+    return jsonDecode(response.body);
   }
 
 
