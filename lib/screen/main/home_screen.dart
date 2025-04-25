@@ -5,6 +5,7 @@ import 'package:classia_amc/screen/homefetures/market_news.dart';
 import 'package:classia_amc/screen/main/profile_heath_screen.dart';
 import 'package:classia_amc/screen/profile/learn_screen.dart';
 import 'package:classia_amc/utills/constent/home_screen_data.dart';
+import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:classia_amc/widget/custom_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -16,9 +17,25 @@ import '../homefetures/lunchpad_screen.dart';
 import '../homefetures/withdraw_screen.dart';
 import 'market_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    print(UserConstants.USER_ID);
+    print(UserConstants.TOKEN);
+    print(UserConstants.NAME);
+    print(UserConstants.EMAIL);
+    print(UserConstants.PHONE);
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
