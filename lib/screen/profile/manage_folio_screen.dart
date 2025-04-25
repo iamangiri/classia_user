@@ -1,9 +1,10 @@
-import 'package:classia_amc/widget/common_app_bar.dart';
+import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:classia_amc/themes/app_colors.dart';
-import 'package:classia_amc/widget/custom_app_bar.dart';
-import 'package:classia_amc/screenutills/create_folio_screen.dart';
+import 'package:classia_amc/widget/common_app_bar.dart';
+import 'package:classia_amc/service/apiservice/user_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ManageFolioScreen extends StatefulWidget {
   const ManageFolioScreen({Key? key}) : super(key: key);
@@ -13,9 +14,30 @@ class ManageFolioScreen extends StatefulWidget {
 }
 
 class _ManageFolioScreenState extends State<ManageFolioScreen> {
-  List<String> folioNumbers = ['FOLIO123', 'FOLIO456'];
   final TextEditingController _folioController = TextEditingController();
   bool _isLoading = false;
+  bool _isListLoading = false;
+
+  List<String> _folioNumbers = [];
+  int _page = 1;
+  int _limit = 10;
+  int _total = 0;
+  bool _hasMore = true;
+
+  late UserService _userService;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeUserService();
+    _fetchFolioList();
+  }
+
+  Future<void> _initializeUserService() async {
+    setState(() {
+      _userService = UserService(token: '${UserConstants.TOKEN}');
+    });
+  }
 
   @override
   void dispose() {
@@ -23,8 +45,8 @@ class _ManageFolioScreenState extends State<ManageFolioScreen> {
     super.dispose();
   }
 
-  void _addFolio(String folioNumber) async {
-    if (folioNumber.isEmpty) {
+  Future<void> _addFolioNumber() async {
+    if (_folioController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Please enter a valid folio number'),
@@ -34,46 +56,91 @@ class _ManageFolioScreenState extends State<ManageFolioScreen> {
       return;
     }
     setState(() => _isLoading = true);
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() {
-      _isLoading = false;
-      folioNumbers.add(folioNumber);
+    try {
+      await _userService.addFolioNumber(_folioController.text.trim());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Folio number added successfully'),
+          backgroundColor: AppColors.success,
+        ),
+      );
       _folioController.clear();
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Folio added successfully'),
-        backgroundColor: AppColors.success,
-      ),
-    );
+// Refresh list
+      setState(() {
+        _page = 1;
+        _folioNumbers.clear();
+        _hasMore = true;
+      });
+      await _fetchFolioList();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.screenBackground,
-      appBar: CommonAppBar(title: 'Manage Folios'),
-      body: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader('Your Investment Folios'),
-            SizedBox(height: 20.h),
-            Expanded(
-              child: folioNumbers.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.builder(
-                itemCount: folioNumbers.length,
-                itemBuilder: (context, index) => _buildFolioCard(folioNumbers[index]),
-              ),
-            ),
-            SizedBox(height: 20.h),
-            _buildActionButtons(),
-          ],
+  Future<void> _fetchFolioList() async {
+    if (!_hasMore || _isListLoading) return;
+    setState(() => _isListLoading = true);
+    try {
+      final response = await _userService.getFolioList(_page, _limit);
+      setState(() {
+        _folioNumbers.addAll(List<String>.from(response['folioNumbers']));
+        _total = response['pagination']['total'];
+        _hasMore = _folioNumbers.length < _total;
+        if (_hasMore) _page++;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: AppColors.error,
         ),
+      );
+    } finally {
+      setState(() => _isListLoading = false);
+    }
+  }
+
+  InputDecoration _inputDecoration(String label, String hint,
+      {IconData? prefixIcon}) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      labelStyle: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp),
+      hintStyle: TextStyle(
+          color: AppColors.secondaryText.withOpacity(0.7), fontSize: 14.sp),
+      prefixIcon: prefixIcon != null
+          ? Padding(
+              padding: EdgeInsets.only(left: 12.w, right: 8.w),
+              child:
+                  Icon(prefixIcon, color: AppColors.secondaryText, size: 20.sp),
+            )
+          : null,
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(30.r),
+        borderSide: BorderSide(color: AppColors.primaryGold, width: 2.w),
       ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(30.r),
+        borderSide: BorderSide(color: AppColors.primaryGold, width: 2.w),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(30.r),
+        borderSide: BorderSide(color: AppColors.error, width: 2.w),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(30.r),
+        borderSide: BorderSide(color: AppColors.error, width: 2.w),
+      ),
+      contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
+      errorStyle:
+          TextStyle(color: AppColors.error, fontSize: 12.sp, height: 0.5),
     );
   }
 
@@ -89,31 +156,24 @@ class _ManageFolioScreenState extends State<ManageFolioScreen> {
   }
 
   Widget _buildFolioCard(String folioNumber) {
-    return Container(
+    return Card(
+      color: AppColors.cardBackground,
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
       margin: EdgeInsets.symmetric(vertical: 8.h),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 6.r,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
       child: ListTile(
-        contentPadding: EdgeInsets.all(16.w),
-        leading: Icon(Icons.folder_shared, color: AppColors.primaryGold, size: 24.sp),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        leading: Icon(Icons.folder_shared,
+            color: AppColors.primaryGold, size: 24.sp),
         title: Text(
           folioNumber,
-          style: TextStyle(color: AppColors.primaryText, fontSize: 16.sp),
+          style: TextStyle(
+              color: AppColors.primaryText,
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w500),
         ),
-        subtitle: Text(
-          'Invested: ₹25,000 • NAV: ₹24.56',
-          style: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp),
-        ),
-        trailing: Icon(Icons.chevron_right, color: AppColors.secondaryText, size: 24.sp),
+        trailing: Icon(Icons.chevron_right,
+            color: AppColors.secondaryText, size: 24.sp),
         onTap: () => _showFolioDetails(folioNumber),
       ),
     );
@@ -124,11 +184,10 @@ class _ManageFolioScreenState extends State<ManageFolioScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(
-            'assets/images/empty_folio.png',
-            width: 120.w,
-            height: 120.h,
+          Icon(
+            Icons.folder_open,
             color: AppColors.secondaryText,
+            size: 120.sp,
           ),
           SizedBox(height: 16.h),
           Text(
@@ -137,71 +196,45 @@ class _ManageFolioScreenState extends State<ManageFolioScreen> {
           ),
           SizedBox(height: 8.h),
           Text(
-            'Start by creating a new folio',
+            'Start by adding an existing folio',
             style: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp),
           ),
           SizedBox(height: 16.h),
-          ElevatedButton.icon(
-            icon: Icon(Icons.add_circle_outline, color: AppColors.buttonText, size: 20.sp),
-            label: Text(
-              'Create New Folio',
-              style: TextStyle(
-                color: AppColors.buttonText,
-                fontSize: 16.sp,
-                fontWeight: FontWeight.bold,
+          SizedBox(
+            width: 342.w,
+            height: 56.h,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r)),
+                elevation: 2,
               ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryGold,
-              padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 24.w),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-            ),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => CreateFolioScreen()),
+              onPressed: _showAddFolioDialog,
+              child: Ink(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.primaryGold, const Color(0xFFFFA500)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Center(
+                  child: Text(
+                    'Add Existing Folio',
+                    style: TextStyle(
+                      color: AppColors.buttonText,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16.sp,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildActionButtons() {
-    return Column(
-      children: [
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            icon: Icon(Icons.add_circle_outline, color: AppColors.buttonText, size: 20.sp),
-            label: Text(
-              'Add Existing Folio',
-              style: TextStyle(
-                color: AppColors.buttonText,
-                fontSize: 16.sp,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryGold,
-              padding: EdgeInsets.symmetric(vertical: 14.h),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-              minimumSize: Size(double.infinity, 48.h),
-            ),
-            onPressed: _isLoading ? null : _showAddFolioDialog,
-          ),
-        ),
-        SizedBox(height: 12.h),
-        TextButton(
-          child: Text(
-            'Create New Folio',
-            style: TextStyle(color: AppColors.primaryGold, fontSize: 16.sp),
-          ),
-          onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => CreateFolioScreen()),
-          ),
-        ),
-      ],
     );
   }
 
@@ -210,7 +243,8 @@ class _ManageFolioScreenState extends State<ManageFolioScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
         title: Text(
           'Add Existing Folio',
           style: TextStyle(color: AppColors.primaryText, fontSize: 18.sp),
@@ -218,28 +252,8 @@ class _ManageFolioScreenState extends State<ManageFolioScreen> {
         content: TextField(
           controller: _folioController,
           style: TextStyle(color: AppColors.primaryText, fontSize: 16.sp),
-          decoration: InputDecoration(
-            hintText: 'Enter Folio Number',
-            hintStyle: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp),
-            filled: true,
-            fillColor: AppColors.cardBackground,
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.primaryGold),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.error),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.error),
-            ),
-          ),
+          decoration: _inputDecoration('Folio Number', 'Enter folio number',
+              prefixIcon: Icons.numbers),
         ),
         actions: [
           TextButton(
@@ -257,10 +271,9 @@ class _ManageFolioScreenState extends State<ManageFolioScreen> {
             onPressed: _isLoading
                 ? null
                 : () {
-              final folioNumber = _folioController.text.trim();
-              _addFolio(folioNumber);
-              Navigator.pop(context);
-            },
+                    _addFolioNumber();
+                    Navigator.pop(context);
+                  },
           ),
         ],
       ),
@@ -289,23 +302,22 @@ class _ManageFolioScreenState extends State<ManageFolioScreen> {
               ),
             ),
             ListTile(
-              leading: Icon(Icons.info, color: AppColors.primaryGold, size: 24.sp),
+              leading:
+                  Icon(Icons.info, color: AppColors.primaryGold, size: 24.sp),
               title: Text(
                 'Folio Details',
                 style: TextStyle(color: AppColors.primaryText, fontSize: 18.sp),
               ),
             ),
             _buildDetailItem('Folio Number', folioNumber),
-            _buildDetailItem('Investment Date', '12 Aug 2023'),
-            _buildDetailItem('Current Value', '₹26,450'),
-            _buildDetailItem('Total Units', '1,076.45'),
             SizedBox(height: 20.h),
             SizedBox(
               width: double.infinity,
               child: TextButton(
                 child: Text(
                   'Close',
-                  style: TextStyle(color: AppColors.primaryGold, fontSize: 16.sp),
+                  style:
+                      TextStyle(color: AppColors.primaryGold, fontSize: 16.sp),
                 ),
                 onPressed: () => Navigator.pop(context),
               ),
@@ -329,6 +341,62 @@ class _ManageFolioScreenState extends State<ManageFolioScreen> {
           Text(
             value,
             style: TextStyle(color: AppColors.primaryText, fontSize: 14.sp),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.screenBackground,
+      appBar: CommonAppBar(title: 'Manage Folios'),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.all(16.w),
+            child: _buildSectionHeader('Your Investment Folios'),
+          ),
+          Expanded(
+            child: _folioNumbers.isEmpty && !_isListLoading
+                ? _buildEmptyState()
+                : ListView.builder(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    itemCount: _folioNumbers.length + (_hasMore ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == _folioNumbers.length) {
+                        return Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16.h),
+                          child: _isListLoading
+                              ? Center(
+                                  child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        AppColors.primaryGold),
+                                  ),
+                                )
+                              : ElevatedButton(
+                                  onPressed: _fetchFolioList,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primaryGold,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12.r)),
+                                  ),
+                                  child: Text(
+                                    'Load More',
+                                    style: TextStyle(
+                                      color: AppColors.buttonText,
+                                      fontSize: 14.sp,
+                                    ),
+                                  ),
+                                ),
+                        );
+                      }
+                      return _buildFolioCard(_folioNumbers[index]);
+                    },
+                  ),
           ),
         ],
       ),

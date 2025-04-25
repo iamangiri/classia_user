@@ -96,5 +96,45 @@ class UserService {
       throw Exception(data['message'] ?? 'Failed to add bank account');
     }
   }
+
+
+
+  // Add Folio Number
+  Future<void> addFolioNumber(String folioNumber) async {
+    final response = await http.post(
+      Uri.parse('${AppConstant.API_URL}/user/add/folio/number'),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Bearer $token',
+      },
+      body: {'folioNumber': folioNumber},
+    );
+    print(response.statusCode);
+    print(response.body);
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 && data['status'] == true) {
+      return;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to add folio number');
+    }
+  }
+
+  // Get Folio List
+  Future<Map<String, dynamic>> getFolioList(int page, int limit) async {
+    final response = await http.post(
+      Uri.parse('${AppConstant.API_URL}/user/folio/list'),
+      headers: _getHeaders(),
+      body: jsonEncode({'page': page, 'limit': limit}),
+    );
+   print(response.statusCode);
+   print(response.body);
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 && data['status'] == true) {
+      return data['data'];
+    } else {
+      throw Exception(data['message'] ?? 'Failed to fetch folio numbers');
+    }
+  }
+
 }
 

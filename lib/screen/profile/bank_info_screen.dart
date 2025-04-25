@@ -2,7 +2,6 @@ import 'package:classia_amc/widget/common_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:classia_amc/themes/app_colors.dart';
-import 'package:classia_amc/widget/custom_app_bar.dart';
 import 'add_bank_screen.dart';
 
 class BankInfoScreen extends StatefulWidget {
