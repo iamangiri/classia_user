@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:classia_amc/themes/app_colors.dart';
 import 'package:classia_amc/widget/common_app_bar.dart';
 import 'package:classia_amc/service/apiservice/user_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:classia_amc/screenutills/create_folio_screen.dart';
 
 class ManageFolioScreen extends StatefulWidget {
   const ManageFolioScreen({Key? key}) : super(key: key);
@@ -238,6 +238,88 @@ class _ManageFolioScreenState extends State<ManageFolioScreen> {
     );
   }
 
+  Widget _buildActionButtons() {
+    return Padding(
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        children: [
+          SizedBox(
+            width: double.infinity,
+            height: 56.h,
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : _showAddFolioDialog,
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                elevation: 2,
+              ),
+              child: Ink(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.primaryGold, const Color(0xFFFFA500)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.add_circle_outline,
+                        color: AppColors.buttonText,
+                        size: 20.sp,
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        'Add Existing Folio',
+                        style: TextStyle(
+                          color: AppColors.buttonText,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 12.h),
+          TextButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => CreateFolioScreen()),
+            ),
+            child: Text(
+              'Create New Folio',
+              style: TextStyle(
+                color: AppColors.primaryGold,
+                fontSize: 16.sp,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   void _showAddFolioDialog() {
     showDialog(
       context: context,
@@ -398,6 +480,7 @@ class _ManageFolioScreenState extends State<ManageFolioScreen> {
                     },
                   ),
           ),
+          _buildActionButtons(),
         ],
       ),
     );

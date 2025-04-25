@@ -121,10 +121,9 @@ class UserService {
 
   // Get Folio List
   Future<Map<String, dynamic>> getFolioList(int page, int limit) async {
-    final response = await http.post(
-      Uri.parse('${AppConstant.API_URL}/user/folio/list'),
+    final response = await http.get(
+      Uri.parse('${AppConstant.API_URL}/user/folio/list?page=$page&limit=$limit'),
       headers: _getHeaders(),
-      body: jsonEncode({'page': page, 'limit': limit}),
     );
    print(response.statusCode);
    print(response.body);
