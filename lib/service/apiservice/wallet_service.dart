@@ -31,4 +31,45 @@ class WalletService {
       throw Exception(data['message'] ?? 'Failed to fetch transactions');
     }
   }
+
+  Future<void> deposit(int amount) async {
+    final response = await http.post(
+      Uri.parse('${AppConstant.API_URL}/user/deposit/amount'),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Bearer $token',
+      },
+      body: {
+        'amount': amount.toString(),
+      },
+    );
+
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 && data['status'] == true) {
+      return;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to deposit');
+    }
+  }
+
+  Future<void> withdraw(int amount) async {
+    final response = await http.post(
+      Uri.parse('${AppConstant.API_URL}/user/withdraw/amount'),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Bearer $token',
+      },
+      body: {
+        'amount': amount.toString(),
+      },
+    );
+
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 && data['status'] == true) {
+      return;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to withdraw');
+    }
+  }
+
 }

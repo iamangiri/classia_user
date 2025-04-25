@@ -1,14 +1,18 @@
+import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:classia_amc/themes/app_colors.dart';
-import 'package:classia_amc/widget/custom_app_bar.dart';
 import 'package:classia_amc/screenutills/create_folio_screen.dart';
+import 'package:classia_amc/service/apiservice/wallet_service.dart';
+import 'package:classia_amc/service/apiservice/user_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TradingDetailsScreen extends StatefulWidget {
   final String logo;
   final String name;
 
-  const TradingDetailsScreen({Key? key, required this.logo, required this.name}) : super(key: key);
+  const TradingDetailsScreen({Key? key, required this.logo, required this.name})
+      : super(key: key);
 
   @override
   _TradingDetailsScreenState createState() => _TradingDetailsScreenState();
@@ -17,15 +21,19 @@ class TradingDetailsScreen extends StatefulWidget {
 class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
   String _selectedAction = 'Invest';
   final TextEditingController _folioController = TextEditingController();
+  final TextEditingController _amountController =
+      TextEditingController(); // New controller for amount
   bool _hasFolio = true;
   bool _isLoading = false;
   final _formKey = GlobalKey<FormState>();
-  bool _isFavorite = false; // State for favorite button
+  bool _isFavorite = false;
+  List<String> _folioNumbers = [];
+  bool _isFolioLoading = true;
 
-  // Placeholder for valid folio numbers
-  static const validFolioNumbers = ['FOLIO123', 'FOLIO456'];
+  late WalletService _walletService;
+  late UserService _userService;
 
-  // Hardcoded stock performance data (replace with API data)
+// Hardcoded stock performance data (unchanged)
   final List<Map<String, dynamic>> performances = [
     {
       "stockId": 1,
@@ -44,8 +52,53 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _initializeServices();
+    _fetchFolioNumbers();
+  }
+
+  Future<void> _initializeServices() async {
+    setState(() {
+      _walletService = WalletService(token: '${UserConstants.TOKEN}');
+      _userService = UserService(token: '${UserConstants.TOKEN}');
+    });
+  }
+
+  Future<void> _fetchFolioNumbers() async {
+    setState(() => _isFolioLoading = true);
+    try {
+      // response is { "folioNumbers": List<String>, "pagination": ... }
+      final data = await _userService.getFolioList(1, 10);
+
+      // Since folioNumbers is List<String>, decode accordingly:
+      final List<String> folios =
+      List<String>.from(data['folioNumbers'] as List<dynamic>);
+
+      setState(() {
+        _folioNumbers = folios;
+        _hasFolio = _folioNumbers.isNotEmpty;
+        _isFolioLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _hasFolio = false;
+        _isFolioLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+
+  @override
   void dispose() {
     _folioController.dispose();
+    _amountController.dispose();
     super.dispose();
   }
 
@@ -72,7 +125,6 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
             ),
           ),
         ),
-
         title: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -104,7 +156,6 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
               size: 24.sp,
             ),
             onPressed: () {
-              // Placeholder: Implement share functionality
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('Share feature coming soon!'),
@@ -125,7 +176,9 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
               });
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(_isFavorite ? 'Added to favorites' : 'Removed from favorites'),
+                  content: Text(_isFavorite
+                      ? 'Added to favorites'
+                      : 'Removed from favorites'),
                   backgroundColor: AppColors.success,
                 ),
               );
@@ -143,8 +196,6 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
             _buildFundDetailsSection(),
             SizedBox(height: 24.h),
             _buildStockPerformanceSection(),
-            SizedBox(height: 24.h),
-            _buildPerformanceChart(),
             SizedBox(height: 24.h),
             _buildRecentTransactions(),
             SizedBox(height: 24.h),
@@ -439,44 +490,7 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
     );
   }
 
-  Widget _buildPerformanceChart() {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 6.r,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildInfoSectionHeader('Performance (1 Year)'),
-          SizedBox(height: 12.h),
-          Container(
-            height: 150.h,
-            color: AppColors.border.withOpacity(0.2),
-            child: Center(
-              child: Text(
-                'Performance Chart Placeholder',
-                style: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp),
-              ),
-            ),
-          ),
-          SizedBox(height: 12.h),
-          Text(
-            'Note: Past performance is not indicative of future results.',
-            style: TextStyle(color: AppColors.secondaryText, fontSize: 12.sp),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildRecentTransactions() {
     return Container(
@@ -497,14 +511,17 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
         children: [
           _buildInfoSectionHeader('Recent Transactions'),
           SizedBox(height: 12.h),
-          _buildTransactionItem('Invest', '₹10,000', '2025-04-20', AppColors.success),
-          _buildTransactionItem('Withdraw', '₹5,000', '2025-04-15', AppColors.error),
+          _buildTransactionItem(
+              'Invest', '₹10,000', '2025-04-20', AppColors.success),
+          _buildTransactionItem(
+              'Withdraw', '₹5,000', '2025-04-15', AppColors.error),
         ],
       ),
     );
   }
 
-  Widget _buildTransactionItem(String type, String amount, String date, Color color) {
+  Widget _buildTransactionItem(
+      String type, String amount, String date, Color color) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8.h),
       child: Row(
@@ -533,7 +550,8 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
               ),
               Text(
                 date,
-                style: TextStyle(color: AppColors.secondaryText, fontSize: 12.sp),
+                style:
+                    TextStyle(color: AppColors.secondaryText, fontSize: 12.sp),
               ),
             ],
           ),
@@ -582,42 +600,110 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (_hasFolio)
-            TextFormField(
-              controller: _folioController,
-              style: TextStyle(color: AppColors.primaryText, fontSize: 16.sp),
-              decoration: InputDecoration(
-                labelText: 'Folio Number',
-                hintText: 'Enter folio number (e.g., FOLIO123)',
-                labelStyle: TextStyle(color: AppColors.primaryText, fontSize: 14.sp),
-                hintStyle: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp),
-                filled: true,
-                fillColor: AppColors.cardBackground,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: AppColors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: AppColors.primaryGold),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: AppColors.error),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: AppColors.error),
-                ),
-                suffixIcon: Icon(Icons.search, color: AppColors.secondaryText, size: 20.sp),
+// Amount input field
+          TextFormField(
+            controller: _amountController,
+            style: TextStyle(color: AppColors.primaryText, fontSize: 16.sp),
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: 'Amount',
+              hintText: 'Enter amount (e.g., 1000)',
+              labelStyle:
+                  TextStyle(color: AppColors.primaryText, fontSize: 14.sp),
+              hintStyle:
+                  TextStyle(color: AppColors.secondaryText, fontSize: 14.sp),
+              filled: true,
+              fillColor: AppColors.cardBackground,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide(color: AppColors.border),
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) return 'Please enter a folio number';
-                if (!RegExp(r'^FOLIO\d{3,}$').hasMatch(value)) return 'Invalid folio number';
-                if (!validFolioNumbers.contains(value)) return 'Folio not found';
-                return null;
-              },
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide(color: AppColors.primaryGold),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide(color: AppColors.error),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide(color: AppColors.error),
+              ),
+              suffixIcon: Icon(Icons.currency_rupee,
+                  color: AppColors.secondaryText, size: 20.sp),
             ),
+            validator: (value) {
+              if (value == null || value.isEmpty)
+                return 'Please enter an amount';
+              final amount = int.tryParse(value);
+              if (amount == null || amount <= 0)
+                return 'Please enter a valid amount';
+              return null;
+            },
+          ),
+          SizedBox(height: 16.h),
+// Folio input or dropdown
+          if (_hasFolio)
+            _isFolioLoading
+                ? Center(
+                    child: CircularProgressIndicator(
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(AppColors.primaryGold),
+                    ),
+                  )
+                : DropdownButtonFormField<String>(
+                    value: _folioController.text.isEmpty
+                        ? null
+                        : _folioController.text,
+                    style: TextStyle(
+                        color: AppColors.primaryText, fontSize: 16.sp),
+                    decoration: InputDecoration(
+                      labelText: 'Folio Number',
+                      hintText: 'Select folio number',
+                      labelStyle: TextStyle(
+                          color: AppColors.primaryText, fontSize: 14.sp),
+                      hintStyle: TextStyle(
+                          color: AppColors.secondaryText, fontSize: 14.sp),
+                      filled: true,
+                      fillColor: AppColors.cardBackground,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide(color: AppColors.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide(color: AppColors.primaryGold),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide(color: AppColors.error),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide(color: AppColors.error),
+                      ),
+                    ),
+                    items: _folioNumbers.map((folio) {
+                      return DropdownMenuItem(
+                        value: folio,
+                        child: Text(folio,
+                            style: TextStyle(
+                                color: AppColors.primaryText, fontSize: 16.sp)),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      _folioController.text = value ?? '';
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty)
+                        return 'Please select a folio number';
+                      return null;
+                    },
+                    dropdownColor: AppColors.cardBackground,
+                    icon: Icon(Icons.arrow_drop_down,
+                        color: AppColors.secondaryText, size: 20.sp),
+                  ),
           if (!_hasFolio) ...[
             Text(
               'No folio number available',
@@ -652,29 +738,33 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
         onPressed: _isLoading
             ? null
             : () {
-          if (_hasFolio && !_formKey.currentState!.validate()) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Please enter a valid folio number'),
-                backgroundColor: AppColors.error,
-              ),
-            );
-            return;
-          }
-          _handleAction();
-        },
+                if (_hasFolio && !_formKey.currentState!.validate()) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                          'Please enter a valid amount and select a folio number'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                  return;
+                }
+                _handleAction();
+              },
         style: ElevatedButton.styleFrom(
-          backgroundColor: _selectedAction == 'Invest' ? AppColors.primaryGold : AppColors.error,
+          backgroundColor: _selectedAction == 'Invest'
+              ? AppColors.primaryGold
+              : AppColors.error,
           padding: EdgeInsets.symmetric(vertical: 14.h),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
           minimumSize: Size(double.infinity, 48.h),
         ),
         child: Text(
           _isLoading
               ? 'Processing...'
               : _hasFolio
-              ? _selectedAction
-              : 'Create Folio',
+                  ? _selectedAction
+                  : 'Create Folio',
           style: TextStyle(
             color: AppColors.buttonText,
             fontSize: 16.sp,
@@ -695,6 +785,7 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
         setState(() {
           _hasFolio = true;
           _folioController.text = newFolio;
+          _folioNumbers.add(newFolio);
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -710,13 +801,14 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
         title: Text(
           'Confirm $_selectedAction',
           style: TextStyle(color: AppColors.primaryText, fontSize: 18.sp),
         ),
         content: Text(
-          'You are about to $_selectedAction in ${widget.name} using folio ${_folioController.text}',
+          'You are about to $_selectedAction ₹${_amountController.text} in ${widget.name} using folio ${_folioController.text}',
           style: TextStyle(color: AppColors.secondaryText, fontSize: 16.sp),
         ),
         actions: [
@@ -740,24 +832,40 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
 
     if (confirmed ?? false) {
       setState(() => _isLoading = true);
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.check_circle, color: AppColors.buttonText, size: 20.sp),
-              SizedBox(width: 12.w),
-              Text(
-                '$_selectedAction Successful!',
-                style: TextStyle(color: AppColors.buttonText, fontSize: 14.sp),
-              ),
-            ],
+      try {
+        final amount = int.parse(_amountController.text);
+        if (_selectedAction == 'Invest') {
+          await _walletService.deposit(amount);
+        } else {
+          await _walletService.withdraw(amount);
+        }
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle,
+                    color: AppColors.buttonText, size: 20.sp),
+                SizedBox(width: 12.w),
+                Text(
+                  '$_selectedAction Successful!',
+                  style:
+                      TextStyle(color: AppColors.buttonText, fontSize: 14.sp),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.success,
           ),
-          backgroundColor: AppColors.success,
-        ),
-      );
+        );
+      } catch (e) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 }
