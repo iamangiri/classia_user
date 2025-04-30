@@ -25,10 +25,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     print(UserConstants.USER_ID);
     print(UserConstants.TOKEN);
@@ -36,13 +34,13 @@ class _HomeScreenState extends State<HomeScreen> {
     print(UserConstants.EMAIL);
     print(UserConstants.PHONE);
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.screenBackground,
       appBar: CustomAppBar(
-        title:
-          'Jockey Trading',
+        title: 'Jockey Trading',
       ),
       body: RefreshIndicator(
         onRefresh: () async => await Future.delayed(const Duration(seconds: 1)),
@@ -52,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Carousel Slider
+// Carousel Slider
               ClipRRect(
                 borderRadius: BorderRadius.circular(15.r),
                 child: CarouselSlider(
@@ -77,7 +75,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               fit: BoxFit.cover,
                               errorWidget: (context, url, error) => Container(
                                 color: AppColors.border,
-                                child: Icon(Icons.image, color: AppColors.disabled),
+                                child: Icon(Icons.image,
+                                    color: AppColors.disabled),
                               ),
                             ),
                           ),
@@ -104,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
               SizedBox(height: 24.h),
 
-              // Features Section
+// Features Section
               CustomHeading(text: 'Features', lineWidth: 40.w),
               SizedBox(height: 12.h),
               SingleChildScrollView(
@@ -114,7 +113,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     return Padding(
                       padding: EdgeInsets.symmetric(horizontal: 10.w),
                       child: InkWell(
-                        onTap: () => _navigateToFeature(feature['title']!, context),
+                        onTap: () =>
+                            _navigateToFeature(feature['title']!, context),
                         child: Column(
                           children: [
                             Container(
@@ -154,7 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               SizedBox(height: 24.h),
 
-              // Trending Funds Section
+// Trending Funds Section
               CustomHeading(text: 'Trending Funds', lineWidth: 40.w),
               SizedBox(height: 12.h),
               SizedBox(
@@ -164,6 +164,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   itemCount: HomeScreenData.trendingFunds.length,
                   itemBuilder: (context, index) {
                     final fund = HomeScreenData.trendingFunds[index];
+// Check if fund has all required fields
+                    if (!_isValidFund(fund)) {
+                      return const SizedBox.shrink(); // Skip invalid funds
+                    }
                     return Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8.w),
                       child: InkWell(
@@ -171,7 +175,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => FundDetailsScreen(fund: fund),
+                              builder: (context) =>
+                                  FundDetailsScreen(fund: fund),
                             ),
                           );
                         },
@@ -196,11 +201,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                 children: [
                                   ClipOval(
                                     child: CachedNetworkImage(
-                                      imageUrl: fund['logo']!,
+                                      imageUrl: fund['logo'] ??
+                                          'https://via.placeholder.com/32',
                                       width: 32.w,
                                       height: 32.h,
                                       fit: BoxFit.cover,
-                                      errorWidget: (context, url, error) => Container(
+                                      errorWidget: (context, url, error) =>
+                                          Container(
                                         width: 32.w,
                                         height: 32.h,
                                         color: AppColors.border,
@@ -215,7 +222,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   SizedBox(width: 8.w),
                                   Expanded(
                                     child: Text(
-                                      fund['symbol']!,
+                                      fund['symbol'] ?? 'Unknown',
                                       style: TextStyle(
                                         color: AppColors.primaryText,
                                         fontSize: 14.sp,
@@ -227,7 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               SizedBox(height: 8.h),
                               Text(
-                                fund['company']!,
+                                fund['company'] ?? 'Unknown Company',
                                 style: TextStyle(
                                   color: AppColors.secondaryText,
                                   fontSize: 12.sp,
@@ -237,7 +244,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               const Spacer(),
                               Text(
-                                '₹${fund['price']}',
+                                '₹${fund['price'] ?? '0.00'}',
                                 style: TextStyle(
                                   color: AppColors.primaryGold,
                                   fontSize: 14.sp,
@@ -245,9 +252,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               Text(
-                                fund['change']!,
+                                fund['change'] ?? '0.00%',
                                 style: TextStyle(
-                                  color: fund['change']!.startsWith('+')
+                                  color: (fund['change'] ?? '0.00%')
+                                          .startsWith('+')
                                       ? AppColors.success
                                       : AppColors.error,
                                   fontSize: 12.sp,
@@ -263,7 +271,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               SizedBox(height: 24.h),
 
-              // Top Mutual Funds Section
+// Top Mutual Funds Section
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -271,7 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   TextButton(
                     onPressed: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) =>  MarketScreen()),
+                      MaterialPageRoute(builder: (context) => MarketScreen()),
                     ),
                     child: Text(
                       'View More',
@@ -330,7 +338,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   width: 32.w,
                                   height: 32.h,
                                   fit: BoxFit.cover,
-                                  errorWidget: (context, url, error) => Container(
+                                  errorWidget: (context, url, error) =>
+                                      Container(
                                     width: 32.w,
                                     height: 32.h,
                                     color: AppColors.border,
@@ -397,20 +406,34 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  bool _isValidFund(Map<String, String?> fund) {
+// Check if all required fields are present and non-null
+    return fund['logo'] != null &&
+        fund['logo']!.isNotEmpty &&
+        fund['symbol'] != null &&
+        fund['symbol']!.isNotEmpty &&
+        fund['company'] != null &&
+        fund['company']!.isNotEmpty &&
+        fund['price'] != null &&
+        fund['price']!.isNotEmpty &&
+        fund['change'] != null &&
+        fund['change']!.isNotEmpty;
+  }
+
   void _navigateToFeature(String title, BuildContext context) {
     Widget destination;
     switch (title) {
       case 'Withdraw':
-        destination =  WithdrawScreen();
+        destination = const WithdrawScreen();
         break;
       case 'Deposit':
-        destination =  InvestmentHistoryScreen();
+        destination = const InvestmentHistoryScreen();
         break;
       case 'Learn':
-        destination =  LearnScreen();
+        destination = LearnScreen();
         break;
       case 'Market News':
-        destination =  MarketNewsScreen();
+        destination = MarketNewsScreen();
         break;
       case 'Launchpad':
         destination = LaunchpadScreen();
@@ -432,7 +455,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
     }
-    Navigator.push(context, MaterialPageRoute(builder: (context) => destination));
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => destination));
   }
 
   Widget _buildProgressFab(BuildContext context) {
@@ -462,7 +486,7 @@ class _HomeScreenState extends State<HomeScreen> {
       onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ProfileHealthScreen()),
+          MaterialPageRoute(builder: (context) => const ProfileHealthScreen()),
         );
       },
     );

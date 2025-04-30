@@ -5,6 +5,8 @@ import 'package:classia_amc/widget/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../widget/common_app_bar.dart';
+
 class FundDetailsScreen extends StatelessWidget {
   final Map<String, String> fund;
 
@@ -14,7 +16,7 @@ class FundDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.screenBackground,
-      appBar: CustomAppBar(
+      appBar: CommonAppBar(
         title: fund['name']!,
 
       ),

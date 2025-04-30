@@ -18,21 +18,33 @@ class _TradingScreenState extends State<TradingScreen> {
       "value": 10.0, // Positive value
     },
     {
-      "name": "Beta Investments",
-      "logo": "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/e8109726-9708-48ac-b7ae-68e564aa6843/df2ymaz-1ef34afe-863b-4ed4-bf64-e64a882cffad.png",
-      "value": -4.2, // Negative value
-    },
-    {
       "name": "Gamma Capital",
       "logo": "https://www.shutterstock.com/image-vector/modern-letter-b-overlapping-line-vector-2184610411",
       "value": 8.3,
+    },
+    {
+      "name": "Epsilon Ventures",
+      "logo": "https://example.com/logos/epsilon.png",
+      "value": 5.6,  // Positive value
+    },
+    {
+      "name": "Zeta Holdings",
+      "logo": "https://example.com/logos/zeta.png",
+      "value": -2.3, // Negative value
+    },
+    {
+      "name": "Beta Investments",
+      "logo": "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/e8109726-9708-48ac-b7ae-68e564aa6843/df2ymaz-1ef34afe-863b-4ed4-bf64-e64a882cffad.png",
+      "value": -4.2, // Negative value
     },
     {
       "name": "Delta Funds",
       "logo": "https://www.shutterstock.com/image-vector/modern-letter-b-overlapping-line-vector-2184610411",
       "value": -7.1,
     },
+
   ];
+
 
   @override
   Widget build(BuildContext context) {

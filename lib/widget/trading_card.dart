@@ -250,7 +250,7 @@ class _TradingCardState extends State<TradingCard>
   }
 
   void _updateAnimation() {
-    double normalizedValue = widget.value >= 0 ? (widget.value / 100) : 0;
+    double normalizedValue = widget.value >= 0 ? (widget.value / 10) : 0;
     _animation = Tween<double>(
       begin: 0,
       end: normalizedValue.clamp(0.0, 1.0),

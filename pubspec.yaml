@@ -48,6 +48,7 @@ dependencies:
   shared_preferences: ^2.5.3
   flutter_screenutil: ^5.9.3
   image_cropper: ^9.1.0
+  convex_bottom_bar: ^3.2.0
 
 dev_dependencies:
   flutter_test:
@@ -89,6 +90,8 @@ flutter:
     - assets/anim/anim-2.json
     - assets/anim/anim-1.json
     - assets/anim/anim-4.json
+    - assets/images/jt.png
+    - assets/images/jt.gif
 
 flutter_icons:
   android: true
