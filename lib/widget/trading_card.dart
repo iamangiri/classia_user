@@ -38,7 +38,7 @@
 //   }
 //
 //   void _updateAnimation() {
-//     double normalizedValue = widget.value >= 0 ? (widget.value / 100) : 0;
+//     double normalizedValue = widget.value >= 0 ? (widget.value / 10) : 0;
 //     _animation = Tween<double>(
 //       begin: 0,
 //       end: normalizedValue.clamp(0.0, 1.0),
@@ -49,7 +49,7 @@
 //   @override
 //   Widget build(BuildContext context) {
 //     bool isPositive = widget.value >= 0;
-//     Color textColor = isPositive ? Colors.tealAccent : Colors.redAccent;
+//     Color textColor = isPositive ? Colors.teal[700]! : Colors.red[700]!;
 //     double cardWidth = MediaQuery.of(context).size.width * 0.7;
 //
 //     return InkWell(
@@ -67,11 +67,11 @@
 //       child: Container(
 //         margin: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
 //         decoration: BoxDecoration(
-//           color: Colors.grey[900],
+//           color: Colors.white,
 //           borderRadius: BorderRadius.circular(16),
 //           boxShadow: [
 //             BoxShadow(
-//               color: Colors.black.withOpacity(0.4),
+//               color: Colors.grey.withOpacity(0.2),
 //               blurRadius: 10,
 //               spreadRadius: 2,
 //               offset: Offset(0, 4),
@@ -94,7 +94,7 @@
 //                         height: 44,
 //                         decoration: BoxDecoration(
 //                           shape: BoxShape.circle,
-//                           color: Colors.grey[800],
+//                           color: Colors.grey[200],
 //                         ),
 //                         child: widget.logo.isNotEmpty
 //                             ? ClipOval(
@@ -105,16 +105,19 @@
 //                               return progress == null
 //                                   ? child
 //                                   : CircularProgressIndicator(
-//                                 color: Colors.tealAccent,
+//                                 color: Color(0xFFDAA520),
 //                               );
 //                             },
 //                             errorBuilder: (_, __, ___) => Icon(
 //                               Icons.account_balance,
-//                               color: Colors.grey[600],
+//                               color: Colors.grey[400],
 //                             ),
 //                           ),
 //                         )
-//                             : Icon(Icons.account_balance, color: Colors.grey[600]),
+//                             : Icon(
+//                           Icons.account_balance,
+//                           color: Colors.grey[400],
+//                         ),
 //                       ),
 //                       SizedBox(width: 12),
 //                       Text(
@@ -122,7 +125,7 @@
 //                         style: TextStyle(
 //                           fontSize: 16,
 //                           fontWeight: FontWeight.w600,
-//                           color: Colors.white,
+//                           color: Colors.black87,
 //                         ),
 //                       ),
 //                     ],
@@ -142,7 +145,7 @@
 //                         isPositive ? "Growth" : "Decline",
 //                         style: TextStyle(
 //                           fontSize: 12,
-//                           color: Colors.grey[500],
+//                           color: Colors.black54,
 //                         ),
 //                       ),
 //                     ],
@@ -159,7 +162,7 @@
 //                     height: 8,
 //                     decoration: BoxDecoration(
 //                       borderRadius: BorderRadius.circular(4),
-//                       color: Colors.grey[800],
+//                       color: Colors.grey[300],
 //                     ),
 //                   ),
 //                   AnimatedBuilder(
@@ -172,8 +175,8 @@
 //                           borderRadius: BorderRadius.circular(4),
 //                           gradient: LinearGradient(
 //                             colors: isPositive
-//                                 ? [Colors.tealAccent, Colors.teal[400]!]
-//                                 : [Colors.redAccent, Colors.red[400]!],
+//                                 ? [Color(0xFFDAA520), Colors.amber[700]!]
+//                                 : [Colors.red[400]!, Colors.red[700]!],
 //                           ),
 //                         ),
 //                       );
@@ -192,13 +195,12 @@
 //                           width: 100,
 //                           child: Transform.flip(
 //                             flipX: true,
-//                             child: Lottie.asset("assets/anim/trade-6.json"),
+//                             child: Lottie.asset("assets/anim/anim-4.json"),
 //                           ),
 //                         ),
 //                       );
 //                     },
 //                   ),
-//
 //                 ],
 //               ),
 //             ],
@@ -208,11 +210,9 @@
 //     );
 //   }
 // }
-//
-//
+
 
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 import '../screenutills/trade_details_screen.dart';
 
 class TradingCard extends StatefulWidget {
@@ -236,7 +236,7 @@ class _TradingCardState extends State<TradingCard>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: Duration(seconds: 3),
+      duration: Duration(seconds: 5),
     );
     _updateAnimation();
   }
@@ -256,6 +256,12 @@ class _TradingCardState extends State<TradingCard>
       end: normalizedValue.clamp(0.0, 1.0),
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
     _controller.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -365,10 +371,11 @@ class _TradingCardState extends State<TradingCard>
                 ],
               ),
               SizedBox(height: 20),
-              // Progress Section
+              // Progress & Horse GIF Section
               Stack(
                 clipBehavior: Clip.none,
                 children: [
+                  // Background Bar
                   Container(
                     width: cardWidth,
                     height: 8,
@@ -377,6 +384,7 @@ class _TradingCardState extends State<TradingCard>
                       color: Colors.grey[300],
                     ),
                   ),
+                  // Animated Progress Fill
                   AnimatedBuilder(
                     animation: _animation,
                     builder: (context, child) {
@@ -394,20 +402,21 @@ class _TradingCardState extends State<TradingCard>
                       );
                     },
                   ),
+                  // Horse Rider GIF
                   AnimatedBuilder(
                     animation: _animation,
                     builder: (context, child) {
                       double horsePosition =
-                      isPositive ? _animation.value * cardWidth : 0;
+                          _animation.value * cardWidth;
                       return Positioned(
-                        left: horsePosition - 20,
+                        left: horsePosition - 30,
                         top: -40,
                         child: SizedBox(
-                          height: 100,
-                          width: 100,
-                          child: Transform.flip(
-                            flipX: true,
-                            child: Lottie.asset("assets/anim/anim-4.json"),
+                          height: 90,
+                          width: 90,
+                          child: Image.asset(
+                            'assets/images/jt.gif',
+                            fit: BoxFit.contain,
                           ),
                         ),
                       );

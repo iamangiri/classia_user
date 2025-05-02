@@ -68,8 +68,8 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildStepIcon(0, Icons.fingerprint, 'Aadhaar'),
-              _buildStepIcon(1, Icons.credit_card, 'PAN'),
+             _buildStepIcon(0, Icons.fingerprint, 'Aadhaar'),
+             _buildStepIcon(1, Icons.credit_card, 'PAN'),
               _buildStepIcon(2, Icons.account_balance, 'Bank'),
             ],
           ),
@@ -84,6 +84,7 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
       ),
     );
   }
+
 
   Widget _buildStepIcon(int stepIndex, IconData icon, String label) {
     bool isActiveOrCompleted = _currentStep >= stepIndex;

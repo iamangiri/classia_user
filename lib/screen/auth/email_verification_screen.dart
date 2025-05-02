@@ -81,12 +81,15 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       });
 
       if (success) {
-        final phone = widget.initialPhone;
-        // Using named navigation:
-        context.goNamed(
-          'mobile_verify',
-          extra: phone,
-        );
+        // final phone = widget.initialPhone;
+        // // Using named navigation:
+        // context.goNamed(
+        //   'mobile_verify',
+        //   extra: phone,
+        // );
+
+
+        context.go('/login'); // <-- If using GoRouter
       }
 
     } catch (e) {
