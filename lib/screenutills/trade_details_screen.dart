@@ -5,6 +5,7 @@ import 'package:classia_amc/themes/app_colors.dart';
 import 'package:classia_amc/screenutills/create_folio_screen.dart';
 import 'package:classia_amc/service/apiservice/wallet_service.dart';
 import 'package:classia_amc/service/apiservice/user_service.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TradingDetailsScreen extends StatefulWidget {
@@ -765,6 +766,109 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
     );
   }
 
+
+  Future<void> _showSuccessDialog(String action) async {
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.cardBackground, // Use your app's theme colors
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FaIcon(
+              FontAwesomeIcons.checkCircle,
+              color: AppColors.success,
+              size: 48.sp,
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              '$action Successful!',
+              style: TextStyle(
+                color: AppColors.primaryText,
+                fontSize: 20.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Your $action of ₹${_amountController.text} has been processed successfully.',
+              style: TextStyle(
+                color: AppColors.secondaryText,
+                fontSize: 16.sp,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'OK',
+              style: TextStyle(
+                color: AppColors.primaryGold,
+                fontSize: 16.sp,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showErrorDialog(String message) async {
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.cardBackground,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FaIcon(
+              FontAwesomeIcons.exclamationCircle,
+              color: AppColors.error,
+              size: 48.sp,
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              'Error',
+              style: TextStyle(
+                color: AppColors.primaryText,
+                fontSize: 20.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              message,
+              style: TextStyle(
+                color: AppColors.secondaryText,
+                fontSize: 16.sp,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'OK',
+              style: TextStyle(
+                color: AppColors.primaryGold,
+                fontSize: 16.sp,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+
   Future<void> _handleInvestOrWithdraw(String action) async {
     if (_folioNumbers.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -817,6 +921,8 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
       ),
     );
 
+
+
     if (confirmed ?? false) {
       setState(() => _isLoading = true);
       try {
@@ -827,30 +933,12 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
           await _walletService.withdraw(amount);
         }
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.check_circle, color: AppColors.buttonText, size: 20.sp),
-                SizedBox(width: 12.w),
-                Text(
-                  '$action Successful!',
-                  style: TextStyle(color: AppColors.buttonText, fontSize: 14.sp),
-                ),
-              ],
-            ),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        await _showSuccessDialog(action);
       } catch (e) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        await _showErrorDialog(e.toString());
       }
     }
+
   }
 }
