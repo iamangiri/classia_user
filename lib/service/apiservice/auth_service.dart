@@ -64,6 +64,8 @@ class AuthService {
     final jsonResp = jsonDecode(response.body) as Map<String, dynamic>;
     final data     = jsonResp['data'] as Map<String, dynamic>?;
 
+    print(response.body);
+    print(response.statusCode);
     // Persist only if login successful
     if ((jsonResp['status'] as bool? ?? false) && data != null) {
       await UserConstants.storeUserData(data);

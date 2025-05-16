@@ -1,6 +1,4 @@
-//
 // import 'package:flutter/material.dart';
-// import 'package:lottie/lottie.dart';
 // import '../screenutills/trade_details_screen.dart';
 //
 // class TradingCard extends StatefulWidget {
@@ -24,7 +22,7 @@
 //     super.initState();
 //     _controller = AnimationController(
 //       vsync: this,
-//       duration: Duration(seconds: 3),
+//       duration: Duration(seconds: 5),
 //     );
 //     _updateAnimation();
 //   }
@@ -44,6 +42,12 @@
 //       end: normalizedValue.clamp(0.0, 1.0),
 //     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 //     _controller.forward(from: 0);
+//   }
+//
+//   @override
+//   void dispose() {
+//     _controller.dispose();
+//     super.dispose();
 //   }
 //
 //   @override
@@ -153,10 +157,11 @@
 //                 ],
 //               ),
 //               SizedBox(height: 20),
-//               // Progress Section
+//               // Progress & Horse GIF Section
 //               Stack(
 //                 clipBehavior: Clip.none,
 //                 children: [
+//                   // Background Bar
 //                   Container(
 //                     width: cardWidth,
 //                     height: 8,
@@ -165,6 +170,7 @@
 //                       color: Colors.grey[300],
 //                     ),
 //                   ),
+//                   // Animated Progress Fill
 //                   AnimatedBuilder(
 //                     animation: _animation,
 //                     builder: (context, child) {
@@ -182,20 +188,21 @@
 //                       );
 //                     },
 //                   ),
+//                   // Horse Rider GIF
 //                   AnimatedBuilder(
 //                     animation: _animation,
 //                     builder: (context, child) {
 //                       double horsePosition =
-//                       isPositive ? _animation.value * cardWidth : 0;
+//                           _animation.value * cardWidth;
 //                       return Positioned(
-//                         left: horsePosition - 20,
+//                         left: horsePosition - 27,
 //                         top: -40,
 //                         child: SizedBox(
-//                           height: 100,
-//                           width: 100,
-//                           child: Transform.flip(
-//                             flipX: true,
-//                             child: Lottie.asset("assets/anim/anim-4.json"),
+//                           height: 90,
+//                           width: 90,
+//                           child: Image.asset(
+//                             'assets/images/jt2.gif',
+//                             fit: BoxFit.contain,
 //                           ),
 //                         ),
 //                       );
@@ -210,8 +217,6 @@
 //     );
 //   }
 // }
-
-
 import 'package:flutter/material.dart';
 import '../screenutills/trade_details_screen.dart';
 
@@ -268,7 +273,7 @@ class _TradingCardState extends State<TradingCard>
   Widget build(BuildContext context) {
     bool isPositive = widget.value >= 0;
     Color textColor = isPositive ? Colors.teal[700]! : Colors.red[700]!;
-    double cardWidth = MediaQuery.of(context).size.width * 0.7;
+    double cardWidth = MediaQuery.of(context).size.width * 0.6;
 
     return InkWell(
       onTap: () {
@@ -283,33 +288,33 @@ class _TradingCardState extends State<TradingCard>
         );
       },
       child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        margin: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              blurRadius: 10,
-              spreadRadius: 2,
-              offset: Offset(0, 4),
+              color: Colors.grey.withOpacity(0.15),
+              blurRadius: 6,
+              spreadRadius: 1,
+              offset: Offset(0, 2),
             ),
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(10.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Section
+              // Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
                       Container(
-                        width: 44,
-                        height: 44,
+                        width: 36,
+                        height: 36,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.grey[200],
@@ -322,8 +327,13 @@ class _TradingCardState extends State<TradingCard>
                             loadingBuilder: (context, child, progress) {
                               return progress == null
                                   ? child
-                                  : CircularProgressIndicator(
-                                color: Color(0xFFDAA520),
+                                  : SizedBox(
+                                height: 16,
+                                width: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Color(0xFFDAA520),
+                                ),
                               );
                             },
                             errorBuilder: (_, __, ___) => Icon(
@@ -337,11 +347,11 @@ class _TradingCardState extends State<TradingCard>
                           color: Colors.grey[400],
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: 8),
                       Text(
                         widget.name,
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),
@@ -354,7 +364,7 @@ class _TradingCardState extends State<TradingCard>
                       Text(
                         "${widget.value.toStringAsFixed(2)}%",
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
                           color: textColor,
                         ),
@@ -362,7 +372,7 @@ class _TradingCardState extends State<TradingCard>
                       Text(
                         isPositive ? "Growth" : "Decline",
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 10,
                           color: Colors.black54,
                         ),
                       ),
@@ -370,27 +380,25 @@ class _TradingCardState extends State<TradingCard>
                   ),
                 ],
               ),
-              SizedBox(height: 20),
-              // Progress & Horse GIF Section
+              SizedBox(height: 14),
+              // Progress Bar + Horse
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // Background Bar
                   Container(
                     width: cardWidth,
-                    height: 8,
+                    height: 6,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(4),
                       color: Colors.grey[300],
                     ),
                   ),
-                  // Animated Progress Fill
                   AnimatedBuilder(
                     animation: _animation,
                     builder: (context, child) {
                       return Container(
                         width: _animation.value * cardWidth,
-                        height: 8,
+                        height: 6,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(4),
                           gradient: LinearGradient(
@@ -402,20 +410,19 @@ class _TradingCardState extends State<TradingCard>
                       );
                     },
                   ),
-                  // Horse Rider GIF
                   AnimatedBuilder(
                     animation: _animation,
                     builder: (context, child) {
                       double horsePosition =
                           _animation.value * cardWidth;
                       return Positioned(
-                        left: horsePosition - 30,
-                        top: -40,
+                        left: horsePosition - 20,
+                        top: -30,
                         child: SizedBox(
-                          height: 90,
-                          width: 90,
+                          height: 60,
+                          width: 60,
                           child: Image.asset(
-                            'assets/images/jt.gif',
+                            'assets/images/jt2.gif',
                             fit: BoxFit.contain,
                           ),
                         ),
@@ -431,3 +438,4 @@ class _TradingCardState extends State<TradingCard>
     );
   }
 }
+

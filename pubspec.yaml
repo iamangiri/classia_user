@@ -92,6 +92,8 @@ flutter:
     - assets/anim/anim-4.json
     - assets/images/jt.png
     - assets/images/jt.gif
+    - assets/images/jt1.gif
+    - assets/images/jt2.gif
 
 flutter_icons:
   android: true

@@ -37,6 +37,7 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     UserConstants.loadUserData();
     _authenticateUser();
+    print(UserConstants.TOKEN);
   }
 
   Future<void> _authenticateUser() async {

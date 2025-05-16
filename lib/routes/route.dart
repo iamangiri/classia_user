@@ -9,6 +9,7 @@ import '../screen/auth/registration_screen.dart';
 import '../screen/base/main_screen.dart';
 import '../screen/onBoarding/onBoarding_screen.dart';
 import '../screen/onBoarding/splash_screen.dart';
+import '../screenutills/horse_riding_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -39,6 +40,13 @@ final router = GoRouter(
       name: 'register',
       builder: (context, state) => RegistrationScreen(),
     ),
+
+    GoRoute(
+      path: '/horse_riding',
+      name: 'horse_riding',
+      builder: (context, state) => HorseRidingScreen(),
+    ),
+
 
     GoRoute(
       path: '/otp_verify',

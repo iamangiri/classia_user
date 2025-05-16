@@ -22,7 +22,7 @@ AppColors._(); // Private constructor to prevent instantiation
   static const Color onErrorColor = Color(0xFFFFFFFF);
 
   // Primary theme color (Gold)
-  static const Color primaryGold = Color(0xFFDAA520);
+  static const Color primaryGold = Color(0xFFF1C40F);
 
   // Background colors
   static const Color screenBackground = Colors.white; // White background for the screen

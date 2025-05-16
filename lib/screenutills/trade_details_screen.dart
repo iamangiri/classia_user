@@ -19,11 +19,8 @@ class TradingDetailsScreen extends StatefulWidget {
 }
 
 class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
-  String _selectedAction = 'Invest';
   final TextEditingController _folioController = TextEditingController();
-  final TextEditingController _amountController =
-      TextEditingController(); // New controller for amount
-  bool _hasFolio = true;
+  final TextEditingController _amountController = TextEditingController();
   bool _isLoading = false;
   final _formKey = GlobalKey<FormState>();
   bool _isFavorite = false;
@@ -33,7 +30,6 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
   late WalletService _walletService;
   late UserService _userService;
 
-// Hardcoded stock performance data (unchanged)
   final List<Map<String, dynamic>> performances = [
     {
       "stockId": 1,
@@ -68,23 +64,15 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
   Future<void> _fetchFolioNumbers() async {
     setState(() => _isFolioLoading = true);
     try {
-      // response is { "folioNumbers": List<String>, "pagination": ... }
       final data = await _userService.getFolioList(1, 10);
-
-      // Since folioNumbers is List<String>, decode accordingly:
       final List<String> folios =
       List<String>.from(data['folioNumbers'] as List<dynamic>);
-
       setState(() {
         _folioNumbers = folios;
-        _hasFolio = _folioNumbers.isNotEmpty;
         _isFolioLoading = false;
       });
     } catch (e) {
-      setState(() {
-        _hasFolio = false;
-        _isFolioLoading = false;
-      });
+      setState(() => _isFolioLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(e.toString()),
@@ -93,7 +81,6 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
       );
     }
   }
-
 
   @override
   void dispose() {
@@ -186,27 +173,30 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSpecialHeader(),
-            SizedBox(height: 20.h),
-            _buildFundDetailsSection(),
-            SizedBox(height: 24.h),
-            _buildStockPerformanceSection(),
-            SizedBox(height: 24.h),
-            _buildRecentTransactions(),
-            SizedBox(height: 24.h),
-            _buildActionSelector(),
-            SizedBox(height: 24.h),
-            _buildFolioInputSection(),
-            SizedBox(height: 24.h),
-            _buildActionButton(),
-            SizedBox(height: 20.h),
-          ],
-        ),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(16.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSpecialHeader(),
+                  SizedBox(height: 20.h),
+                  _buildFundDetailsSection(),
+                  SizedBox(height: 24.h),
+                  _buildStockPerformanceSection(),
+                  SizedBox(height: 24.h),
+                  _buildRecentTransactions(),
+                  SizedBox(height: 24.h),
+                  _buildFolioInputSection(),
+                  SizedBox(height: 20.h),
+                ],
+              ),
+            ),
+          ),
+          _buildBottomButtons(),
+        ],
       ),
     );
   }
@@ -490,8 +480,6 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
     );
   }
 
-
-
   Widget _buildRecentTransactions() {
     return Container(
       padding: EdgeInsets.all(16.w),
@@ -551,45 +539,11 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
               Text(
                 date,
                 style:
-                    TextStyle(color: AppColors.secondaryText, fontSize: 12.sp),
+                TextStyle(color: AppColors.secondaryText, fontSize: 12.sp),
               ),
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildActionSelector() {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _selectedAction,
-          isExpanded: true,
-          dropdownColor: AppColors.cardBackground,
-          style: TextStyle(color: AppColors.primaryText, fontSize: 16.sp),
-          icon: Icon(Icons.arrow_drop_down, color: AppColors.primaryGold),
-          items: ['Invest', 'Withdraw'].map((action) {
-            return DropdownMenuItem(
-              value: action,
-              child: Text(
-                action,
-                style: TextStyle(color: AppColors.primaryText, fontSize: 16.sp),
-              ),
-            );
-          }).toList(),
-          onChanged: (value) {
-            setState(() {
-              _selectedAction = value!;
-            });
-          },
-        ),
       ),
     );
   }
@@ -600,7 +554,6 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-// Amount input field
           TextFormField(
             controller: _amountController,
             style: TextStyle(color: AppColors.primaryText, fontSize: 16.sp),
@@ -609,9 +562,9 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
               labelText: 'Amount',
               hintText: 'Enter amount (e.g., 1000)',
               labelStyle:
-                  TextStyle(color: AppColors.primaryText, fontSize: 14.sp),
+              TextStyle(color: AppColors.primaryText, fontSize: 14.sp),
               hintStyle:
-                  TextStyle(color: AppColors.secondaryText, fontSize: 14.sp),
+              TextStyle(color: AppColors.secondaryText, fontSize: 14.sp),
               filled: true,
               fillColor: AppColors.cardBackground,
               enabledBorder: OutlineInputBorder(
@@ -643,86 +596,167 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
             },
           ),
           SizedBox(height: 16.h),
-// Folio input or dropdown
-          if (_hasFolio)
+          if (_folioNumbers.isNotEmpty)
             _isFolioLoading
                 ? Center(
-                    child: CircularProgressIndicator(
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(AppColors.primaryGold),
-                    ),
-                  )
+              child: CircularProgressIndicator(
+                valueColor:
+                AlwaysStoppedAnimation<Color>(AppColors.primaryGold),
+              ),
+            )
                 : DropdownButtonFormField<String>(
-                    value: _folioController.text.isEmpty
-                        ? null
-                        : _folioController.text,
-                    style: TextStyle(
-                        color: AppColors.primaryText, fontSize: 16.sp),
-                    decoration: InputDecoration(
-                      labelText: 'Folio Number',
-                      hintText: 'Select folio number',
-                      labelStyle: TextStyle(
-                          color: AppColors.primaryText, fontSize: 14.sp),
-                      hintStyle: TextStyle(
-                          color: AppColors.secondaryText, fontSize: 14.sp),
-                      filled: true,
-                      fillColor: AppColors.cardBackground,
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide(color: AppColors.border),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide(color: AppColors.primaryGold),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide(color: AppColors.error),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide(color: AppColors.error),
-                      ),
-                    ),
-                    items: _folioNumbers.map((folio) {
-                      return DropdownMenuItem(
-                        value: folio,
-                        child: Text(folio,
-                            style: TextStyle(
-                                color: AppColors.primaryText, fontSize: 16.sp)),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      _folioController.text = value ?? '';
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty)
-                        return 'Please select a folio number';
-                      return null;
-                    },
-                    dropdownColor: AppColors.cardBackground,
-                    icon: Icon(Icons.arrow_drop_down,
-                        color: AppColors.secondaryText, size: 20.sp),
-                  ),
-          if (!_hasFolio) ...[
-            Text(
-              'No folio number available',
-              style: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp),
-            ),
-            SizedBox(height: 8.h),
-          ],
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () {
-                setState(() {
-                  _hasFolio = !_hasFolio;
-                  if (!_hasFolio) _folioController.clear();
-                });
+              value: _folioController.text.isEmpty
+                  ? null
+                  : _folioController.text,
+              style: TextStyle(
+                  color: AppColors.primaryText, fontSize: 16.sp),
+              decoration: InputDecoration(
+                labelText: 'Folio Number',
+                hintText: 'Select folio number',
+                labelStyle: TextStyle(
+                    color: AppColors.primaryText, fontSize: 14.sp),
+                hintStyle: TextStyle(
+                    color: AppColors.secondaryText, fontSize: 14.sp),
+                filled: true,
+                fillColor: AppColors.cardBackground,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: AppColors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: AppColors.primaryGold),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: AppColors.error),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: AppColors.error),
+                ),
+              ),
+              items: _folioNumbers.map((folio) {
+                return DropdownMenuItem(
+                  value: folio,
+                  child: Text(folio,
+                      style: TextStyle(
+                          color: AppColors.primaryText, fontSize: 16.sp)),
+                );
+              }).toList(),
+              onChanged: (value) {
+                _folioController.text = value ?? '';
               },
+              validator: (value) {
+                if (value == null || value.isEmpty)
+                  return 'Please select a folio number';
+                return null;
+              },
+              dropdownColor: AppColors.cardBackground,
+              icon: Icon(Icons.arrow_drop_down,
+                  color: AppColors.secondaryText, size: 20.sp),
+            )
+          else
+            Column(
+              children: [
+                Text(
+                  'No folio available. Please create a new folio to proceed.',
+                  style: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp),
+                ),
+                SizedBox(height: 8.h),
+                ElevatedButton(
+                  onPressed: () async {
+                    final newFolio = await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const CreateFolioScreen()),
+                    );
+                    if (newFolio != null) {
+                      setState(() {
+                        _folioNumbers.add(newFolio);
+                        _folioController.text = newFolio;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('New folio created: $newFolio'),
+                          backgroundColor: AppColors.success,
+                        ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryGold,
+                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                  ),
+                  child: Text(
+                    'Create Folio',
+                    style: TextStyle(
+                      color: AppColors.buttonText,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomButtons() {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(12.r),
+          topRight: Radius.circular(12.r),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 6.r,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : () => _handleInvestOrWithdraw('Invest'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryGold,
+                padding: EdgeInsets.symmetric(vertical: 14.h),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+              ),
               child: Text(
-                _hasFolio ? 'Create New Folio' : 'Use Existing Folio',
-                style: TextStyle(color: AppColors.primaryGold, fontSize: 14.sp),
+                'Invest',
+                style: TextStyle(
+                  color: AppColors.buttonText,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : () => _handleInvestOrWithdraw('Withdraw'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                padding: EdgeInsets.symmetric(vertical: 14.h),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+              ),
+              child: Text(
+                'Withdraw',
+                style: TextStyle(
+                  color: AppColors.buttonText,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -731,69 +765,23 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
     );
   }
 
-  Widget _buildActionButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: _isLoading
-            ? null
-            : () {
-                if (_hasFolio && !_formKey.currentState!.validate()) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                          'Please enter a valid amount and select a folio number'),
-                      backgroundColor: AppColors.error,
-                    ),
-                  );
-                  return;
-                }
-                _handleAction();
-              },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _selectedAction == 'Invest'
-              ? AppColors.primaryGold
-              : AppColors.error,
-          padding: EdgeInsets.symmetric(vertical: 14.h),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-          minimumSize: Size(double.infinity, 48.h),
+  Future<void> _handleInvestOrWithdraw(String action) async {
+    if (_folioNumbers.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please create a folio first'),
+          backgroundColor: AppColors.error,
         ),
-        child: Text(
-          _isLoading
-              ? 'Processing...'
-              : _hasFolio
-                  ? _selectedAction
-                  : 'Create Folio',
-          style: TextStyle(
-            color: AppColors.buttonText,
-            fontSize: 16.sp,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _handleAction() async {
-    if (!_hasFolio) {
-      final newFolio = await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const CreateFolioScreen()),
       );
-      if (newFolio != null) {
-        setState(() {
-          _hasFolio = true;
-          _folioController.text = newFolio;
-          _folioNumbers.add(newFolio);
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('New folio created: $newFolio'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
+      return;
+    }
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please enter a valid amount and select a folio number'),
+          backgroundColor: AppColors.error,
+        ),
+      );
       return;
     }
 
@@ -801,14 +789,13 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
         title: Text(
-          'Confirm $_selectedAction',
+          'Confirm $action',
           style: TextStyle(color: AppColors.primaryText, fontSize: 18.sp),
         ),
         content: Text(
-          'You are about to $_selectedAction ₹${_amountController.text} in ${widget.name} using folio ${_folioController.text}',
+          'You are about to $action ₹${_amountController.text} in ${widget.name} using folio ${_folioController.text}',
           style: TextStyle(color: AppColors.secondaryText, fontSize: 16.sp),
         ),
         actions: [
@@ -834,7 +821,7 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
       setState(() => _isLoading = true);
       try {
         final amount = int.parse(_amountController.text);
-        if (_selectedAction == 'Invest') {
+        if (action == 'Invest') {
           await _walletService.deposit(amount);
         } else {
           await _walletService.withdraw(amount);
@@ -844,13 +831,11 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
           SnackBar(
             content: Row(
               children: [
-                Icon(Icons.check_circle,
-                    color: AppColors.buttonText, size: 20.sp),
+                Icon(Icons.check_circle, color: AppColors.buttonText, size: 20.sp),
                 SizedBox(width: 12.w),
                 Text(
-                  '$_selectedAction Successful!',
-                  style:
-                      TextStyle(color: AppColors.buttonText, fontSize: 14.sp),
+                  '$action Successful!',
+                  style: TextStyle(color: AppColors.buttonText, fontSize: 14.sp),
                 ),
               ],
             ),

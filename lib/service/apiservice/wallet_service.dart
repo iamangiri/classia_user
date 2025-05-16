@@ -41,9 +41,11 @@ class WalletService {
       },
       body: {
         'amount': amount.toString(),
+        'amcId' : '2'
       },
     );
-
+     print(response.body);
+     print(response.statusCode);
     final data = jsonDecode(response.body);
     if (response.statusCode == 200 && data['status'] == true) {
       return;
@@ -61,9 +63,11 @@ class WalletService {
       },
       body: {
         'amount': amount.toString(),
+        'amcId' : '2'
       },
     );
-
+    print(response.body);
+    print(response.statusCode);
     final data = jsonDecode(response.body);
     if (response.statusCode == 200 && data['status'] == true) {
       return;
