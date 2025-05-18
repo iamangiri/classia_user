@@ -55,13 +55,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 borderRadius: BorderRadius.circular(15.r),
                 child: CarouselSlider(
                   options: CarouselOptions(
-                    height: 150.h,
+                    height: 180.h,
                     autoPlay: true,
                     enlargeCenterPage: true,
                     aspectRatio: 16 / 5,
                     viewportFraction: 0.9,
                   ),
-                  items: HomeScreenData.sliderImages.map((image) {
+                  items: HomeScreenData.sliderImages.map((imagePath) {
                     return Container(
                       margin: EdgeInsets.symmetric(horizontal: 5.w),
                       decoration: BoxDecoration(
@@ -70,14 +70,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Stack(
                         children: [
                           Positioned.fill(
-                            child: CachedNetworkImage(
-                              imageUrl: image,
-                              fit: BoxFit.cover,
-                              errorWidget: (context, url, error) => Container(
-                                color: AppColors.border,
-                                child: Icon(Icons.image,
-                                    color: AppColors.disabled),
-                              ),
+                            child: Image.asset(
+                              imagePath,
+                              fit: BoxFit.fitWidth,
                             ),
                           ),
                           Positioned.fill(

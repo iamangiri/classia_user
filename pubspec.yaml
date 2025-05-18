@@ -94,8 +94,18 @@ flutter:
     - assets/images/jt.gif
     - assets/images/jt1.gif
     - assets/images/jt2.gif
+    - assets/images/logo.png
+    - assets/images/app-logo.png
+    - assets/images/jt-nav.jpeg
+    - assets/images/jt-nav1.jpeg
+    - assets/images/jt-nav2.jpeg
+    - assets/images/jt-nav3.jpeg
+    - assets/images/jt-nav4.jpeg
+    - assets/images/slider-1.jpeg
+    - assets/images/slider-2.jpeg
+    - assets/images/slider-3.jpeg
 
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/images/logo.jpeg"  # Path to your logo image
+  image_path: "assets/images/app-logo.jpeg"  # Path to your logo image

@@ -22,16 +22,17 @@ AppColors._(); // Private constructor to prevent instantiation
   static const Color onErrorColor = Color(0xFFFFFFFF);
 
   // Primary theme color (Gold)
-  static const Color primaryGold = Color(0xFFF1C40F);
-
+  //static const Color primaryGold = Color(0xFFd7b56d);
+   static const Color primaryGold = 		Color(0xFF00004D)
+;
   // Background colors
   static const Color screenBackground = Colors.white; // White background for the screen
   static const Color cardBackground = Color(0xFFE8F0FE); // Light blue for card background
 
   // Text colors
-  static const Color primaryText = Color(0xFF1A1A1A); // Dark gray for body text
+  static const Color primaryText = Color(0xFFd7b56d); // Dark gray for body text
   static const Color secondaryText = Color(0xFF666666); // Lighter gray for subtitles or secondary text
-  static const Color headingText = Color(0xFF0D1B2A); // Near-black for headings
+  static const Color headingText = Colors.white; // Near-black for headings
 
   // Border colors
   static const Color border = Color(0xFFE0E0E0); // Light gray for borders

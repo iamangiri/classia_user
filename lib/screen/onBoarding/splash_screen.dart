@@ -40,7 +40,7 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: Colors.white, // Light mode background color
       body: Center(
         child: TweenAnimationBuilder(
-          duration: const Duration(seconds: 1),
+          duration: const Duration(seconds: 3),
           tween: Tween<double>(begin: 0, end: 1),
           builder: (context, double value, child) {
             return Opacity(
@@ -49,8 +49,8 @@ class _SplashScreenState extends State<SplashScreen> {
             );
           },
           child: Image.asset(
-            'assets/images/splash-2.png', // Make sure this image looks good on white
-            width: 150,
+            'assets/images/logo.png', // Make sure this image looks good on white
+            width: 160,
           ),
         ),
       ),

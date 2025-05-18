@@ -2,9 +2,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class HomeScreenData {
   static final List<String> sliderImages = [
-    'https://i.ytimg.com/vi/oU9Xq9rdRVg/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLBMlvA48DeFnUOB8TEiEceFiMJHjA',
-    'https://www.alliedmarketresearch.com/assets/sampleimages/multiple-toe-socks-market-1691677648.png',
-    'https://www.alliedmarketresearch.com/assets/sampleimages/multiple-toe-socks-market-1691677648.png',
+    "assets/images/slider-1.jpeg",
+    "assets/images/slider-2.jpeg",
+    "assets/images/slider-3.jpeg"
   ];
 
 
