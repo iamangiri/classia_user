@@ -49,6 +49,7 @@ dependencies:
   flutter_screenutil: ^5.9.3
   image_cropper: ^9.1.0
   convex_bottom_bar: ^3.2.0
+  provider: ^6.1.5
 
 dev_dependencies:
   flutter_test:
@@ -96,14 +97,11 @@ flutter:
     - assets/images/jt2.gif
     - assets/images/logo.png
     - assets/images/app-logo.png
-    - assets/images/jt-nav.jpeg
-    - assets/images/jt-nav1.jpeg
-    - assets/images/jt-nav2.jpeg
-    - assets/images/jt-nav3.jpeg
-    - assets/images/jt-nav4.jpeg
+    - assets/images/jt-nav.png
     - assets/images/slider-1.jpeg
     - assets/images/slider-2.jpeg
     - assets/images/slider-3.jpeg
+    - assets/images/certificate_bg.jpeg
 
 flutter_icons:
   android: true

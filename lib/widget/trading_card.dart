@@ -6,9 +6,10 @@ import '../screenutills/trade_details_screen.dart';
 class TradingCard extends StatefulWidget {
   final String logo;
   final String name;
+  final String fundName;
   final double value;
 
-  TradingCard({required this.logo, required this.name, required this.value});
+  TradingCard({required this.logo, required this.name, required this.value,required this.fundName});
 
   @override
   _TradingCardState createState() => _TradingCardState();
@@ -131,14 +132,27 @@ class _TradingCardState extends State<TradingCard>
                         ),
                       ),
                       SizedBox(width: 8),
-                      Text(
-                        widget.name,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,  // ← add this
+                        children: [
+                          Text(
+                            widget.name,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          Text(
+                            widget.fundName,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
                       ),
+
                     ],
                   ),
                   Column(

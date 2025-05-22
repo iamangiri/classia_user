@@ -1,11 +1,8 @@
-
-
-
 import 'package:flutter/material.dart';
 
 class AppColors {
 
-AppColors._(); // Private constructor to prevent instantiation
+AppColors._();
 
 
   static const Color primaryColor = Colors.amber;

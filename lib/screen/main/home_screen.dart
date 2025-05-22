@@ -13,6 +13,12 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../screenutills/fund_deatils_screen.dart';
 import '../../themes/app_colors.dart';
 import '../../widget/custom_app_bar.dart';
+import '../home/home_certificate_section.dart';
+import '../home/home_features_widget.dart';
+import '../home/home_learn_section.dart';
+import '../home/home_slider.dart';
+import '../home/home_top_mutual_funds_section.dart';
+import '../home/home_trending_fund_widget.dart';
 import '../homefetures/lunchpad_screen.dart';
 import '../homefetures/withdraw_screen.dart';
 import 'market_screen.dart';
@@ -50,349 +56,33 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-// Carousel Slider
-              ClipRRect(
-                borderRadius: BorderRadius.circular(15.r),
-                child: CarouselSlider(
-                  options: CarouselOptions(
-                    height: 180.h,
-                    autoPlay: true,
-                    enlargeCenterPage: true,
-                    aspectRatio: 16 / 5,
-                    viewportFraction: 0.9,
-                  ),
-                  items: HomeScreenData.sliderImages.map((imagePath) {
-                    return Container(
-                      margin: EdgeInsets.symmetric(horizontal: 5.w),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15.r),
-                      ),
-                      child: Stack(
-                        children: [
-                          Positioned.fill(
-                            child: Image.asset(
-                              imagePath,
-                              fit: BoxFit.fitWidth,
-                            ),
-                          ),
-                          Positioned.fill(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    AppColors.disabled.withOpacity(0.3),
-                                    Colors.transparent,
-                                  ],
-                                  begin: Alignment.bottomCenter,
-                                  end: Alignment.topCenter,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-
+              // Carousel Slider
+              HomeSliderWidget(),
               SizedBox(height: 24.h),
 
-// Features Section
+              // Features Section
               CustomHeading(text: 'Features', lineWidth: 40.w),
               SizedBox(height: 12.h),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: HomeScreenData.features.map((feature) {
-                    return Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10.w),
-                      child: InkWell(
-                        onTap: () =>
-                            _navigateToFeature(feature['title']!, context),
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(14.w),
-                              decoration: BoxDecoration(
-                                color: AppColors.cardBackground,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.border.withOpacity(0.5),
-                                    spreadRadius: 1,
-                                    blurRadius: 4,
-                                  ),
-                                ],
-                              ),
-                              child: FaIcon(
-                                feature['icon'] as IconData,
-                                size: 28,
-                                color: AppColors.primaryGold,
-                              ),
-                            ),
-                            SizedBox(height: 8.h),
-                            Text(
-                              feature['title']!,
-                              style: TextStyle(
-                                color: AppColors.primaryText,
-                                fontSize: 13.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
+              HomeFeaturesWidget(
+                onFeatureTap: _navigateToFeature,
               ),
               SizedBox(height: 24.h),
 
-// Trending Funds Section
+              // New Section: Learn & Earn
+              HomeLearnSection(),
+
+              SizedBox(height: 24.h),
+
+              // Trending Funds Section
               CustomHeading(text: 'Trending Funds', lineWidth: 40.w),
               SizedBox(height: 12.h),
-              SizedBox(
-                height: 150.h,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: HomeScreenData.trendingFunds.length,
-                  itemBuilder: (context, index) {
-                    final fund = HomeScreenData.trendingFunds[index];
-// Check if fund has all required fields
-                    if (!_isValidFund(fund)) {
-                      return const SizedBox.shrink(); // Skip invalid funds
-                    }
-                    return Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w),
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  FundDetailsScreen(fund: fund),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          width: 170.w,
-                          decoration: BoxDecoration(
-                            color: AppColors.cardBackground,
-                            borderRadius: BorderRadius.circular(12.r),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          padding: EdgeInsets.all(12.w),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  ClipOval(
-                                    child: CachedNetworkImage(
-                                      imageUrl: fund['logo'] ??
-                                          'https://via.placeholder.com/32',
-                                      width: 32.w,
-                                      height: 32.h,
-                                      fit: BoxFit.cover,
-                                      errorWidget: (context, url, error) =>
-                                          Container(
-                                        width: 32.w,
-                                        height: 32.h,
-                                        color: AppColors.border,
-                                        child: Icon(
-                                          Icons.image,
-                                          color: AppColors.disabled,
-                                          size: 20.sp,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(width: 8.w),
-                                  Expanded(
-                                    child: Text(
-                                      fund['symbol'] ?? 'Unknown',
-                                      style: TextStyle(
-                                        color: AppColors.primaryText,
-                                        fontSize: 14.sp,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 8.h),
-                              Text(
-                                fund['company'] ?? 'Unknown Company',
-                                style: TextStyle(
-                                  color: AppColors.secondaryText,
-                                  fontSize: 12.sp,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const Spacer(),
-                              Text(
-                                '₹${fund['price'] ?? '0.00'}',
-                                style: TextStyle(
-                                  color: AppColors.primaryGold,
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                fund['change'] ?? '0.00%',
-                                style: TextStyle(
-                                  color: (fund['change'] ?? '0.00%')
-                                          .startsWith('+')
-                                      ? AppColors.success
-                                      : AppColors.error,
-                                  fontSize: 12.sp,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
+              HomeTrendingFundWidget(),
               SizedBox(height: 24.h),
-
-// Top Mutual Funds Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CustomHeading(text: 'Top Mutual Funds', lineWidth: 40.w),
-                  TextButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => MarketScreen()),
-                    ),
-                    child: Text(
-                      'View More',
-                      style: TextStyle(
-                        color: AppColors.primaryGold,
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              // Top Mutual Funds Section
+              TopMutualFundsSection(),
               SizedBox(height: 12.h),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12.w,
-                  mainAxisSpacing: 12.h,
-                  childAspectRatio: 0.9,
-                ),
-                itemCount: HomeScreenData.mutualFunds.length,
-                itemBuilder: (context, index) {
-                  final fund = HomeScreenData.mutualFunds[index];
-                  return InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FundDetailsScreen(fund: fund),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.cardBackground,
-                        borderRadius: BorderRadius.circular(12.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      padding: EdgeInsets.all(12.w),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              ClipOval(
-                                child: CachedNetworkImage(
-                                  imageUrl: fund['logo']!,
-                                  width: 32.w,
-                                  height: 32.h,
-                                  fit: BoxFit.cover,
-                                  errorWidget: (context, url, error) =>
-                                      Container(
-                                    width: 32.w,
-                                    height: 32.h,
-                                    color: AppColors.border,
-                                    child: Icon(
-                                      Icons.image,
-                                      color: AppColors.disabled,
-                                      size: 20.sp,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 8.w),
-                              Expanded(
-                                child: Text(
-                                  fund['symbol']!,
-                                  style: TextStyle(
-                                    color: AppColors.primaryText,
-                                    fontSize: 14.sp,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 8.h),
-                          Text(
-                            fund['company']!,
-                            style: TextStyle(
-                              color: AppColors.secondaryText,
-                              fontSize: 12.sp,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const Spacer(),
-                          Text(
-                            '₹${fund['price']}',
-                            style: TextStyle(
-                              color: AppColors.primaryGold,
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            fund['change']!,
-                            style: TextStyle(
-                              color: fund['change']!.startsWith('+')
-                                  ? AppColors.success
-                                  : AppColors.error,
-                              fontSize: 12.sp,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
+              HomeCertificateSection(),
+
             ],
           ),
         ),
@@ -402,7 +92,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   bool _isValidFund(Map<String, String?> fund) {
-// Check if all required fields are present and non-null
     return fund['logo'] != null &&
         fund['logo']!.isNotEmpty &&
         fund['symbol'] != null &&

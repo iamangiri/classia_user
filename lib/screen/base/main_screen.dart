@@ -77,7 +77,7 @@ class _MainScreenState extends State<MainScreen> {
           // JT uses custom image asset
           TabItem(
             icon: Image.asset(
-              'assets/images/jt-nav1.jpeg',
+              'assets/images/jt-nav.png',
               width: 56,
               height: 56,
             ),
