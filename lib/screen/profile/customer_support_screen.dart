@@ -1,8 +1,10 @@
-import 'package:classia_amc/widget/common_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:classia_amc/themes/app_colors.dart';
+import 'package:classia_amc/widget/common_app_bar.dart';
 import 'package:classia_amc/widget/custom_app_bar.dart';
+import '../../screenutills/support_list.dart';
+import '../../service/apiservice/support_service.dart';
 
 class CustomerSupportScreen extends StatefulWidget {
   @override
@@ -55,12 +57,20 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
       'action': 'submitFeedback',
     },
     {
-      'title': 'Troubleshooting',
-      'icon': Icons.build,
-      'subtitle': 'Resolve common issues with guided steps',
-      'responseTime': 'Self-service',
-      'contact': 'In-app guides',
-      'action': 'viewTroubleshooting',
+      'title': 'Create Support Ticket',
+      'icon': Icons.support,
+      'subtitle': 'Submit a detailed support ticket for assistance',
+      'responseTime': 'Within 24 hours',
+      'contact': 'In-app ticket submission',
+      'action': 'createSupportTicket',
+    },
+    {
+      'title': 'View Support Tickets',
+      'icon': Icons.list_alt,
+      'subtitle': 'View your submitted support tickets',
+      'responseTime': 'Instant',
+      'contact': 'In-app ticket list',
+      'action': 'viewSupportTickets',
     },
   ];
 
@@ -299,17 +309,75 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
   }
 }
 
-class SupportDetailScreen extends StatelessWidget {
+class SupportDetailScreen extends StatefulWidget {
   final Map<String, dynamic> option;
 
   const SupportDetailScreen({Key? key, required this.option}) : super(key: key);
+
+  @override
+  _SupportDetailScreenState createState() => _SupportDetailScreenState();
+}
+
+class _SupportDetailScreenState extends State<SupportDetailScreen> {
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitSupportTicket() async {
+    if (_titleController.text.isEmpty || _descriptionController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please fill in both title and description'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final success = await SupportService().createSupportTicket(
+      _titleController.text,
+      _descriptionController.text,
+    );
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Support ticket submitted successfully'),
+          backgroundColor: AppColors.primaryGold,
+        ),
+      );
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to submit support ticket'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     String detailContent = '';
     Widget actionWidget = SizedBox.shrink();
 
-    switch (option['action']) {
+    switch (widget.option['action']) {
       case 'startChat':
         detailContent =
         'Connect with our support team instantly via live chat. Our agents are available 24/7 to assist with any issues or questions.';
@@ -342,7 +410,7 @@ class SupportDetailScreen extends StatelessWidget {
         break;
       case 'sendEmail':
         detailContent =
-        'Send us an email at ${option['contact']} and our team will respond within 24 hours. Please include details about your issue for faster resolution.';
+        'Send us an email at ${widget.option['contact']} and our team will respond within 24 hours. Please include details about your issue for faster resolution.';
         actionWidget = TextField(
           maxLines: 4,
           decoration: InputDecoration(
@@ -366,7 +434,7 @@ class SupportDetailScreen extends StatelessWidget {
         break;
       case 'makeCall':
         detailContent =
-        'Call our 24/7 helpline at ${option['contact']} for immediate assistance. Our team is ready to help with any queries.';
+        'Call our 24/7 helpline at ${widget.option['contact']} for immediate assistance. Our team is ready to help with any queries.';
         actionWidget = ElevatedButton(
           onPressed: () {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -406,7 +474,7 @@ class SupportDetailScreen extends StatelessWidget {
         break;
       case 'submitFeedback':
         detailContent =
-        'Share your feedback at ${option['contact']} to help us improve. We value your input and will acknowledge your message within 48 hours.';
+        'Share your feedback at ${widget.option['contact']} to help us improve. We value your input and will acknowledge your message within 48 hours.';
         actionWidget = TextField(
           maxLines: 4,
           decoration: InputDecoration(
@@ -428,15 +496,105 @@ class SupportDetailScreen extends StatelessWidget {
           ),
         );
         break;
-      case 'viewTroubleshooting':
+      case 'createSupportTicket':
         detailContent =
-        'Follow our guided steps to resolve common issues like app crashes, login problems, or transaction errors.';
+        'Submit a support ticket with a title and detailed description of your issue. Our team will respond within 24 hours.';
         actionWidget = Column(
           children: [
-            _buildTroubleshootingItem('App Crashing', 'Clear app cache or reinstall the app.'),
-            SizedBox(height: 8.h),
-            _buildTroubleshootingItem('Login Issues', 'Ensure correct credentials and stable internet.'),
+            TextField(
+              controller: _titleController,
+              decoration: InputDecoration(
+                hintText: 'Enter ticket title...',
+                hintStyle: TextStyle(
+                  color: AppColors.secondaryText,
+                  fontSize: 14.sp,
+                ),
+                filled: true,
+                fillColor: AppColors.cardBackground,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              style: TextStyle(
+                color: AppColors.primaryText,
+                fontSize: 14.sp,
+              ),
+            ),
+            SizedBox(height: 12.h),
+            TextField(
+              controller: _descriptionController,
+              maxLines: 4,
+              decoration: InputDecoration(
+                hintText: 'Enter detailed description...',
+                hintStyle: TextStyle(
+                  color: AppColors.secondaryText,
+                  fontSize: 14.sp,
+                ),
+                filled: true,
+                fillColor: AppColors.cardBackground,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              style: TextStyle(
+                color: AppColors.primaryText,
+                fontSize: 14.sp,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Center(
+              child: _isLoading
+                  ? CircularProgressIndicator(color: AppColors.primaryGold)
+                  : ElevatedButton(
+                onPressed: _submitSupportTicket,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryGold,
+                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                ),
+                child: Text(
+                  'Submit Ticket',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.buttonText,
+                  ),
+                ),
+              ),
+            ),
           ],
+        );
+        break;
+      case 'viewSupportTickets':
+        detailContent = 'View all your submitted support tickets and their statuses.';
+        actionWidget = ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SupportTicketListScreen(),
+              ),
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryGold,
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+          ),
+          child: Text(
+            'View Tickets',
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.bold,
+              color: AppColors.buttonText,
+            ),
+          ),
         );
         break;
     }
@@ -444,7 +602,7 @@ class SupportDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.screenBackground,
       appBar: CustomAppBar(
-        title: option['title'],
+        title: widget.option['title'],
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
@@ -452,7 +610,7 @@ class SupportDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              option['title'],
+              widget.option['title'],
               style: TextStyle(
                 color: AppColors.primaryText,
                 fontSize: 20.sp,
@@ -461,7 +619,7 @@ class SupportDetailScreen extends StatelessWidget {
             ),
             SizedBox(height: 12.h),
             Text(
-              'Response Time: ${option['responseTime']}',
+              'Response Time: ${widget.option['responseTime']}',
               style: TextStyle(
                 color: AppColors.secondaryText,
                 fontSize: 16.sp,
@@ -469,7 +627,7 @@ class SupportDetailScreen extends StatelessWidget {
             ),
             SizedBox(height: 8.h),
             Text(
-              'Contact: ${option['contact']}',
+              'Contact: ${widget.option['contact']}',
               style: TextStyle(
                 color: AppColors.secondaryText,
                 fontSize: 16.sp,
@@ -486,14 +644,14 @@ class SupportDetailScreen extends StatelessWidget {
             ),
             SizedBox(height: 24.h),
             actionWidget,
-            if (option['action'] == 'sendEmail' || option['action'] == 'submitFeedback') ...[
+            if (widget.option['action'] == 'sendEmail' || widget.option['action'] == 'submitFeedback') ...[
               SizedBox(height: 16.h),
               Center(
                 child: ElevatedButton(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('${option['title']} submitted'),
+                        content: Text('${widget.option['title']} submitted'),
                         backgroundColor: AppColors.primaryGold,
                       ),
                     );
@@ -551,44 +709,6 @@ class SupportDetailScreen extends StatelessWidget {
           SizedBox(height: 4.h),
           Text(
             answer,
-            style: TextStyle(
-              color: AppColors.secondaryText,
-              fontSize: 14.sp,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTroubleshootingItem(String issue, String solution) {
-    return Container(
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 6.r,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            issue,
-            style: TextStyle(
-              color: AppColors.primaryText,
-              fontSize: 16.sp,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            solution,
             style: TextStyle(
               color: AppColors.secondaryText,
               fontSize: 14.sp,

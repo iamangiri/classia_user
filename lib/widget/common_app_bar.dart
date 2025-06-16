@@ -15,12 +15,12 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: AppColors.primaryGold,
+      backgroundColor: AppColors.primaryColor,
       title: Text(
         title,
         style: TextStyle(
           fontSize: 22.sp,
-          color: AppColors.primaryText,
+          color: AppColors.primaryGold,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -29,7 +29,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: IconButton(
         icon: Icon(
           Icons.arrow_back,
-          color: AppColors.primaryText,
+          color: AppColors.primaryGold,
           size: 24.sp,
         ),
         onPressed: () => Navigator.pop(context),

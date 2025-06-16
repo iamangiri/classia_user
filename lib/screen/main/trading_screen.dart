@@ -1,6 +1,5 @@
 import 'package:classia_amc/themes/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 import '../../widget/custom_app_bar.dart';
 import '../../widget/trading_card.dart';
 

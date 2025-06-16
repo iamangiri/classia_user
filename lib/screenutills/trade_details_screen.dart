@@ -77,7 +77,7 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
     return Scaffold(
       backgroundColor: AppColors.screenBackground,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryGold,
+        backgroundColor: AppColors.primaryColor,
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: ClipOval(

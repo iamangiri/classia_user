@@ -1,4 +1,4 @@
-package com.classia.amc
+package com.jockey.trading
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

@@ -5,8 +5,7 @@ class AppColors {
 AppColors._();
 
 
-  static const Color primaryColor = Colors.amber;
-  static const Color primaryVariantColor = Color(0xFF3700B3);
+  static const Color primaryVariantColor = primaryColor;
   static const Color secondaryColor = Color(0xFF03DAC6);
   static const Color secondaryVariantColor = Color(0xFF018786);
   static const Color backgroundColor = Color(0xFFF6F6F6);
@@ -19,9 +18,9 @@ AppColors._();
   static const Color onErrorColor = Color(0xFFFFFFFF);
 
   // Primary theme color (Gold)
-  //static const Color primaryGold = Color(0xFFd7b56d);
-   static const Color primaryGold = 		Color(0xFF00004D)
-;
+  static const Color primaryGold = Color(0xFFd7b56d);
+   static const Color primaryColor = 		Color(0xFF00004D);
+
   // Background colors
   static const Color screenBackground = Colors.white; // White background for the screen
   static const Color cardBackground = Color(0xFFE8F0FE); // Light blue for card background
