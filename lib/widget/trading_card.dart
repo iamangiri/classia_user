@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import '../screenutills/trade_details_screen.dart';
 

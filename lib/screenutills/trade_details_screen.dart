@@ -101,7 +101,7 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
             Text(
               widget.name,
               style: TextStyle(
-                color: AppColors.primaryText,
+                color: AppColors.primaryGold,
                 fontSize: 20.sp,
                 fontWeight: FontWeight.bold,
               ),
@@ -122,7 +122,7 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
           IconButton(
             icon: Icon(
               Icons.share,
-              color: AppColors.primaryText,
+              color: AppColors.primaryGold,
               size: 24.sp,
             ),
             onPressed: () {
@@ -137,7 +137,7 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen> {
           IconButton(
             icon: Icon(
               _isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: AppColors.primaryText,
+              color: AppColors.primaryGold,
               size: 24.sp,
             ),
             onPressed: () {

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:classia_amc/widget/common_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -19,11 +20,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _isLoading = false;
 
   // Controllers for text fields
-  final TextEditingController _fullNameController = TextEditingController(text: "Aman Giri");
-  final TextEditingController _emailController = TextEditingController(text: "aman@classia.com");
-  final TextEditingController _phoneController = TextEditingController(text: "1234567890");
-  final TextEditingController _addressController = TextEditingController(text: "123 Main St, City");
-  final TextEditingController _dobController = TextEditingController(text: "1990-01-01");
+  final TextEditingController _fullNameController = TextEditingController(text: "${UserConstants.NAME}");
+  final TextEditingController _emailController = TextEditingController(text: "${UserConstants.EMAIL}");
+  final TextEditingController _phoneController = TextEditingController(text: "${UserConstants.PHONE}");
 
   File? _profileImage;
 
@@ -119,8 +118,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _fullNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _addressController.dispose();
-    _dobController.dispose();
     super.dispose();
   }
 
@@ -195,46 +192,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   return null;
                 },
               ),
-              // Address
-              _buildTextField(
-                label: "Address",
-                hint: "Enter your address",
-                controller: _addressController,
-                validator: (value) => value == null || value.isEmpty ? "Please enter your address" : null,
-              ),
-              // Date of Birth
-              _buildTextField(
-                label: "Date of Birth",
-                hint: "YYYY-MM-DD",
-                controller: _dobController,
-                keyboardType: TextInputType.datetime,
-                validator: (value) {
-                  if (value == null || value.isEmpty) return "Please enter your date of birth";
-                  if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(value)) return "Please use YYYY-MM-DD format";
-                  return null;
-                },
-                onTap: () async {
-                  FocusScope.of(context).requestFocus(FocusNode());
-                  final DateTime? picked = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime(1990),
-                    firstDate: DateTime(1900),
-                    lastDate: DateTime.now(),
-                    builder: (context, child) => Theme(
-                      data: ThemeData.light().copyWith(
-                        colorScheme: ColorScheme.light(
-                          primary: AppColors.primaryGold,
-                          onPrimary: AppColors.buttonText,
-                        ),
-                      ),
-                      child: child!,
-                    ),
-                  );
-                  if (picked != null) {
-                    _dobController.text = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
-                  }
-                },
-              ),
+
+
+
               SizedBox(height: 30.h),
               // Save Button
               ElevatedButton(

@@ -99,7 +99,7 @@ class _MainScreenState extends State<MainScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.fingerprint, size: 100, color: AppColors.primaryText),
+            Icon(Icons.fingerprint, size: 100, color: AppColors.primaryGold),
             SizedBox(height: 10),
             Text(
               "Authenticating...",

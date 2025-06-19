@@ -26,7 +26,7 @@ AppColors._();
   static const Color cardBackground = Color(0xFFE8F0FE); // Light blue for card background
 
   // Text colors
-  static const Color primaryText = Color(0xFFd7b56d); // Dark gray for body text
+  static const Color primaryText = primaryColor; // Dark gray for body text
   static const Color secondaryText = Color(0xFF666666); // Lighter gray for subtitles or secondary text
   static const Color headingText = Colors.white; // Near-black for headings
 

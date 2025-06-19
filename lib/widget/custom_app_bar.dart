@@ -24,7 +24,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         title,
         style: TextStyle(
           fontSize: 22,
-          color: AppColors.primaryText,
+          color: AppColors.primaryGold,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -34,7 +34,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            icon: Icon(Icons.person, color: AppColors.primaryText,),
+            icon: Icon(Icons.person, color: AppColors.primaryGold,),
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => ProfileScreen()),
@@ -44,7 +44,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       actions: [
         IconButton(
-          icon: Icon(Icons.support_agent, color: AppColors.primaryText),
+          icon: Icon(Icons.support_agent, color: AppColors.primaryGold),
           onPressed: onSupportPressed ?? () {
             // TODO: Implement customer support action
             Navigator.push(
@@ -54,7 +54,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           },
         ),
         IconButton(
-          icon: Icon(Icons.notifications, color: AppColors.primaryText),
+          icon: Icon(Icons.notifications, color: AppColors.primaryGold),
           onPressed: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => NotificationsScreen()),

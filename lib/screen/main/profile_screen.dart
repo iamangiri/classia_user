@@ -1,10 +1,10 @@
 import 'package:classia_amc/screen/homefetures/withdraw_screen.dart';
+import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:classia_amc/widget/common_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:classia_amc/themes/app_colors.dart';
-import 'package:classia_amc/widget/custom_app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../profile/about_us_screen.dart';
 import '../profile/bank_info_screen.dart';
@@ -50,8 +50,8 @@ class ProfileScreen extends StatelessWidget {
 
 
   Widget _buildProfileSection(BuildContext context) {
-    String userName = "Aman Giri"; // Replace with actual username
-    String userEmail = "aman@trader.com"; // Replace with actual email
+    String userName = "${UserConstants.NAME}"; // Replace with actual username
+    String userEmail = "${UserConstants.EMAIL}"; // Replace with actual email
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
