@@ -49,7 +49,7 @@ class _SplashScreenState extends State<SplashScreen> {
             );
           },
           child: Image.asset(
-            'assets/images/logo.png', // Make sure this image looks good on white
+            'assets/logo/logo.jpg', // Make sure this image looks good on white
             width: 160,
           ),
         ),

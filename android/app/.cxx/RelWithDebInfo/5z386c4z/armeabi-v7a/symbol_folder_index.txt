@@ -1,0 +1,1 @@
+/Users/prakashkumar/Desktop/swift_practice/firstproject/jockey_trading/build/app/intermediates/cxx/RelWithDebInfo/5z386c4z/obj/armeabi-v7a

@@ -39,7 +39,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
             controller: _controller,
             children: [
               _buildOnboardingPage(
-                'Welcome to Jocey Trading!',
+                'Welcome to Classia Capital!',
                 'assets/anim/trade-4.json',
                 'We make trading simple and accessible for everyone.',
                 isLocal: true,

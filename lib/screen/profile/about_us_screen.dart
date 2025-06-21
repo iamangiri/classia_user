@@ -48,7 +48,7 @@ class AboutUsScreen extends StatelessWidget {
             SizedBox(height: 16.h),
             // Welcome Section
             Text(
-              'Welcome to Jockey Trading',
+              'Welcome to Classia Capital',
               style: TextStyle(
                 color: AppColors.primaryText,
                 fontSize: 24.sp,

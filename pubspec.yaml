@@ -102,8 +102,10 @@ flutter:
     - assets/images/slider-2.jpeg
     - assets/images/slider-3.jpeg
     - assets/images/certificate_bg.jpeg
+    - assets/logo/logo.jpg
+    - assets/logo/classia-logo.png
 
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/images/app-logo.jpeg"  # Path to your logo image
+  image_path: "assets/logo/classia-logo.png"  # Path to your logo image

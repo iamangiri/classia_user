@@ -1,0 +1,1 @@
+/Users/prakashkumar/Desktop/swift_practice/firstproject/jockey_trading/build/app/intermediates/cxx/Debug/2j3r23x1/obj/arm64-v8a
