@@ -10,7 +10,6 @@ import '../main/market_screen.dart';
 import '../main/trading_screen.dart';
 import '../main/wallet_screen.dart';
 
-
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
 
@@ -22,6 +21,8 @@ class _MainScreenState extends State<MainScreen> {
   // Default to JT tab (index 2)
   int currentPage = 2;
   bool isAuthenticating = true;
+  bool authenticationFailed = false;
+  String authMessage = "Authenticating...";
   final AuthFingerprintService _authService = AuthFingerprintService();
 
   final List<Widget> screens = [
@@ -41,14 +42,77 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _authenticateUser() async {
-    bool isAuthenticated = await _authService.authenticate();
-    if (!isAuthenticated) {
-      Navigator.pop(context);
-      return;
+    try {
+      setState(() {
+        isAuthenticating = true;
+        authenticationFailed = false;
+        authMessage = "Checking authentication...";
+      });
+
+      // Add a small delay to show the loading screen
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Check if biometric is available first
+      bool isBiometricAvailable = await _authService.isBiometricAvailable();
+
+      if (!isBiometricAvailable) {
+        setState(() {
+          authMessage = "Biometric not available. Proceeding...";
+        });
+        await Future.delayed(const Duration(milliseconds: 1000));
+        setState(() {
+          isAuthenticating = false;
+        });
+        return;
+      }
+
+      setState(() {
+        authMessage = "Authenticating...";
+      });
+
+      bool isAuthenticated = await _authService.authenticate();
+
+      if (!isAuthenticated) {
+        // Check if locked out
+        if (_authService.isLockedOut()) {
+          setState(() {
+            authenticationFailed = true;
+            authMessage = "Too many failed attempts. Try again in ${_authService.getRemainingLockTime()} seconds.";
+          });
+
+          // Auto retry after lockout period
+          Future.delayed(Duration(seconds: _authService.getRemainingLockTime() + 1), () {
+            if (mounted) {
+              _authenticateUser();
+            }
+          });
+          return;
+        } else {
+          setState(() {
+            authenticationFailed = true;
+            authMessage = "Authentication failed. Tap to retry.";
+          });
+          return;
+        }
+      }
+
+      setState(() {
+        isAuthenticating = false;
+        authenticationFailed = false;
+      });
+
+    } catch (e) {
+      print("Error during authentication: $e");
+      // On any error, proceed to main screen to prevent blank screen
+      setState(() {
+        authMessage = "Authentication error. Proceeding...";
+      });
+      await Future.delayed(const Duration(milliseconds: 1000));
+      setState(() {
+        isAuthenticating = false;
+        authenticationFailed = false;
+      });
     }
-    setState(() {
-      isAuthenticating = false;
-    });
   }
 
   void _onItemTapped(int index) {
@@ -57,9 +121,21 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  void _retryAuthentication() {
+    _authService.resetAuthState();
+    _authenticateUser();
+  }
+
+  void _skipAuthentication() {
+    setState(() {
+      isAuthenticating = false;
+      authenticationFailed = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (isAuthenticating) {
+    if (isAuthenticating || authenticationFailed) {
       return _buildAuthLoadingScreen();
     }
 
@@ -99,16 +175,52 @@ class _MainScreenState extends State<MainScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.fingerprint, size: 100, color: AppColors.primaryGold),
-            SizedBox(height: 10),
+            if (!authenticationFailed) ...[
+              // Loading animation
+              Icon(Icons.fingerprint, size: 100, color: AppColors.primaryGold),
+              const SizedBox(height: 20),
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGold),
+              ),
+              const SizedBox(height: 20),
+            ] else ...[
+              // Error state
+              Icon(Icons.error_outline, size: 100, color: Colors.red),
+              const SizedBox(height: 20),
+            ],
             Text(
-              "Authenticating...",
+              authMessage,
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: AppColors.primaryGold,
+                color: authenticationFailed ? Colors.red : AppColors.primaryGold,
               ),
             ),
+            if (authenticationFailed) ...[
+              const SizedBox(height: 30),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: _retryAuthentication,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryGold,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text("Retry"),
+                  ),
+                  ElevatedButton(
+                    onPressed: _skipAuthentication,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text("Skip"),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

@@ -28,7 +28,7 @@ AppColors._();
   // Text colors
   static const Color primaryText = primaryColor; // Dark gray for body text
   static const Color secondaryText = Color(0xFF666666); // Lighter gray for subtitles or secondary text
-  static const Color headingText = Colors.white; // Near-black for headings
+  static const Color headingText = primaryColor; // Near-black for headings
 
   // Border colors
   static const Color border = Color(0xFFE0E0E0); // Light gray for borders

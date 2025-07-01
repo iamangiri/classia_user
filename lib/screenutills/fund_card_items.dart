@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../screen/market/fund_deatils_screen.dart';
 import '../themes/app_colors.dart';
+
 
 class FundCard extends StatelessWidget {
   final Map<String, dynamic> fund;
@@ -17,7 +19,7 @@ class FundCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        _navigateToDetails(context);
+        navigateToDetails(context);
       },
       child: Container(
         width: 160, // Reduced width for compactness
@@ -25,7 +27,13 @@ class FundCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.cardBackground, // Light card background
           borderRadius: BorderRadius.circular(12),
-
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
         ),
         padding: EdgeInsets.all(12), // Reduced padding
         child: Column(
@@ -103,12 +111,12 @@ class FundCard extends StatelessWidget {
     );
   }
 
-  void _navigateToDetails(BuildContext context) {
-  //  Navigator.push(
-     // context,
-      // MaterialPageRoute(
-      //   builder: (context) => FundDetailsScreen(fund: fund),
-      // ),
-   // );
+  void navigateToDetails(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FundDetailsScreen(fund: fund),
+      ),
+    );
   }
 }

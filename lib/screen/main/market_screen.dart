@@ -3,6 +3,9 @@ import 'package:classia_amc/widget/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import '../../screenutills/fund_card_items.dart';
 import '../../utills/constent/mutual_fond_data.dart';
+import '../market/all_fund_screen.dart';
+import '../market/fund_deatils_screen.dart';
+
 
 class MarketScreen extends StatefulWidget {
   @override
@@ -59,10 +62,10 @@ class _MarketScreenState extends State<MarketScreen> {
           Expanded(
             child: ListView(
               children: [
-                _buildCategorySection('Top Performing Funds', Icons.trending_up),
-                _buildCategorySection('Equity Funds', Icons.show_chart),
-                _buildCategorySection('Debt Funds', Icons.assessment),
-                _buildCategorySection('Tax Saving Funds', Icons.savings),
+                _buildCategorySection('Top Performing Funds', Icons.trending_up, 'Equity'),
+                _buildCategorySection('Equity Funds', Icons.show_chart, 'Equity'),
+                _buildCategorySection('Debt Funds', Icons.assessment, 'Debt'),
+                _buildCategorySection('Tax Saving Funds', Icons.savings, 'Tax Saving'),
               ],
             ),
           ),
@@ -71,10 +74,16 @@ class _MarketScreenState extends State<MarketScreen> {
     );
   }
 
-  Widget _buildCategorySection(String category, IconData icon) {
+  Widget _buildCategorySection(String category, IconData icon, String categoryFilter) {
     final filteredFunds = MutualFondData.mutualFunds
         .where((fund) =>
     _selectedFilter == 'All' || fund['category'] == _selectedFilter)
+        .toList();
+
+    // Get category specific funds for display
+    final categoryFunds = MutualFondData.mutualFunds
+        .where((fund) => fund['category'] == categoryFilter)
+        .take(5) // Show only first 5 items
         .toList();
 
     return Column(
@@ -100,7 +109,17 @@ class _MarketScreenState extends State<MarketScreen> {
               ),
               Spacer(),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ViewAllFundsScreen(
+                        category: category,
+                        filterType: categoryFilter,
+                      ),
+                    ),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryGold,
                   shape: RoundedRectangleBorder(
@@ -125,11 +144,23 @@ class _MarketScreenState extends State<MarketScreen> {
           child: ListView.separated(
             padding: EdgeInsets.symmetric(horizontal: 16),
             scrollDirection: Axis.horizontal,
-            itemCount: filteredFunds.length,
+            itemCount: categoryFunds.length,
             separatorBuilder: (_, __) => SizedBox(width: 12),
-            itemBuilder: (context, index) => FundCard(
-              fund: filteredFunds[index],
-              isDarkMode: false,
+            itemBuilder: (context, index) => GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FundDetailsScreen(
+                      fund: categoryFunds[index],
+                    ),
+                  ),
+                );
+              },
+              child: FundCard(
+                fund: categoryFunds[index],
+                isDarkMode: false,
+              ),
             ),
           ),
         ),

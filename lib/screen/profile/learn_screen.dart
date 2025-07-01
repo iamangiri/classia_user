@@ -42,19 +42,28 @@ class _LearnScreenState extends State<LearnScreen> with SingleTickerProviderStat
 
   final List<Map<String, dynamic>> topics = [
     {
-      'title': 'Stock Market Trading',
+      'title': 'How to Invest in Mutual Funds',
       'progress': 0.0,
       'color': Colors.blue,
       'details': {
-        'difficulty': 'Intermediate',
-        'description': 'Learn the fundamentals of stock market trading, including technical analysis, portfolio management, and risk management.',
-        'keyPoints': ['Technical Analysis', 'Fundamental Analysis', 'Risk Management', 'Portfolio Management'],
-        'example': 'Example: Analyzing a company’s balance sheet to determine its investment potential.',
-        'strategies': ['Attend webinars', 'Practice trading on simulators', 'Follow market news'],
-        'videoUrl': 'https://example.com/stock-trading-video',
+        'difficulty': 'Beginner',
+        'description': 'Understand how mutual funds work, types of funds, risk levels, and how to start investing safely.',
+        'keyPoints': [
+          'Types of Mutual Funds',
+          'NAV (Net Asset Value)',
+          'Risk vs Return',
+          'Systematic Investment Plans (SIP)'
+        ],
+        'example': 'Example: Starting a SIP of ₹500/month in a balanced mutual fund.',
+        'strategies': [
+          'Use a mutual fund app or website',
+          'Compare fund performance and ratings',
+          'Start small and diversify'
+        ],
+        'videoUrl': 'https://example.com/mutual-funds-video',
         'resources': [
-          {'title': 'Investopedia: Stock Basics', 'url': 'https://www.investopedia.com/stocks'},
-          {'title': 'Bloomberg Market News', 'url': 'https://www.bloomberg.com/markets'},
+          {'title': 'Groww: Mutual Fund Basics', 'url': 'https://groww.in/mutual-funds'},
+          {'title': 'AMFI India', 'url': 'https://www.amfiindia.com/investor-corner/knowledge-center'},
         ],
       },
     },
@@ -76,6 +85,7 @@ class _LearnScreenState extends State<LearnScreen> with SingleTickerProviderStat
     },
     // Other existing topics remain unchanged
   ];
+
 
   Map<String, bool> _bookmarks = {};
   Map<String, double> _progress = {};

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../themes/app_colors.dart';
+import '../profile/learn_screen.dart';
 
 class HomeCertificateSection extends StatelessWidget {
   const HomeCertificateSection({super.key});
@@ -84,8 +85,12 @@ class HomeCertificateSection extends StatelessWidget {
                           ),
                         ),
                         onPressed: () {
-                          // Add navigation or action
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => LearnScreen()),
+                          );
                         },
+
                         child: Text(
                           'Unlock Now',
                           style: TextStyle(
