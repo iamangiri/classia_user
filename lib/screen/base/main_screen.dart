@@ -11,7 +11,9 @@ import '../main/trading_screen.dart';
 import '../main/wallet_screen.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({Key? key}) : super(key: key);
+  final int initialIndex;
+
+  const MainScreen({Key? key, this.initialIndex = 2}) : super(key: key); // default to JT
 
   @override
   _MainScreenState createState() => _MainScreenState();
@@ -36,6 +38,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
+    currentPage = widget.initialIndex;
     UserConstants.loadUserData();
     _authenticateUser();
     print(UserConstants.TOKEN);

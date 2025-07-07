@@ -49,7 +49,21 @@ class _TradingCardState extends State<TradingCard>
   void dispose() {
     _controller.dispose();
     super.dispose();
+
   }
+  String _truncateText(String text, {int maxWords = 4}) {
+    // Normalize non-breaking or narrow spaces to regular space
+    final normalized = text
+        .replaceAll(RegExp(r'[\u00A0\u202F]'), ' ')
+        .trim();
+
+    final words = normalized.split(RegExp(r'\s+'));
+
+    if (words.length <= maxWords) return normalized;
+
+    return words.sublist(0, maxWords).join(' ') + '...';
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -134,13 +148,14 @@ class _TradingCardState extends State<TradingCard>
                         crossAxisAlignment: CrossAxisAlignment.start,  // ← add this
                         children: [
                           Text(
-                            widget.name,
+                            _truncateText(widget.name),
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: Colors.black87,
                             ),
                           ),
+
                           Text(
                             widget.fundName,
                             style: TextStyle(

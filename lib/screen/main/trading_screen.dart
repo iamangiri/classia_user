@@ -1,174 +1,12 @@
-//
-// import 'package:flutter/material.dart';
-// import 'package:classia_amc/themes/app_colors.dart';
-// import '../../service/apiservice/trade_service.dart';
-// import '../../widget/custom_app_bar.dart';
-// import '../../widget/trading_card.dart';
-//
-//
-// class TradingScreen extends StatefulWidget {
-//   @override
-//   _TradingScreenState createState() => _TradingScreenState();
-// }
-//
-// class _TradingScreenState extends State<TradingScreen> {
-//   List<Map<String, dynamic>> amcList = [];
-//   bool isLoading = true;
-//   String? errorMessage;
-//
-//   // Create instance of TradeService
-//   final TradeService _tradeService = TradeService();
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//     _loadAmcData();
-//   }
-//
-//   Future<void> _loadAmcData() async {
-//     try {
-//       setState(() {
-//         isLoading = true;
-//         errorMessage = null;
-//       });
-//
-//       // Use the service to load AMC data
-//       final enrichedAmcList = await _tradeService.loadAmcData();
-//
-//       setState(() {
-//         amcList = enrichedAmcList;
-//         isLoading = false;
-//       });
-//
-//     } catch (e) {
-//       print('Error loading AMC data: $e');
-//       setState(() {
-//         // Use default data as fallback through service
-//         amcList = _tradeService.getDefaultAmcData();
-//         amcList.sort((a, b) => b["value"].compareTo(a["value"]));
-//         isLoading = false;
-//         errorMessage = 'Using default data due to API error';
-//       });
-//     }
-//   }
-//
-//   Future<void> _refreshData() async {
-//     await _loadAmcData();
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: AppColors.backgroundColor,
-//       appBar: CustomAppBar(title: 'Jockey Trading'),
-//       body: RefreshIndicator(
-//         onRefresh: _refreshData,
-//         child: Column(
-//           children: [
-//             if (errorMessage != null)
-//               Container(
-//                 width: double.infinity,
-//                 padding: EdgeInsets.all(8),
-//                 margin: EdgeInsets.all(16),
-//                 decoration: BoxDecoration(
-//                   color: Colors.orange[100],
-//                   borderRadius: BorderRadius.circular(8),
-//                   border: Border.all(color: Colors.orange[300]!),
-//                 ),
-//                 child: Row(
-//                   children: [
-//                     Icon(Icons.warning, color: Colors.orange[700], size: 16),
-//                     SizedBox(width: 8),
-//                     Expanded(
-//                       child: Text(
-//                         errorMessage!,
-//                         style: TextStyle(
-//                           color: Colors.orange[700],
-//                           fontSize: 12,
-//                         ),
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//             Expanded(
-//               child: isLoading
-//                   ? Center(
-//                 child: Column(
-//                   mainAxisAlignment: MainAxisAlignment.center,
-//                   children: [
-//                     CircularProgressIndicator(
-//                       valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFDAA520)),
-//                     ),
-//                     SizedBox(height: 16),
-//                     Text(
-//                       'Loading AMC data...',
-//                       style: TextStyle(
-//                         color: Colors.grey[600],
-//                         fontSize: 16,
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//               )
-//                   : amcList.isEmpty
-//                   ? Center(
-//                 child: Column(
-//                   mainAxisAlignment: MainAxisAlignment.center,
-//                   children: [
-//                     Icon(
-//                       Icons.error_outline,
-//                       size: 64,
-//                       color: Colors.grey[400],
-//                     ),
-//                     SizedBox(height: 16),
-//                     Text(
-//                       'No AMC data available',
-//                       style: TextStyle(
-//                         color: Colors.grey[600],
-//                         fontSize: 18,
-//                       ),
-//                     ),
-//                     SizedBox(height: 8),
-//                     ElevatedButton(
-//                       onPressed: _refreshData,
-//                       child: Text('Retry'),
-//                       style: ElevatedButton.styleFrom(
-//                         backgroundColor: Color(0xFFDAA520),
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//               )
-//                   : Padding(
-//                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-//                 child: ListView.builder(
-//                   itemCount: amcList.length,
-//                   itemBuilder: (context, index) {
-//                     var amc = amcList[index];
-//                     return TradingCard(
-//                       logo: amc["logo"],
-//                       name: amc["name"],
-//                       fundName: amc["fundName"],
-//                       value: amc["value"],
-//                     );
-//                   },
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-
 import 'package:flutter/material.dart';
 import 'package:classia_amc/themes/app_colors.dart';
+import 'package:go_router/go_router.dart';
 import '../../service/apiservice/trade_service.dart';
-import '../../widget/custom_app_bar.dart';
+import '../../widget/trade/trade_app_bar.dart';
+import '../../widget/trade/trade_overlay.dart';
 import '../../widget/trading_card.dart';
 import 'dart:async';
+
 
 class TradingScreen extends StatefulWidget {
   @override
@@ -179,8 +17,7 @@ class _TradingScreenState extends State<TradingScreen> {
   List<Map<String, dynamic>> amcList = [];
   bool isLoading = true;
   String? errorMessage;
-  DateTime currentTime = DateTime.now();
-  Timer? _timer;
+  bool showMarketClosedOverlay = false;
 
   // Create instance of TradeService
   final TradeService _tradeService = TradeService();
@@ -189,21 +26,16 @@ class _TradingScreenState extends State<TradingScreen> {
   void initState() {
     super.initState();
     _loadAmcData();
-    _startTimer();
+    _checkMarketStatus();
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void _startTimer() {
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+  void _checkMarketStatus() {
+    // Check market status and show overlay if needed
+    if (!_isMarketOpen()) {
       setState(() {
-        currentTime = DateTime.now();
+        showMarketClosedOverlay = true;
       });
-    });
+    }
   }
 
   bool _isMarketOpen() {
@@ -246,137 +78,6 @@ class _TradingScreenState extends State<TradingScreen> {
     }
   }
 
-  String _formatTime(DateTime time) {
-    String period = time.hour >= 12 ? 'PM' : 'AM';
-    int hour = time.hour > 12 ? time.hour - 12 : (time.hour == 0 ? 12 : time.hour);
-    String minute = time.minute.toString().padLeft(2, '0');
-    String second = time.second.toString().padLeft(2, '0');
-
-    return '$hour:$minute:$second $period';
-  }
-
-  Widget _buildMarketStatusCard() {
-    final isOpen = _isMarketOpen();
-
-    return Container(
-      margin: EdgeInsets.all(16),
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isOpen
-              ? [Color(0xFF4CAF50), Color(0xFF45A049)]
-              : [Color(0xFFFF6B6B), Color(0xFFE55353)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: (isOpen ? Colors.green : Colors.red).withOpacity(0.3),
-            blurRadius: 8,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          isOpen ? Icons.trending_up : Icons.access_time,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          isOpen ? 'MARKET OPEN' : 'MARKET CLOSED',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      _getMarketStatus(),
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    if (!isOpen) ...[
-                      SizedBox(height: 8),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '⚠️ Investment restricted during market hours only',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'CURRENT TIME',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      _formatTime(currentTime),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _loadAmcData() async {
     try {
       setState(() {
@@ -408,110 +109,185 @@ class _TradingScreenState extends State<TradingScreen> {
     await _loadAmcData();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundColor,
-      appBar: CustomAppBar(title: 'Jockey Trading'),
-      body: RefreshIndicator(
-        onRefresh: _refreshData,
-        child: Column(
-          children: [
-            _buildMarketStatusCard(),
-            if (errorMessage != null)
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(8),
-                margin: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.orange[100],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange[300]!),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.warning, color: Colors.orange[700], size: 16),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        errorMessage!,
-                        style: TextStyle(
-                          color: Colors.orange[700],
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+  Widget _buildCompactErrorMessage() {
+    if (errorMessage == null) return SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.orange.withOpacity(0.1),
+        border: Border(
+          left: BorderSide(color: Colors.orange, width: 4),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.warning_amber, color: Colors.orange, size: 16),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              errorMessage!,
+              style: TextStyle(
+                color: Colors.orange[700],
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
               ),
-            Expanded(
-              child: isLoading
-                  ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFDAA520)),
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'Loading AMC data...',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
-              )
-                  : amcList.isEmpty
-                  ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.grey[400],
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'No AMC data available',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 18,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    ElevatedButton(
-                      onPressed: _refreshData,
-                      child: Text('Retry'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFFDAA520),
-                      ),
-                    ),
-                  ],
-                ),
-              )
-                  : Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: ListView.builder(
-                  itemCount: amcList.length,
-                  itemBuilder: (context, index) {
-                    var amc = amcList[index];
-                    return TradingCard(
-                      logo: amc["logo"],
-                      name: amc["name"],
-                      fundName: amc["fundName"],
-                      value: amc["value"],
-                    );
-                  },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFundsList() {
+    if (isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGold),
+              strokeWidth: 3,
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Loading funds...',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (amcList.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.error_outline,
+                size: 48,
+                color: Colors.grey[400],
+              ),
+            ),
+            SizedBox(height: 20),
+            Text(
+              'No funds available',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Please check your connection and try again',
+              style: TextStyle(
+                color: Colors.grey[500],
+                fontSize: 14,
+              ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: _refreshData,
+              icon: Icon(Icons.refresh),
+              label: Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryGold,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
                 ),
               ),
             ),
           ],
         ),
+      );
+    }
+
+    return ListView.builder(
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      itemCount: amcList.length,
+      itemBuilder: (context, index) {
+        var amc = amcList[index];
+        return Container(
+          margin: EdgeInsets.only(bottom: 12),
+          child: TradingCard(
+            logo: amc["logo"],
+            name: amc["name"],
+            fundName: amc["fundName"],
+            value: amc["value"],
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      appBar: TradeAppBar(title: 'Jockey Trading'),
+      body: Stack(
+        children: [
+          // Main Content
+          RefreshIndicator(
+            onRefresh: _refreshData,
+            color: AppColors.primaryGold,
+            child: Column(
+              children: [
+                _buildCompactErrorMessage(),
+                Expanded(
+                  child: _buildFundsList(),
+                ),
+              ],
+            ),
+          ),
+
+          // Market Closed Overlay
+          if (showMarketClosedOverlay)
+            Positioned.fill(
+              child:MarketClosedOverlay(
+                onExploreFunds: () {
+                  context.goNamed('main', queryParameters: {'index': '1'});
+                },
+              )
+            ),
+        ],
       ),
+
+      // Floating Action Button for Market Status (Optional)
+      floatingActionButton: !_isMarketOpen() && !showMarketClosedOverlay
+          ? FloatingActionButton.extended(
+        onPressed: () {
+          setState(() {
+            showMarketClosedOverlay = true;
+          });
+        },
+        backgroundColor: AppColors.primaryGold,
+        icon: Icon(Icons.access_time, color: Colors.white),
+        label: Text(
+          'Market Status',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      )
+          : null,
     );
   }
 }

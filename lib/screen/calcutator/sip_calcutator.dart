@@ -4,6 +4,8 @@ import 'package:classia_amc/widget/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../main/trading_screen.dart';
+
 class InvestmentCalculator extends StatefulWidget {
   @override
   _InvestmentCalculatorState createState() => _InvestmentCalculatorState();
@@ -578,7 +580,13 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => TradingScreen()),
+          );
+        },
+
         child: Text(
           'INVEST NOW',
           style: TextStyle(

@@ -87,7 +87,11 @@ final router = GoRouter(
     GoRoute(
       path: '/main',
       name: 'main',
-      builder: (context, state) => MainScreen(),
+      builder: (context, state) {
+        final initialIndex = int.tryParse(state.uri.queryParameters['index'] ?? '2') ?? 2;
+        return MainScreen(initialIndex: initialIndex);
+      },
     ),
+
   ],
 );

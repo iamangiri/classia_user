@@ -64,29 +64,19 @@ class TradeService {
   // Get AMC logo URL based on name
   String getAmcLogo(String amcName) {
     final logoMap = {
-      'HDFC Amc': 'https://upload.wikimedia.org/wikipedia/commons/7/70/HDFC_Bank_Logo.svg',
-      'ICIC Amc': 'https://www.icicipruamc.com/docs/default-source/default-document-library/icici-pru-logo.jpg',
-      'prakash': 'https://www.quantmutual.com/images/logo.png',
-      'Classia amc': 'https://www.sbimf.com/images/default-source/default-album/sbi-mutual-fund-logo.png',
-      'test amc': 'https://www.axisbank.com/etc.clientlibs/kotak/clientlibs/clientlib-base/resources/images/kotak-logo.png',
-      'Amc Classia': 'https://www.kotak.com/etc.clientlibs/kotak/clientlibs/clientlib-base/resources/images/kotak-logo.png',
+      'HDFC Asset Management Company': 'https://assets-netstorage.groww.in/mf-assets/logos/hdfc_groww.png',
+      'ICICI Prudential AMC Ltd': 'https://assets-netstorage.groww.in/mf-assets/logos/icici_groww.png',
+      'Quant Mutual Fund': 'https://assets-netstorage.groww.in/mf-assets/logos/escorts_groww.png',
+      'Aditya Birla Sun Life Mutual Fund': 'https://assets-netstorage.groww.in/mf-assets/logos/birla_groww.png',
+      'Axis Mutual Fund': 'https://assets-netstorage.groww.in/mf-assets/logos/axis_groww.png',
+      'Bandhan Mutual Fund': 'https://assets-netstorage.groww.in/mf-assets/logos/idfc_groww.png',
+      'ITI Mutual Fund': 'https://assets-netstorage.groww.in/mf-assets/logos/iti_groww.png',
+      'Invesco Mutual Fund': 'https://assets-netstorage.groww.in/mf-assets/logos/invesco_groww.png',
+      'Franklin Templeton Mutual Fund': 'https://assets-netstorage.groww.in/mf-assets/logos/franklin_groww.png',
+      'Motilal Oswal AMC': 'https://assets-netstorage.groww.in/mf-assets/logos/motilal_groww.png',
     };
 
     return logoMap[amcName] ?? 'https://www.quantmutual.com/images/logo.png';
-  }
-
-  // Get AMC fund name based on AMC name
-  String getAmcFundName(String amcName) {
-    final fundNameMap = {
-      'HDFC Amc': 'Mid-Cap Opportunities Fund',
-      'ICIC Amc': 'Technology Fund',
-      'prakash': 'Small Cap Fund',
-      'Classia amc': 'Bluechip Fund',
-      'test amc': 'Midcap Fund',
-      'Amc Classia': 'Emerging Equity Fund',
-    };
-
-    return fundNameMap[amcName] ?? 'Mutual Fund';
   }
 
   // Get default AMC data as fallback
@@ -146,10 +136,20 @@ class TradeService {
           'id': amc['ID'],
           'logo': getAmcLogo(amc['Name']),
           'name': amc['Name'],
-          'fundName': getAmcFundName(amc['Name']),
+          'fundName': amc['FundName'] ?? 'Mutual Fund', // Use dynamic fund name from API
           'value': performanceData,
           'email': amc['Email'],
           'mobile': amc['Mobile'],
+          'address': amc['Address'],
+          'city': amc['City'],
+          'state': amc['State'],
+          'pinCode': amc['PinCode'],
+          'contactPersonName': amc['ContactPersonName'],
+          'contactPersonDesignation': amc['ContactPerDesignation'],
+          'panNumber': amc['PanNumber'],
+          'equityPer': amc['EquityPer'],
+          'debtPer': amc['DebtPer'],
+          'cashSplit': amc['CashSplit'],
         });
       }
 

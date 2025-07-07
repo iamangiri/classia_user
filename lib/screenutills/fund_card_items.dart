@@ -44,15 +44,26 @@ class FundCard extends StatelessWidget {
                 Container(
                   width: 36,
                   height: 36,
-                  decoration: BoxDecoration(
-                    color: AppColors.screenBackground,
+                  child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    image: DecorationImage(
-                      image: NetworkImage(logoUrl),
+                    child: Image.network(
+                      logoUrl,
                       fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: AppColors.screenBackground,
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.broken_image,
+                            size: 20,
+                            color: AppColors.secondaryText,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
+
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
