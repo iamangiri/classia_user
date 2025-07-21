@@ -27,29 +27,53 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   File? _profileImage;
 
   Future<void> _pickImage(ImageSource source) async {
-    final ImagePicker _picker = ImagePicker();
-    final XFile? pickedImage = await _picker.pickImage(source: source);
-    if (pickedImage != null) {
-      // Crop the image
-      final CroppedFile? croppedImage = await ImageCropper().cropImage(
-        sourcePath: pickedImage.path,
-        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Crop Image',
-            toolbarColor: AppColors.primaryGold,
-            toolbarWidgetColor: AppColors.buttonText,
-            initAspectRatio: CropAspectRatioPreset.square,
-            lockAspectRatio: true,
-          ),
-          IOSUiSettings(title: 'Crop Image'),
-        ],
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? pickedImage = await picker.pickImage(
+        source: source,
+        maxWidth: 1000,
+        maxHeight: 1000,
+        imageQuality: 80,
       );
-      if (croppedImage != null) {
-        setState(() {
-          _profileImage = File(croppedImage.path);
-        });
+
+      if (pickedImage != null) {
+        // Crop the image
+        final CroppedFile? croppedImage = await ImageCropper().cropImage(
+          sourcePath: pickedImage.path,
+          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+          uiSettings: [
+            AndroidUiSettings(
+              toolbarTitle: 'Crop Image',
+              toolbarColor: AppColors.primaryGold,
+              toolbarWidgetColor: AppColors.buttonText,
+              initAspectRatio: CropAspectRatioPreset.square,
+              lockAspectRatio: true,
+              hideBottomControls: false,
+              statusBarColor: AppColors.primaryGold,
+              activeControlsWidgetColor: AppColors.primaryGold,
+            ),
+            IOSUiSettings(
+              title: 'Crop Image',
+              minimumAspectRatio: 1.0,
+              aspectRatioLockEnabled: true,
+            ),
+          ],
+        );
+
+        if (croppedImage != null) {
+          setState(() {
+            _profileImage = File(croppedImage.path);
+          });
+        }
       }
+    } catch (e) {
+      // Handle any errors during image picking
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to pick image: ${e.toString()}"),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
   }
 
@@ -57,33 +81,91 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16.r))),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+      ),
       builder: (context) => Container(
         padding: EdgeInsets.all(16.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Container(
+              width: 40.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+            SizedBox(height: 16.h),
             Text(
               'Select Image Source',
-              style: TextStyle(color: AppColors.primaryText, fontSize: 18.sp, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppColors.primaryText,
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             SizedBox(height: 16.h),
             ListTile(
-              leading: Icon(Icons.camera_alt, color: AppColors.primaryGold, size: 24.sp),
-              title: Text('Camera', style: TextStyle(color: AppColors.primaryText, fontSize: 16.sp)),
+              leading: Icon(
+                Icons.camera_alt,
+                color: AppColors.primaryGold,
+                size: 24.sp,
+              ),
+              title: Text(
+                'Camera',
+                style: TextStyle(
+                  color: AppColors.primaryText,
+                  fontSize: 16.sp,
+                ),
+              ),
               onTap: () {
                 Navigator.pop(context);
-             //   _pickImage(ImageSource.camera);
+                _pickImage(ImageSource.camera);
               },
             ),
             ListTile(
-              leading: Icon(Icons.photo_library, color: AppColors.primaryGold, size: 24.sp),
-              title: Text('Gallery', style: TextStyle(color: AppColors.primaryText, fontSize: 16.sp)),
+              leading: Icon(
+                Icons.photo_library,
+                color: AppColors.primaryGold,
+                size: 24.sp,
+              ),
+              title: Text(
+                'Gallery',
+                style: TextStyle(
+                  color: AppColors.primaryText,
+                  fontSize: 16.sp,
+                ),
+              ),
               onTap: () {
                 Navigator.pop(context);
-             //   _pickImage(ImageSource.gallery);
+                _pickImage(ImageSource.gallery);
               },
             ),
+            // Add option to remove current image
+            if (_profileImage != null)
+              ListTile(
+                leading: Icon(
+                  Icons.delete,
+                  color: AppColors.error,
+                  size: 24.sp,
+                ),
+                title: Text(
+                  'Remove Image',
+                  style: TextStyle(
+                    color: AppColors.error,
+                    fontSize: 16.sp,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() {
+                    _profileImage = null;
+                  });
+                },
+              ),
+            SizedBox(height: 16.h),
           ],
         ),
       ),
@@ -93,16 +175,36 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Profile updated successfully!"),
-          backgroundColor: AppColors.success,
-        ),
-      );
-      Navigator.pop(context);
+
+      try {
+        // Simulate API call - replace with actual API call
+        await Future.delayed(const Duration(seconds: 2));
+
+        // Here you would typically:
+        // 1. Upload the image to your server if _profileImage is not null
+        // 2. Update user profile with new data
+        // 3. Update UserConstants with new values
+
+        setState(() => _isLoading = false);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Profile updated successfully!"),
+            backgroundColor: AppColors.success,
+          ),
+        );
+
+        Navigator.pop(context);
+      } catch (e) {
+        setState(() => _isLoading = false);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to update profile: ${e.toString()}"),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -132,28 +234,47 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           key: _formKey,
           child: Column(
             children: [
-              // Profile Image
+              // Profile Image with enhanced styling
               Stack(
                 children: [
-                  CircleAvatar(
-                    radius: 60.r,
-                    backgroundColor: AppColors.border,
-                    backgroundImage: _profileImage != null
-                        ? FileImage(_profileImage!)
-                        : const AssetImage('assets/images/default_profile.png') as ImageProvider,
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.primaryGold,
+                        width: 3.w,
+                      ),
+                    ),
+                    child: CircleAvatar(
+                      radius: 60.r,
+                      backgroundColor: AppColors.border,
+                      backgroundImage: _profileImage != null
+                          ? FileImage(_profileImage!)
+                          : const AssetImage('assets/images/default_profile.png') as ImageProvider,
+                    ),
                   ),
                   Positioned(
                     bottom: 0,
                     right: 0,
                     child: GestureDetector(
                       onTap: _showImageSourceDialog,
-                      child: CircleAvatar(
-                        backgroundColor: AppColors.primaryGold,
-                        radius: 20.r,
-                        child: Icon(
-                          Icons.camera_alt,
-                          color: AppColors.buttonText,
-                          size: 20.sp,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primaryGold,
+                          border: Border.all(
+                            color: AppColors.screenBackground,
+                            width: 2.w,
+                          ),
+                        ),
+                        child: CircleAvatar(
+                          backgroundColor: AppColors.primaryGold,
+                          radius: 20.r,
+                          child: Icon(
+                            Icons.camera_alt,
+                            color: AppColors.buttonText,
+                            size: 20.sp,
+                          ),
                         ),
                       ),
                     ),
@@ -161,6 +282,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ],
               ),
               SizedBox(height: 20.h),
+
               // Full Name
               _buildTextField(
                 label: "Full Name",
@@ -168,6 +290,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 controller: _fullNameController,
                 validator: (value) => value == null || value.isEmpty ? "Please enter your full name" : null,
               ),
+
               // Email
               _buildTextField(
                 label: "Email",
@@ -180,6 +303,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   return null;
                 },
               ),
+
               // Phone Number
               _buildTextField(
                 label: "Phone Number",
@@ -193,9 +317,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 },
               ),
 
-
-
               SizedBox(height: 30.h),
+
               // Save Button
               ElevatedButton(
                 onPressed: _isLoading ? null : _saveProfile,
@@ -204,6 +327,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   padding: EdgeInsets.symmetric(vertical: 14.h),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
                   minimumSize: Size(double.infinity, 48.h),
+                  elevation: 2,
                 ),
                 child: _isLoading
                     ? SizedBox(
@@ -224,6 +348,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
               ),
               SizedBox(height: 16.h),
+
               // Cancel Button
               TextButton(
                 onPressed: () => Navigator.pop(context),

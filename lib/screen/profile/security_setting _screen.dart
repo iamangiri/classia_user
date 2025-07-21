@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:classia_amc/themes/app_colors.dart';
 import 'package:classia_amc/widget/custom_app_bar.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SecuritySettingsScreen extends StatefulWidget {
   const SecuritySettingsScreen({Key? key}) : super(key: key);
@@ -55,11 +56,12 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
       'isToggle': false,
     },
     {
-      'title': 'Session Management',
-      'subtitle': 'View and terminate active sessions',
-      'icon': Icons.devices,
+      'title': 'Delete My Account',
+      'subtitle': 'Request account deletion via our website',
+      'icon': Icons.delete_forever,
       'isToggle': false,
     },
+
     {
       'title': 'Biometric Login',
       'subtitle': 'Enable fingerprint or face ID login',
@@ -177,12 +179,9 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                     MaterialPageRoute(builder: (context) => ChangePhoneNumberScreen()),
                   );
                   break;
-                case 'Session Management':
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => SessionManagementScreen()),
-                  );
-                  break;
+                  case 'Delete My Account':
+                launchUrl(Uri.parse('https://classiacapital.com/contact'), mode: LaunchMode.externalApplication);
+                break;
               }
             },
             child: Container(
@@ -287,11 +286,12 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
             Icons.fingerprint,
           ),
           _buildComparisonItem(
-            'Session Management',
-            'Control active devices, revoke access',
-            '3 min setup, low effort',
-            Icons.devices,
+            'Delete My Account',
+            'Allows users to request account deletion via the website',
+            'Instant request, low effort',
+            Icons.delete_forever,
           ),
+
         ],
       ),
     );
@@ -545,8 +545,16 @@ class ChangePasswordScreen extends StatelessWidget {
             SizedBox(height: 16.h),
             ElevatedButton(
               onPressed: () {
-                // Handle password change
+                // Handle password change logic here
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Password updated successfully'),
+                    backgroundColor: AppColors.success,
+                  ),
+                );
               },
+
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryGold,
                 padding: EdgeInsets.symmetric(vertical: 14.h),

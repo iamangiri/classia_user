@@ -1,236 +1,350 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:classia_amc/themes/app_colors.dart';
-import 'package:classia_amc/widget/common_app_bar.dart';
-import 'package:classia_amc/widget/custom_app_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class MarketNewsScreen extends StatefulWidget {
-  @override
-  _MarketNewsScreenState createState() => _MarketNewsScreenState();
+// Data models
+class MarketNewsResponse {
+  final Meta meta;
+  final List<NewsData> data;
+
+  MarketNewsResponse({required this.meta, required this.data});
+
+  factory MarketNewsResponse.fromJson(Map<String, dynamic> json) {
+    return MarketNewsResponse(
+      meta: Meta.fromJson(json['meta']),
+      data: (json['data'] as List)
+          .map((item) => NewsData.fromJson(item))
+          .toList(),
+    );
+  }
 }
 
-class _MarketNewsScreenState extends State<MarketNewsScreen>
-    with SingleTickerProviderStateMixin {
-  TabController? _tabController;
-  String selectedCategory = 'All';
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
+class Meta {
+  final int found;
+  final int returned;
+  final int limit;
+  final int page;
 
-  // Dummy data for Trade Market news
-  final List<Map<String, String>> tradeMarketNews = [
-    {
-      'title': 'Trade Market Hits New Highs',
-      'date': '2025-03-01',
-      'image': 'https://via.placeholder.com/150',
-      'content':
-      'The trade market has reached new all-time highs today, driven by strong economic data and investor confidence...',
-    },
-    {
-      'title': 'Global Markets Rally Amid Optimism',
-      'date': '2025-02-28',
-      'image': 'https://via.placeholder.com/150',
-      'content':
-      'Global markets saw a significant rally as optimism grows over new trade agreements and technological advancements...',
-    },
-  ];
+  Meta({required this.found, required this.returned, required this.limit, required this.page});
 
-  // Dummy data for Mutual Fund news
-  final List<Map<String, String>> mutualFundNews = [
-    {
-      'title': 'Mutual Funds See Record Inflows',
-      'date': '2025-03-02',
-      'image': 'https://via.placeholder.com/150',
-      'content':
-      'Mutual funds have attracted record inflows this month, with investors favoring large-cap and hybrid funds...',
-    },
-    {
-      'title': 'Top Mutual Fund Picks for Q1',
-      'date': '2025-02-27',
-      'image': 'https://via.placeholder.com/150',
-      'content':
-      'Analysts have highlighted the top mutual fund picks for Q1, focusing on growth-oriented equity funds...',
-    },
-  ];
+  factory Meta.fromJson(Map<String, dynamic> json) {
+    return Meta(
+      found: json['found'],
+      returned: json['returned'],
+      limit: json['limit'],
+      page: json['page'],
+    );
+  }
+}
+
+class NewsData {
+  final String uuid;
+  final String title;
+  final String description;
+  final String snippet;
+  final String url;
+  final String? imageUrl;
+  final String language;
+  final DateTime publishedAt;
+  final String source;
+  final List<Entity> entities;
+
+  NewsData({
+    required this.uuid,
+    required this.title,
+    required this.description,
+    required this.snippet,
+    required this.url,
+    this.imageUrl,
+    required this.language,
+    required this.publishedAt,
+    required this.source,
+    required this.entities,
+  });
+
+  factory NewsData.fromJson(Map<String, dynamic> json) {
+    return NewsData(
+      uuid: json['uuid'],
+      title: json['title'],
+      description: json['description'],
+      snippet: json['snippet'],
+      url: json['url'],
+      imageUrl: json['image_url'],
+      language: json['language'],
+      publishedAt: DateTime.parse(json['published_at']),
+      source: json['source'],
+      entities: (json['entities'] as List?)
+          ?.map((item) => Entity.fromJson(item))
+          .toList() ?? [],
+    );
+  }
+}
+
+class Entity {
+  final String symbol;
+  final String name;
+  final String? exchange;
+  final String country;
+  final String type;
+  final String? industry;
+  final double sentimentScore;
+
+  Entity({
+    required this.symbol,
+    required this.name,
+    this.exchange,
+    required this.country,
+    required this.type,
+    this.industry,
+    required this.sentimentScore,
+  });
+
+  factory Entity.fromJson(Map<String, dynamic> json) {
+    return Entity(
+      symbol: json['symbol'],
+      name: json['name'],
+      exchange: json['exchange'],
+      country: json['country'],
+      type: json['type'],
+      industry: json['industry'],
+      sentimentScore: (json['sentiment_score'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+}
+
+// API Service
+class MarketAuxService {
+  static const String baseUrl = 'https://api.marketaux.com/v1';
+  static const String apiToken = 'IPPUEt7mAwb8r8EVXW1nPS5dIhYCGy7NTvcPvriT';
+
+  static Future<MarketNewsResponse> fetchNews({
+    String entityTypes = 'index,equity',
+    String language = 'en',
+    int limit = 10,
+    int page = 1,
+  }) async {
+    final url = Uri.parse(
+      '$baseUrl/news/all?entity_types=$entityTypes&language=$language&limit=$limit&page=$page&api_token=$apiToken',
+    );
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        return MarketNewsResponse.fromJson(jsonData);
+      } else {
+        throw Exception('Failed to load news: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching news: $e');
+    }
+  }
+}
+
+// Main Market Screen
+class MarketNewsScreen extends StatefulWidget {
+  @override
+  _MarketScreenState createState() => _MarketScreenState();
+}
+
+class _MarketScreenState extends State<MarketNewsScreen> {
+  late Future<MarketNewsResponse> _newsFuture;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    _searchController.addListener(() {
-      setState(() {
-        _searchQuery = _searchController.text.toLowerCase();
-      });
+    _newsFuture = MarketAuxService.fetchNews();
+  }
+
+  void _refreshNews() {
+    setState(() {
+      _newsFuture = MarketAuxService.fetchNews();
     });
-  }
-
-  @override
-  void dispose() {
-    _tabController!.dispose();
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  Widget _buildNewsList(List<Map<String, String>> newsList) {
-    final filteredNews = newsList.where((news) {
-      final title = news['title']!.toLowerCase();
-      final content = news['content']!.toLowerCase();
-      return selectedCategory == 'All' &&
-          (title.contains(_searchQuery) || content.contains(_searchQuery));
-    }).toList();
-
-    return filteredNews.isEmpty
-        ? Center(
-      child: Text(
-        'No news found',
-        style: TextStyle(
-          color: AppColors.secondaryText,
-          fontSize: 16.sp,
-        ),
-      ),
-    )
-        : ListView.builder(
-      itemCount: filteredNews.length,
-      itemBuilder: (context, index) {
-        final news = filteredNews[index];
-        return InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => NewsDetailScreen(news: news),
-              ),
-            );
-          },
-          child: Container(
-            margin: EdgeInsets.symmetric(vertical: 4.h, horizontal: 8.w),
-            decoration: BoxDecoration(
-              color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(12.r),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 6.r,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: ListTile(
-              contentPadding:
-              EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-              leading: ClipRRect(
-                borderRadius: BorderRadius.circular(8.r),
-                child: CachedNetworkImage(
-                  imageUrl: news['image']!,
-                  width: 60.w,
-                  height: 60.h,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    width: 60.w,
-                    height: 60.h,
-                    color: AppColors.border,
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    width: 60.w,
-                    height: 60.h,
-                    color: AppColors.border,
-                    child: Icon(
-                      Icons.article,
-                      color: AppColors.disabled,
-                      size: 24.sp,
-                    ),
-                  ),
-                ),
-              ),
-              title: Text(
-                news['title'] ?? 'No Title',
-                style: TextStyle(
-                  color: AppColors.primaryText,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16.sp,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              subtitle: Text(
-                news['date'] ?? '',
-                style: TextStyle(
-                  color: AppColors.secondaryText,
-                  fontSize: 12.sp,
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.screenBackground,
-      appBar:AppBar(
-        backgroundColor: AppColors.primaryGold,
+      appBar: AppBar(
         title: Text(
           'Market News',
-          style: TextStyle(
-            fontSize: 18.sp, // Optional: for better scaling
-            fontWeight: FontWeight.w600,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.blueGrey[900],
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: _refreshNews,
+            icon: Icon(Icons.refresh),
+            tooltip: 'Refresh News',
+          ),
+        ],
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.blueGrey[900]!,
+              Colors.blueGrey[800]!,
+              Colors.blueGrey[700]!,
+            ],
           ),
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: AppColors.primaryGold,
-          labelColor: AppColors.primaryText,
-          unselectedLabelColor: AppColors.secondaryText,
-          labelStyle: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
-          unselectedLabelStyle: TextStyle(fontSize: 14.sp),
-          tabs: [
-            Tab(text: 'Trade Market'),
-            Tab(text: 'Mutual Fund'),
-          ],
+        child: FutureBuilder<MarketNewsResponse>(
+          future: _newsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Loading market news...',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            if (snapshot.hasError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      color: Colors.red[300],
+                      size: 64,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Error loading news',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      '${snapshot.error}',
+                      style: TextStyle(color: Colors.white70),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _refreshNews,
+                      child: Text('Retry'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            if (!snapshot.hasData || snapshot.data!.data.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.article_outlined,
+                      color: Colors.white54,
+                      size: 64,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'No news available',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            final newsResponse = snapshot.data!;
+            return RefreshIndicator(
+              onRefresh: () async {
+                _refreshNews();
+              },
+              child: Column(
+                children: [
+                  // Stats Header
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildStatCard('Total Found', newsResponse.meta.found),
+                        _buildStatCard('Showing', newsResponse.meta.returned),
+                        _buildStatCard('Page', newsResponse.meta.page),
+                      ],
+                    ),
+                  ),
+
+                  // News List
+                  Expanded(
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: newsResponse.data.length,
+                      itemBuilder: (context, index) {
+                        final news = newsResponse.data[index];
+                        return NewsCard(news: news);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
+    );
+  }
 
-      body: Column(
+  Widget _buildStatCard(String label, int value) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
+      ),
+      child: Column(
         children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search news...',
-                hintStyle: TextStyle(
-                  color: AppColors.secondaryText,
-                  fontSize: 14.sp,
-                ),
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: AppColors.secondaryText,
-                  size: 20.sp,
-                ),
-                filled: true,
-                fillColor: AppColors.cardBackground,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              style: TextStyle(
-                color: AppColors.primaryText,
-                fontSize: 14.sp,
-              ),
+          Text(
+            value.toString(),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 8.h),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildNewsList(tradeMarketNews),
-                _buildNewsList(mutualFundNews),
-              ],
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
             ),
           ),
         ],
@@ -239,77 +353,248 @@ class _MarketNewsScreenState extends State<MarketNewsScreen>
   }
 }
 
-class NewsDetailScreen extends StatelessWidget {
-  final Map<String, String> news;
+// News Card Widget
+class NewsCard extends StatelessWidget {
+  final NewsData news;
 
-  const NewsDetailScreen({Key? key, required this.news}) : super(key: key);
+  const NewsCard({Key? key, required this.news}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.screenBackground,
-      appBar: CommonAppBar(
-        title: 'News Details',
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.w),
+    return Card(
+      margin: EdgeInsets.only(bottom: 16),
+      elevation: 8,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white,
+              Colors.grey[50]!,
+            ],
+          ),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (news['image'] != null)
+            // Image
+            if (news.imageUrl != null)
               ClipRRect(
-                borderRadius: BorderRadius.circular(12.r),
-                child: CachedNetworkImage(
-                  imageUrl: news['image']!,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+                child: Image.network(
+                  news.imageUrl!,
+                  height: 200,
                   width: double.infinity,
-                  height: 200.h,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    width: double.infinity,
-                    height: 200.h,
-                    color: AppColors.border,
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    width: double.infinity,
-                    height: 200.h,
-                    color: AppColors.border,
-                    child: Icon(
-                      Icons.broken_image,
-                      color: AppColors.disabled,
-                      size: 48.sp,
-                    ),
-                  ),
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 200,
+                      color: Colors.grey[300],
+                      child: Icon(
+                        Icons.image_not_supported,
+                        size: 50,
+                        color: Colors.grey[600],
+                      ),
+                    );
+                  },
                 ),
               ),
-            SizedBox(height: 16.h),
-            Text(
-              news['title'] ?? 'No Title',
-              style: TextStyle(
-                color: AppColors.primaryText,
-                fontSize: 20.sp,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              news['date'] ?? '',
-              style: TextStyle(
-                color: AppColors.secondaryText,
-                fontSize: 14.sp,
-              ),
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              news['content'] ?? 'No content available.',
-              style: TextStyle(
-                color: AppColors.primaryText,
-                fontSize: 16.sp,
-                height: 1.5,
+
+            Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title
+                  Text(
+                    news.title,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 8),
+
+                  // Description
+                  Text(
+                    news.description,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                      height: 1.4,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 12),
+
+                  // Entities (Stocks)
+                  if (news.entities.isNotEmpty)
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: news.entities.take(3).map((entity) {
+                        return Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _getSentimentColor(entity.sentimentScore),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            entity.symbol,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  SizedBox(height: 12),
+
+                  // Footer
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            news.source,
+                            style: TextStyle(
+                              color: Colors.blue[600],
+                              fontWeight: FontWeight.w500,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            DateFormat('MMM dd, yyyy • HH:mm').format(news.publishedAt),
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        onPressed: () => _launchURL(context, news.url),
+                        icon: Icon(
+                          Icons.open_in_new,
+                          color: Colors.blue[600],
+                        ),
+                        tooltip: 'Read full article',
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Color _getSentimentColor(double sentiment) {
+    if (sentiment > 0.6) return Colors.green;
+    if (sentiment > 0.4) return Colors.orange;
+    return Colors.red;
+  }
+
+  void _launchURL(BuildContext context, String url) async {
+    try {
+      final Uri uri = Uri.parse(url);
+
+      // Check if URL can be launched
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        // Show a fallback dialog if URL can't be launched
+        _showUrlDialog(context, url);
+      }
+    } catch (e) {
+      // Handle any errors and show fallback dialog
+      _showUrlDialog(context, url);
+    }
+  }
+
+  void _showUrlDialog(BuildContext context, String url) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Open Link'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Unable to open the link automatically.'),
+              SizedBox(height: 8),
+              Text('URL:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              SelectableText(
+                url,
+                style: TextStyle(color: Colors.blue),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Close'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Try again with different launch mode
+                _tryAlternativeLaunch(url);
+              },
+              child: Text('Try Again'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _tryAlternativeLaunch(String url) async {
+    try {
+      final Uri uri = Uri.parse(url);
+
+      // Try different launch modes
+      List<LaunchMode> modes = [
+        LaunchMode.externalApplication,
+        LaunchMode.platformDefault,
+        LaunchMode.inAppWebView,
+      ];
+
+      for (LaunchMode mode in modes) {
+        try {
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: mode);
+            break;
+          }
+        } catch (e) {
+          // Continue to next mode
+          continue;
+        }
+      }
+    } catch (e) {
+      // All attempts failed
+      print('Failed to launch URL: $e');
+    }
   }
 }
