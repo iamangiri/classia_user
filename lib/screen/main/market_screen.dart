@@ -1,11 +1,10 @@
-import 'package:classia_amc/themes/app_colors.dart';
-import 'package:classia_amc/widget/custom_app_bar.dart';
+import 'package:classia_amc/utills/constent/mutual_fond_data.dart';
 import 'package:flutter/material.dart';
 import '../../screenutills/fund_card_items.dart';
-import '../../utills/constent/mutual_fond_data.dart';
+import '../../themes/app_colors.dart';
+import '../../widget/custom_app_bar.dart';
 import '../market/all_fund_screen.dart';
 import '../market/fund_deatils_screen.dart';
-
 
 class MarketScreen extends StatefulWidget {
   @override
@@ -57,16 +56,29 @@ class _MarketScreenState extends State<MarketScreen> {
               ),
             ),
           ),
-
           // Fund List
           Expanded(
-            child: ListView(
-              children: [
-                _buildCategorySection('Top Performing Funds', Icons.trending_up, 'Equity'),
-                _buildCategorySection('Equity Funds', Icons.show_chart, 'Equity'),
-                _buildCategorySection('Debt Funds', Icons.assessment, 'Debt'),
-                _buildCategorySection('Tax Saving Funds', Icons.savings, 'Tax Saving'),
-              ],
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: MutualFondData.mutualFunds,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(child: Text('No funds available'));
+                }
+
+                final funds = snapshot.data!;
+                return ListView(
+                  children: [
+                    _buildCategorySection('Top Performing Funds', Icons.trending_up, 'Equity', funds),
+                    _buildCategorySection('Equity Funds', Icons.show_chart, 'Equity', funds),
+                    _buildCategorySection('Debt Funds', Icons.assessment, 'Debt', funds),
+                    _buildCategorySection('Tax Saving Funds', Icons.savings, 'Tax Saving', funds),
+                  ],
+                );
+              },
             ),
           ),
         ],
@@ -74,16 +86,14 @@ class _MarketScreenState extends State<MarketScreen> {
     );
   }
 
-  Widget _buildCategorySection(String category, IconData icon, String categoryFilter) {
-    final filteredFunds = MutualFondData.mutualFunds
-        .where((fund) =>
-    _selectedFilter == 'All' || fund['category'] == _selectedFilter)
+  Widget _buildCategorySection(String category, IconData icon, String categoryFilter, List<Map<String, dynamic>> funds) {
+    final filteredFunds = funds
+        .where((fund) => _selectedFilter == 'All' || fund['category'] == _selectedFilter)
         .toList();
 
-    // Get category specific funds for display
-    final categoryFunds = MutualFondData.mutualFunds
+    final categoryFunds = funds
         .where((fund) => fund['category'] == categoryFilter)
-        .take(5) // Show only first 5 items
+        .take(5)
         .toList();
 
     return Column(
@@ -140,7 +150,7 @@ class _MarketScreenState extends State<MarketScreen> {
           ),
         ),
         SizedBox(
-          height: 210, // Reduced height to match compact FundCard
+          height: 210,
           child: ListView.separated(
             padding: EdgeInsets.symmetric(horizontal: 16),
             scrollDirection: Axis.horizontal,

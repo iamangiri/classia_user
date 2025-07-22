@@ -3,13 +3,12 @@ import 'package:classia_amc/screen/homefetures/investment_history_screen.dart';
 import 'package:classia_amc/screen/homefetures/market_news.dart';
 import 'package:classia_amc/screen/main/profile_heath_screen.dart';
 import 'package:classia_amc/screen/profile/learn_screen.dart';
-import 'package:classia_amc/utills/constent/home_screen_data.dart';
+
 import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:classia_amc/widget/custom_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../../screenutills/fund_deatils_screen.dart';
+
 import '../../themes/app_colors.dart';
 import '../../widget/custom_app_bar.dart';
 import '../home/home_certificate_section.dart';
@@ -20,7 +19,7 @@ import '../home/home_top_mutual_funds_section.dart';
 import '../home/home_trending_fund_widget.dart';
 import '../homefetures/lunchpad_screen.dart';
 import '../homefetures/withdraw_screen.dart';
-import 'market_screen.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
