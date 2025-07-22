@@ -59,6 +59,32 @@
 
         <meta-data
             android:name="flutterEmbedding"
+<<<<<<< HEAD
             android:value="2"/>
     </application>
 </manifest>
+=======
+            android:value="2" />
+
+
+
+    </application>
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="http" />
+        </intent>
+    </queries>
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+    </queries>
+</manifest>
+>>>>>>> 5fad09f9f15cd2b2db7704478e47671b1e2afae9

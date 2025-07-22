@@ -1,10 +1,9 @@
-import 'package:classia_amc/screen/market/fund_deatils_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:classia_amc/themes/app_colors.dart';
-import 'package:classia_amc/widget/custom_app_bar.dart';
-import '../../utills/constent/mutual_fond_data.dart';
 import '../../screenutills/fund_card_items.dart';
-
+import '../../themes/app_colors.dart';
+import '../../utills/constent/mutual_fond_data.dart';
+import '../../widget/custom_app_bar.dart';
+import '../market/fund_deatils_screen.dart';
 
 class ViewAllFundsScreen extends StatefulWidget {
   final String category;
@@ -36,189 +35,196 @@ class _ViewAllFundsScreenState extends State<ViewAllFundsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredFunds = _getFilteredFunds();
-
     return Scaffold(
       appBar: CustomAppBar(
         title: widget.category,
       ),
       backgroundColor: AppColors.screenBackground,
-      body: Column(
-        children: [
-          // Filter and Sort Section
-          Container(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              children: [
-                // Filter Chips
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: _filters.map((filter) {
-                      return Padding(
-                        padding: EdgeInsets.only(right: 8),
-                        child: FilterChip(
-                          label: Text(filter),
-                          selected: _selectedFilter == filter,
-                          onSelected: (selected) =>
-                              setState(() => _selectedFilter = filter),
-                          backgroundColor: AppColors.border,
-                          selectedColor: AppColors.primaryGold,
-                          labelStyle: TextStyle(
-                            color: _selectedFilter == filter
-                                ? AppColors.buttonText
-                                : AppColors.primaryText,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-                SizedBox(height: 12),
-                // Sort and Results Count
-                Row(
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: MutualFondData.mutualFunds,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return _buildEmptyState();
+          }
+
+          final filteredFunds = _getFilteredFunds(snapshot.data!);
+          return Column(
+            children: [
+              // Filter and Sort Section
+              Container(
+                padding: EdgeInsets.all(16),
+                child: Column(
                   children: [
-                    Text(
-                      '${filteredFunds.length} Funds',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.headingText,
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: _filters.map((filter) {
+                          return Padding(
+                            padding: EdgeInsets.only(right: 8),
+                            child: FilterChip(
+                              label: Text(filter),
+                              selected: _selectedFilter == filter,
+                              onSelected: (selected) =>
+                                  setState(() => _selectedFilter = filter),
+                              backgroundColor: AppColors.border,
+                              selectedColor: AppColors.primaryGold,
+                              labelStyle: TextStyle(
+                                color: _selectedFilter == filter
+                                    ? AppColors.buttonText
+                                    : AppColors.primaryText,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            ),
+                          );
+                        }).toList(),
                       ),
                     ),
-                    Spacer(),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: AppColors.cardBackground,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _sortBy,
-                          icon: Icon(Icons.keyboard_arrow_down, color: AppColors.accent),
-                          style: TextStyle(color: AppColors.primaryText),
-                          dropdownColor: AppColors.cardBackground,
-                          items: _sortOptions.map((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(
-                                'Sort by $value',
-                                style: TextStyle(fontSize: 14),
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              _sortBy = newValue!;
-                            });
-                          },
+                    SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Text(
+                          '${filteredFunds.length} Funds',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.headingText,
+                          ),
                         ),
-                      ),
+                        Spacer(),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.cardBackground,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _sortBy,
+                              icon: Icon(Icons.keyboard_arrow_down, color: AppColors.accent),
+                              style: TextStyle(color: AppColors.primaryText),
+                              dropdownColor: AppColors.cardBackground,
+                              items: _sortOptions.map((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(
+                                    'Sort by $value',
+                                    style: TextStyle(fontSize: 14),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  _sortBy = newValue!;
+                                });
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-
-          // Funds Grid
-          Expanded(
-            child: filteredFunds.isEmpty
-                ? _buildEmptyState()
-                : Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.75,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                ),
-                itemCount: filteredFunds.length,
-                itemBuilder: (context, index) {
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FundDetailsScreen(
-                            fund: filteredFunds[index],
-                          ),
+              ),
+              // Funds Grid
+              Expanded(
+                child: filteredFunds.isEmpty
+                    ? _buildEmptyState()
+                    : Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.75,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                    ),
+                    itemCount: filteredFunds.length,
+                    itemBuilder: (context, index) {
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FundDetailsScreen(
+                                fund: filteredFunds[index],
+                              ),
+                            ),
+                          );
+                        },
+                        child: FundCard(
+                          fund: filteredFunds[index],
+                          isDarkMode: false,
                         ),
                       );
                     },
-                    child: FundCard(
-                      fund: filteredFunds[index],
-                      isDarkMode: false,
-                    ),
-                  );
-                },
+                  ),
+                ),
               ),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
 
-  List<Map<String, dynamic>> _getFilteredFunds() {
-    List<Map<String, dynamic>> funds = MutualFondData.mutualFunds;
+  List<Map<String, dynamic>> _getFilteredFunds(List<Map<String, dynamic>> funds) {
+    List<Map<String, dynamic>> filteredFunds = funds;
 
-    // Apply filter
     if (_selectedFilter != 'All') {
-      funds = funds
+      filteredFunds = filteredFunds
           .where((fund) => fund['category'] == _selectedFilter)
           .toList();
     }
 
-    // Apply sorting
     switch (_sortBy) {
       case 'Returns':
-        funds.sort((a, b) {
+        filteredFunds.sort((a, b) {
           double returnA = double.tryParse(
               a['returns'].toString().replaceAll('%', '').replaceAll('+', '')) ??
               0;
           double returnB = double.tryParse(
               b['returns'].toString().replaceAll('%', '').replaceAll('+', '')) ??
               0;
-          return returnB.compareTo(returnA); // Descending order
+          return returnB.compareTo(returnA);
         });
         break;
       case 'Rating':
-        funds.sort((a, b) {
+        filteredFunds.sort((a, b) {
           double ratingA = double.tryParse(a['rating'].toString()) ?? 0;
           double ratingB = double.tryParse(b['rating'].toString()) ?? 0;
-          return ratingB.compareTo(ratingA); // Descending order
+          return ratingB.compareTo(ratingA);
         });
         break;
       case 'Min SIP':
-        funds.sort((a, b) {
+        filteredFunds.sort((a, b) {
           int sipA = int.tryParse(
               a['minSip'].toString().replaceAll('₹', '').replaceAll(',', '')) ??
               0;
           int sipB = int.tryParse(
               b['minSip'].toString().replaceAll('₹', '').replaceAll(',', '')) ??
               0;
-          return sipA.compareTo(sipB); // Ascending order
+          return sipA.compareTo(sipB);
         });
         break;
       case 'Risk':
-        funds.sort((a, b) {
+        filteredFunds.sort((a, b) {
           int riskA = a['risk'] ?? 0;
           int riskB = b['risk'] ?? 0;
-          return riskA.compareTo(riskB); // Ascending order
+          return riskA.compareTo(riskB);
         });
         break;
     }
 
-    return funds;
+    return filteredFunds;
   }
 
   Widget _buildEmptyState() {
