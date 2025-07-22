@@ -105,6 +105,14 @@ flutter:
     - assets/images/certificate_bg.jpeg
     - assets/logo/logo.jpg
     - assets/logo/classia-logo.png
+    - assets/anim/sip_anim_1.json
+    - assets/anim/sip_anim_2.json
+    - assets/anim/sip_anim_3.json
+    - assets/anim/sip_anim_4.json
+    - assets/anim/sip_anim_5.json
+    - assets/anim/sip_anim_6.json
+    - assets/anim/sip_anim_7.json
+    - assets/anim/sip_anim_success.json
 
 flutter_icons:
   android: true

@@ -9,6 +9,7 @@ import '../main/home_screen.dart';
 import '../main/market_screen.dart';
 import '../main/trading_screen.dart';
 import '../main/wallet_screen.dart';
+import '../sip/jockey_sip_screen.dart';
 
 class MainScreen extends StatefulWidget {
   final int initialIndex;
@@ -31,7 +32,7 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(),
     MarketScreen(),
     TradingScreen(),
-    WalletScreen(),
+    JockeySipScreen(),
     InvestmentCalculator(),
   ];
 
