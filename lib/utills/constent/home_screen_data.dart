@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class HomeScreenData {
@@ -44,12 +46,34 @@ class HomeScreenData {
   ];
 
   static final List<Map<String, dynamic>> features = [
-    {'title': 'Launchpad', 'icon': FontAwesomeIcons.rocket},
-    {'title': 'Market News', 'icon': FontAwesomeIcons.newspaper},
-    {'title': 'Deposit', 'icon': FontAwesomeIcons.moneyBillWave},
-    {'title': 'Withdraw', 'icon': FontAwesomeIcons.wallet},
-    {'title': 'Learn', 'icon': FontAwesomeIcons.graduationCap},
+    {
+      'title': 'Launchpad',
+      'icon': FontAwesomeIcons.rocket,
+      'color': Color(0xFFE91E63), // pink
+    },
+    {
+      'title': 'Learn',
+      'icon': FontAwesomeIcons.graduationCap,
+      'color': Color(0xFF9C27B0), // purple
+    },
+    {
+      'title': 'Market News',
+      'icon': FontAwesomeIcons.newspaper,
+      'color': Color(0xFF3F51B5), // indigo
+    },
+    {
+      'title': 'Deposit',
+      'icon': FontAwesomeIcons.moneyBillWave,
+      'color': Color(0xFF4CAF50), // green
+    },
+    {
+      'title': 'Withdraw',
+      'icon': FontAwesomeIcons.wallet,
+      'color': Color(0xFFFF9800), // orange
+    },
+
   ];
+
 
 
   static List<Map<String, String>> trendingFunds = [

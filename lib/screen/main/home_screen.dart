@@ -11,6 +11,7 @@ import '../../widget/custom_app_bar.dart';
 import '../home/home_certificate_section.dart';
 import '../home/home_features_widget.dart';
 import '../home/home_learn_section.dart';
+import '../home/home_sip_goal_section.dart';
 import '../home/home_slider.dart';
 import '../home/home_top_mutual_funds_section.dart';
 import '../home/home_trending_fund_widget.dart';
@@ -54,7 +55,6 @@ class _HomeScreenState extends State<HomeScreen> {
               // Carousel Slider
               HomeSliderWidget(),
               SizedBox(height: 24.h),
-
               // Features Section
               CustomHeading(text: 'Features', lineWidth: 40.w),
               SizedBox(height: 12.h),
@@ -62,16 +62,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 onFeatureTap: _navigateToFeature,
               ),
               SizedBox(height: 24.h),
-
               // New Section: Learn & Earn
               HomeLearnSection(),
-
               SizedBox(height: 24.h),
-
-              // Trending Funds Section
-              CustomHeading(text: 'Trending Funds', lineWidth: 40.w),
-              SizedBox(height: 12.h),
               HomeTrendingFundWidget(),
+              SizedBox(height: 24.h),
+              HomeSipGoalSection(),
               SizedBox(height: 24.h),
               // Top Mutual Funds Section
               TopMutualFundsSection(),

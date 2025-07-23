@@ -1,10 +1,14 @@
+import 'package:classia_amc/widget/common_app_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:ui';
+import '../../themes/app_colors.dart';
 
-// Data models
+// Data models (unchanged)
 class MarketNewsResponse {
   final Meta meta;
   final List<NewsData> data;
@@ -114,7 +118,7 @@ class Entity {
   }
 }
 
-// API Service
+// API Service (unchanged)
 class MarketAuxService {
   static const String baseUrl = 'https://api.marketaux.com/v1';
   static const String apiToken = 'IPPUEt7mAwb8r8EVXW1nPS5dIhYCGy7NTvcPvriT';
@@ -144,20 +148,39 @@ class MarketAuxService {
   }
 }
 
-// Main Market Screen
+// Main Market News Screen
 class MarketNewsScreen extends StatefulWidget {
+  const MarketNewsScreen({super.key});
+
   @override
-  _MarketScreenState createState() => _MarketScreenState();
+  _MarketNewsScreenState createState() => _MarketNewsScreenState();
 }
 
-class _MarketScreenState extends State<MarketNewsScreen> {
+class _MarketNewsScreenState extends State<MarketNewsScreen> with TickerProviderStateMixin {
   late Future<MarketNewsResponse> _newsFuture;
   final ScrollController _scrollController = ScrollController();
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
     _newsFuture = MarketAuxService.fetchNews();
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
+    );
+    _fadeController.forward();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _fadeController.dispose();
+    super.dispose();
   }
 
   void _refreshNews() {
@@ -168,365 +191,453 @@ class _MarketScreenState extends State<MarketNewsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Market News',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.blueGrey[900],
-        foregroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            onPressed: _refreshNews,
-            icon: Icon(Icons.refresh),
-            tooltip: 'Refresh News',
-          ),
-        ],
-      ),
+      appBar: CommonAppBar(title: 'Market News'),
+      // appBar: AppBar(
+      //   title: ShaderMask(
+      //     shaderCallback: (bounds) => LinearGradient(
+      //       colors: [
+      //         AppColors.primaryColor ?? Colors.blue,
+      //         AppColors.primaryGold ?? const Color(0xFFDAA520),
+      //       ],
+      //       begin: Alignment.topLeft,
+      //       end: Alignment.bottomRight,
+      //     ).createShader(bounds),
+      //     child: Text(
+      //       'Market News',
+      //       style: TextStyle(
+      //         fontSize: 20.sp,
+      //         fontWeight: FontWeight.bold,
+      //         color: Colors.white,
+      //       ),
+      //     ),
+      //   ),
+      //   backgroundColor: isDarkMode ? const Color(0xFF1E1E1E) : AppColors.cardBackground,
+      //   foregroundColor: Colors.white,
+      //   elevation: 0,
+      //   actions: [
+      //     IconButton(
+      //       onPressed: _refreshNews,
+      //       icon: Icon(Icons.refresh),
+      //       tooltip: 'Refresh News',
+      //       color: AppColors.primaryGold ?? const Color(0xFFDAA520),
+      //     ),
+      //   ],
+      // ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.blueGrey[900]!,
-              Colors.blueGrey[800]!,
-              Colors.blueGrey[700]!,
-            ],
+
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: FutureBuilder<MarketNewsResponse>(
+            future: _newsFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.primaryGold ?? const Color(0xFFDAA520),
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                      Text(
+                        'Loading market news...',
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white70 : AppColors.secondaryText,
+                          fontSize: 16.sp,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        color: AppColors.error ?? Colors.red,
+                        size: 64.sp,
+                      ),
+                      SizedBox(height: 16.h),
+                      Text(
+                        'Error loading news',
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white : AppColors.primaryText,
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        '${snapshot.error}',
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white70 : AppColors.secondaryText,
+                          fontSize: 14.sp,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 16.h),
+                      GestureDetector(
+                        onTapDown: (_) => setState(() {}),
+                        onTapUp: (_) {
+                          setState(() {});
+                          _refreshNews();
+                        },
+                        onTapCancel: () => setState(() {}),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppColors.primaryGold ?? const Color(0xFFDAA520),
+                                AppColors.primaryColor?.withOpacity(0.8) ?? Colors.blue.withOpacity(0.8),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(8.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 6.r,
+                                offset: Offset(0, 2.h),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            'Retry',
+                            style: TextStyle(
+                              color: AppColors.buttonText ?? Colors.white,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              if (!snapshot.hasData || snapshot.data!.data.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.article_outlined,
+                        color: isDarkMode ? Colors.white54 : AppColors.secondaryText,
+                        size: 64.sp,
+                      ),
+                      SizedBox(height: 16.h),
+                      Text(
+                        'No news available',
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white : AppColors.primaryText,
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              final newsResponse = snapshot.data!;
+              return RefreshIndicator(
+                onRefresh: () async {
+                  _refreshNews();
+                },
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  itemCount: newsResponse.data.length,
+                  itemBuilder: (context, index) {
+                    final news = newsResponse.data[index];
+                    return NewsCard(news: news);
+                  },
+                ),
+              );
+            },
           ),
         ),
-        child: FutureBuilder<MarketNewsResponse>(
-          future: _newsFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'Loading market news...',
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            if (snapshot.hasError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      color: Colors.red[300],
-                      size: 64,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'Error loading news',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      '${snapshot.error}',
-                      style: TextStyle(color: Colors.white70),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _refreshNews,
-                      child: Text('Retry'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            if (!snapshot.hasData || snapshot.data!.data.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.article_outlined,
-                      color: Colors.white54,
-                      size: 64,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'No news available',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            final newsResponse = snapshot.data!;
-            return RefreshIndicator(
-              onRefresh: () async {
-                _refreshNews();
-              },
-              child: Column(
-                children: [
-                  // Stats Header
-                  Container(
-                    padding: EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildStatCard('Total Found', newsResponse.meta.found),
-                        _buildStatCard('Showing', newsResponse.meta.returned),
-                        _buildStatCard('Page', newsResponse.meta.page),
-                      ],
-                    ),
-                  ),
-
-                  // News List
-                  Expanded(
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: newsResponse.data.length,
-                      itemBuilder: (context, index) {
-                        final news = newsResponse.data[index];
-                        return NewsCard(news: news);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatCard(String label, int value) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value.toString(),
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-            ),
-          ),
-        ],
       ),
     );
   }
 }
 
 // News Card Widget
-class NewsCard extends StatelessWidget {
+class NewsCard extends StatefulWidget {
   final NewsData news;
 
   const NewsCard({Key? key, required this.news}) : super(key: key);
 
   @override
+  _NewsCardState createState() => _NewsCardState();
+}
+
+class _NewsCardState extends State<NewsCard> {
+  bool _isTapped = false;
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.only(bottom: 16),
-      elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.white,
-              Colors.grey[50]!,
-            ],
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image
-            if (news.imageUrl != null)
-              ClipRRect(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                ),
-                child: Image.network(
-                  news.imageUrl!,
-                  height: 200,
-                  width: double.infinity,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 200,
-                      color: Colors.grey[300],
-                      child: Icon(
-                        Icons.image_not_supported,
-                        size: 50,
-                        color: Colors.grey[600],
-                      ),
-                    );
-                  },
-                ),
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: 16.h),
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: GestureDetector(
+          onTapDown: (_) => setState(() => _isTapped = true),
+          onTapUp: (_) => setState(() => _isTapped = false),
+          onTapCancel: () => setState(() => _isTapped = false),
+          onTap: () => _launchURL(context, widget.news.url),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            transform: Matrix4.identity()..scale(_isTapped ? 0.95 : 1.0),
+            constraints: BoxConstraints(minHeight: 300.h),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isDarkMode
+                    ? [
+                  const Color(0xFF1E1E1E).withOpacity(0.9),
+                  const Color(0xFF2D2D2D).withOpacity(0.7),
+                ]
+                    : [
+                  AppColors.cardBackground?.withOpacity(0.9) ?? const Color(0xFFF5F5F5).withOpacity(0.9),
+                  AppColors.cardBackground?.withOpacity(0.7) ?? const Color(0xFFF5F5F5).withOpacity(0.7),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(
+                color: _isHovered
+                    ? (AppColors.primaryGold?.withOpacity(0.6) ?? const Color(0xFFDAA520).withOpacity(0.6))
+                    : (AppColors.primaryGold?.withOpacity(0.2) ?? const Color(0xFFDAA520).withOpacity(0.2)),
+                width: 1.w,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.1),
+                  blurRadius: (_isHovered ? 12 : 6).r,
+                  offset: Offset(0, (_isHovered ? 4 : 2).h),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16.r),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Image
+                    if (widget.news.imageUrl != null)
+                      ClipRRect(
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(16.r),
+                          topRight: Radius.circular(16.r),
+                        ),
+                        child: Image.network(
+                          widget.news.imageUrl!,
+                          height: 180.h,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              height: 180.h,
+                              color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
+                              child: Icon(
+                                Icons.image_not_supported,
+                                size: 50.sp,
+                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
 
-            Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title
-                  Text(
-                    news.title,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 8),
-
-                  // Description
-                  Text(
-                    news.description,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                      height: 1.4,
-                    ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 12),
-
-                  // Entities (Stocks)
-                  if (news.entities.isNotEmpty)
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      children: news.entities.take(3).map((entity) {
-                        return Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: _getSentimentColor(entity.sentimentScore),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            entity.symbol,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  SizedBox(height: 12),
-
-                  // Footer
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
+                    Padding(
+                      padding: EdgeInsets.all(16.w),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+
                           Text(
-                            news.source,
+                            widget.news.title,
                             style: TextStyle(
-                              color: Colors.blue[600],
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primaryColor ?? Colors.blue,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+
+
+                          SizedBox(height: 8.h),
+
+                          // Divider
+                          Container(
+                            height: 2.h,
+                            width: 60.w,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppColors.primaryGold ?? const Color(0xFFDAA520),
+                                  (AppColors.primaryGold ?? const Color(0xFFDAA520)).withOpacity(0.3),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(1.r),
                             ),
                           ),
+                          SizedBox(height: 12.h),
+
+                          // Description
                           Text(
-                            DateFormat('MMM dd, yyyy • HH:mm').format(news.publishedAt),
+                            widget.news.description,
                             style: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 11,
+                              fontSize: 14.sp,
+                              color: isDarkMode ? Colors.white70 : AppColors.secondaryText,
+                              height: 1.4,
                             ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 12.h),
+
+                          // Entities
+                          if (widget.news.entities.isNotEmpty)
+                            Wrap(
+                              spacing: 8.w,
+                              runSpacing: 4.h,
+                              children: widget.news.entities.take(3).map((entity) {
+                                return Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        _getSentimentColor(entity.sentimentScore, isDarkMode),
+                                        _getSentimentColor(entity.sentimentScore, isDarkMode).withOpacity(0.6),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12.r),
+                                  ),
+                                  child: Text(
+                                    entity.symbol,
+                                    style: TextStyle(
+                                      color: AppColors.buttonText ?? Colors.white,
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          SizedBox(height: 12.h),
+
+                          // Footer
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    widget.news.source,
+                                    style: TextStyle(
+                                      color: AppColors.primaryColor ?? Colors.blue,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 12.sp,
+                                    ),
+                                  ),
+                                  Text(
+                                    DateFormat('MMM dd, yyyy • HH:mm').format(widget.news.publishedAt),
+                                    style: TextStyle(
+                                      color: isDarkMode ? Colors.white70 : AppColors.secondaryText,
+                                      fontSize: 11.sp,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              GestureDetector(
+                                onTapDown: (_) => setState(() {}),
+                                onTapUp: (_) {
+                                  setState(() {});
+                                  _launchURL(context, widget.news.url);
+                                },
+                                onTapCancel: () => setState(() {}),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                                  decoration: BoxDecoration(
+                                    color:  AppColors.primaryGold,
+                                    borderRadius: BorderRadius.circular(8.r),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.2),
+                                        blurRadius: 6.r,
+                                        offset: Offset(0, 2.h),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Text(
+                                    'Read More',
+                                    style: TextStyle(
+                                      color: AppColors.buttonText ?? Colors.white,
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                      IconButton(
-                        onPressed: () => _launchURL(context, news.url),
-                        icon: Icon(
-                          Icons.open_in_new,
-                          color: Colors.blue[600],
-                        ),
-                        tooltip: 'Read full article',
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Color _getSentimentColor(double sentiment) {
-    if (sentiment > 0.6) return Colors.green;
-    if (sentiment > 0.4) return Colors.orange;
-    return Colors.red;
+  Color _getSentimentColor(double sentiment, bool isDarkMode) {
+    if (sentiment > 0.6) return AppColors.success ?? Colors.green;
+    if (sentiment > 0.4) return AppColors.warning ?? Colors.amber;
+    return AppColors.error ?? Colors.red;
   }
 
   void _launchURL(BuildContext context, String url) async {
     try {
       final Uri uri = Uri.parse(url);
-
-      // Check if URL can be launched
       if (await canLaunchUrl(uri)) {
         await launchUrl(
           uri,
           mode: LaunchMode.externalApplication,
         );
       } else {
-        // Show a fallback dialog if URL can't be launched
         _showUrlDialog(context, url);
       }
     } catch (e) {
-      // Handle any errors and show fallback dialog
       _showUrlDialog(context, url);
     }
   }
@@ -542,12 +653,12 @@ class NewsCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Unable to open the link automatically.'),
-              SizedBox(height: 8),
+              SizedBox(height: 8.h),
               Text('URL:', style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
+              SizedBox(height: 4.h),
               SelectableText(
                 url,
-                style: TextStyle(color: Colors.blue),
+                style: TextStyle(color: AppColors.primaryColor ?? Colors.blue),
               ),
             ],
           ),
@@ -559,7 +670,6 @@ class NewsCard extends StatelessWidget {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                // Try again with different launch mode
                 _tryAlternativeLaunch(url);
               },
               child: Text('Try Again'),
@@ -573,27 +683,22 @@ class NewsCard extends StatelessWidget {
   void _tryAlternativeLaunch(String url) async {
     try {
       final Uri uri = Uri.parse(url);
-
-      // Try different launch modes
       List<LaunchMode> modes = [
         LaunchMode.externalApplication,
         LaunchMode.platformDefault,
         LaunchMode.inAppWebView,
       ];
-
       for (LaunchMode mode in modes) {
         try {
           if (await canLaunchUrl(uri)) {
             await launchUrl(uri, mode: mode);
             break;
           }
-        } catch (e) {
-          // Continue to next mode
+        } catch (_) {
           continue;
         }
       }
     } catch (e) {
-      // All attempts failed
       print('Failed to launch URL: $e');
     }
   }

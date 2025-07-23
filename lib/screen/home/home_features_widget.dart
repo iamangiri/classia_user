@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
 import '../../themes/app_colors.dart';
 import '../../utills/constent/home_screen_data.dart';
 
@@ -25,22 +24,24 @@ class HomeFeaturesWidget extends StatelessWidget {
                   Container(
                     padding: EdgeInsets.all(14.w),
                     decoration: BoxDecoration(
-                      color: AppColors.cardBackground,
+                      color: Colors.white,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.border.withOpacity(0.5),
-                          spreadRadius: 1,
-                          blurRadius: 4,
+                          color: (feature['color'] as Color).withOpacity(0.3),
+                          spreadRadius: 2,
+
+                          offset: Offset(0, 3),
                         ),
                       ],
                     ),
                     child: FaIcon(
                       feature['icon'] as IconData,
                       size: 28,
-                      color: AppColors.primaryGold,
+                      color: feature['color'] as Color,
                     ),
                   ),
+
                   SizedBox(height: 8.h),
                   Text(
                     feature['title']!,
