@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../screenutills/fund_card_items.dart';
 import '../../themes/app_colors.dart';
 import '../../utills/constent/mutual_fond_data.dart';
+import '../../widget/common_app_bar.dart';
 import '../../widget/custom_app_bar.dart';
 import '../market/fund_deatils_screen.dart';
 
@@ -36,7 +37,7 @@ class _ViewAllFundsScreenState extends State<ViewAllFundsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(
+      appBar: CommonAppBar(
         title: widget.category,
       ),
       backgroundColor: AppColors.screenBackground,
