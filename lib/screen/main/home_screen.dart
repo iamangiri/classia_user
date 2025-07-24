@@ -6,11 +6,13 @@ import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:classia_amc/widget/custom_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../themes/app_colors.dart';
 import '../../widget/custom_app_bar.dart';
 import '../home/home_certificate_section.dart';
 import '../home/home_features_widget.dart';
 import '../home/home_learn_section.dart';
+import '../home/home_pending_kyc_dialog_box.dart';
 import '../home/home_sip_goal_section.dart';
 import '../home/home_slider.dart';
 import '../home/home_top_mutual_funds_section.dart';
@@ -30,11 +32,51 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _loadUserDataAndShowPopups();
+  }
+
+  Future<void> _loadUserDataAndShowPopups() async {
+    await UserConstants.loadUserData();
     print(UserConstants.USER_ID);
     print(UserConstants.TOKEN);
     print(UserConstants.NAME);
     print(UserConstants.EMAIL);
     print(UserConstants.PHONE);
+    print(UserConstants.KYC_STATUS);
+    print(UserConstants.BANK_DETAILS);
+
+
+    // Check KYC status and show popup if incomplete
+    if (UserConstants.KYC_STATUS == null || UserConstants.KYC_STATUS == 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => HomePendingKycDialogBox(
+            title: 'Complete Your KYC',
+            message: 'Please complete your KYC verification to start trading and investing securely.',
+            icon: FontAwesomeIcons.idCard,
+            actionType: 'KYC',
+          ),
+        );
+      });
+    }
+
+    // Check bank details and show popup if incomplete
+    if (UserConstants.BANK_DETAILS == null || UserConstants.BANK_DETAILS == 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => HomePendingKycDialogBox(
+            title: 'Add Bank Details',
+            message: 'Please add your bank details to enable seamless transactions for deposits and withdrawals.',
+            icon: FontAwesomeIcons.bank,
+            actionType: 'Bank Details',
+          ),
+        );
+      });
+    }
   }
 
   @override
@@ -73,7 +115,6 @@ class _HomeScreenState extends State<HomeScreen> {
               TopMutualFundsSection(),
               SizedBox(height: 12.h),
               HomeCertificateSection(),
-
             ],
           ),
         ),

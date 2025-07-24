@@ -4,6 +4,7 @@ import 'package:classia_amc/widget/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../widget/common_app_bar.dart';
 import '../main/trading_screen.dart';
 
 class InvestmentCalculator extends StatefulWidget {
@@ -90,7 +91,7 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
 
     return Scaffold(
       backgroundColor: AppColors.screenBackground,
-      appBar: CustomAppBar(
+      appBar: CommonAppBar(
         title: 'Plan & Invest',
       ),
       body: SingleChildScrollView(

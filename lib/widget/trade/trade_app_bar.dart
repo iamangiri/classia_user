@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+import '../../screen/calcutator/sip_calcutator.dart';
 import '../../screen/homefetures/notification_screen.dart';
 import '../../screen/main/profile_screen.dart';
 import '../../screen/profile/customer_support_screen.dart';
@@ -157,6 +158,13 @@ class _CustomAppBarState extends State<TradeAppBar> {
       centerTitle: true,
       actions: [
         IconButton(
+          icon: Icon(Icons.calculate, color: AppColors.primaryGold),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => InvestmentCalculator()),
+          ),
+        ),
+        IconButton(
           icon: Icon(Icons.support_agent, color: AppColors.primaryGold),
           onPressed: widget.onSupportPressed ?? () {
             Navigator.push(
@@ -165,13 +173,7 @@ class _CustomAppBarState extends State<TradeAppBar> {
             );
           },
         ),
-        IconButton(
-          icon: Icon(Icons.notifications, color: AppColors.primaryGold),
-          onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => NotificationsScreen()),
-          ),
-        ),
+
       ],
     );
   }

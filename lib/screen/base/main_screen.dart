@@ -29,12 +29,13 @@ class _MainScreenState extends State<MainScreen> {
   final AuthFingerprintService _authService = AuthFingerprintService();
 
   final List<Widget> screens = [
-    HomeScreen(),
-    MarketScreen(),
-    TradingScreen(),
-    JockeySipScreen(),
-    InvestmentCalculator(),
+    HomeScreen(),           // 0
+    MarketScreen(),         // 1
+    TradingScreen(),        // 2
+    JockeySipScreen(),      // 3
+    WalletScreen(),         // 4
   ];
+
 
   @override
   void initState() {
@@ -163,8 +164,12 @@ class _MainScreenState extends State<MainScreen> {
             ),
             title: 'JT',
           ),
+          TabItem(
+            icon: FaIcon(FontAwesomeIcons.bullseye, size: 24), // 🎯 SIP Goals icon
+            title: 'SIP Goals',
+          ),
           TabItem(icon: FaIcon(FontAwesomeIcons.wallet, size: 24), title: 'Wallet'),
-          TabItem(icon: FaIcon(FontAwesomeIcons.calculator, size: 24), title: 'Calculator'),
+
         ],
         initialActiveIndex: currentPage,
         onTap: _onItemTapped,

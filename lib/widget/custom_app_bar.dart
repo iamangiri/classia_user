@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../screen/calcutator/sip_calcutator.dart';
 import '../screen/homefetures/notification_screen.dart';
 import '../screen/main/profile_screen.dart';
 import '../screen/profile/customer_support_screen.dart';
@@ -44,6 +45,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       actions: [
         IconButton(
+          icon: Icon(Icons.calculate, color: AppColors.primaryGold),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => InvestmentCalculator()),
+          ),
+        ),
+        IconButton(
           icon: Icon(Icons.support_agent, color: AppColors.primaryGold),
           onPressed: onSupportPressed ?? () {
             // TODO: Implement customer support action
@@ -53,13 +61,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             );
           },
         ),
-        IconButton(
-          icon: Icon(Icons.notifications, color: AppColors.primaryGold),
-          onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => NotificationsScreen()),
-          ),
-        ),
+
+
       ],
     );
   }
