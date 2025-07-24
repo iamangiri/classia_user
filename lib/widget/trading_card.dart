@@ -79,6 +79,8 @@ class _TradingCardState extends State<TradingCard>
             builder: (context) => TradingDetailsScreen(
               logo: widget.logo,
               name: widget.name,
+              value: widget.value,
+              fundName:  widget.fundName,
             ),
           ),
         );
