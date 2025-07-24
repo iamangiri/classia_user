@@ -43,25 +43,25 @@ class ExploreGoal {
   });
 }
 
-class WishlistItem {
-  final String name;
-  final IconData icon;
-  final double targetAmount;
-  final double monthlySIP;
-  final double progress;
-  final String lottieAsset;
-  final Color color;
-
-  WishlistItem({
-    required this.name,
-    required this.icon,
-    required this.targetAmount,
-    required this.monthlySIP,
-    required this.progress,
-    required this.lottieAsset,
-    required this.color,
-  });
-}
+// class WishlistItem {
+//   final String name;
+//   final IconData icon;
+//   final double targetAmount;
+//   final double monthlySIP;
+//   final double progress;
+//   final String lottieAsset;
+//   final Color color;
+//
+//   WishlistItem({
+//     required this.name,
+//     required this.icon,
+//     required this.targetAmount,
+//     required this.monthlySIP,
+//     required this.progress,
+//     required this.lottieAsset,
+//     required this.color,
+//   });
+// }
 
 class Fund {
   final String name;
