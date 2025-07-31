@@ -66,7 +66,6 @@ class _ExploreTabState extends State<ExploreTab> with TickerProviderStateMixin {
       child: Column(
         children: [
           Container(
-            padding: EdgeInsets.symmetric(vertical: 30),
             child: Column(
               children: [
                 _buildAnimatedHorse(),
@@ -88,28 +87,6 @@ class _ExploreTabState extends State<ExploreTab> with TickerProviderStateMixin {
                   ),
                 ),
               ],
-            ),
-          ),
-          Container(
-            margin: EdgeInsets.only(bottom: 24),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceColor ?? Color(0xFFF5F5F5),
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: Offset(0, 5),
-                ),
-              ],
-            ),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search investment goals...',
-                prefixIcon: Icon(Icons.search, color: AppColors.secondaryText ?? Colors.grey),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              ),
             ),
           ),
           SipExploreGoalGrid(),

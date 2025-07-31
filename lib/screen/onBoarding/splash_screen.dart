@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../utills/constent/user_constant.dart';
+
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -17,19 +18,25 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkAuthAndNavigate() async {
-// Get SharedPreferences instance
-    final prefs = await SharedPreferences.getInstance();
-    final authToken = prefs.getString('authToken');
+    // Load user data from SharedPreferences
+    await UserConstants.loadUserData();
 
-// Navigate after 3 seconds
+    // Navigate after 3 seconds
     await Future.delayed(const Duration(seconds: 3));
 
     if (mounted) {
-// Navigate based on authToken
-      if (authToken == null || authToken.isEmpty) {
-        context.go('/onboarding');
+      // Navigate based on auth token and verification status
+      if (UserConstants.TOKEN == null || UserConstants.TOKEN!.isEmpty) {
+        context.goNamed('onboarding');
       } else {
-        context.go('/main');
+        context.goNamed('main');
+        // if (UserConstants.IS_EMAIL_VERIFIED == false) {
+        //   context.goNamed('email_verify');
+        // } else if (UserConstants.IS_MOBILE_VERIFIED == false) {
+        //   context.goNamed('mobile_verify');
+        // } else {
+        //   context.goNamed('main');
+        // }
       }
     }
   }

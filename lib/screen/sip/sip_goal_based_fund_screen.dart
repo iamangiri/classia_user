@@ -1,3 +1,4 @@
+import 'package:classia_amc/screen/sip/sip_explore_goal_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import '../../themes/app_colors.dart';
@@ -521,21 +522,7 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
   }
 }
 
-class ExploreGoal {
-  final String name;
-  final IconData icon;
-  final String description;
-  final Color color;
-  final String lottieAsset;
 
-  ExploreGoal({
-    required this.name,
-    required this.icon,
-    required this.description,
-    required this.color,
-    required this.lottieAsset,
-  });
-}
 
 class Fund {
   final String name;

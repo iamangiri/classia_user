@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'package:classia_amc/utills/constent/app_constant.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../utills/constent/user_constant.dart';
 
@@ -180,6 +181,82 @@ class AuthService {
 
 
 
+  static Future<Map<String, dynamic>> loginOTPUser({
+    String? email,
+    String? mobile,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConstant.API_URL}/auth/login-otp'),
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: {
+          if (email != null) 'email': email,
+          if (mobile != null) 'mobile': mobile,
+        },
+      );
+
+      final data = jsonDecode(response.body);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('login_response', jsonEncode(data));
+
+      return {
+        'status': data['status'] ?? false,
+        'message': data['message'] ?? 'Unknown error',
+        'statusCode': response.statusCode,
+      };
+    } catch (e) {
+      return {
+        'status': false,
+        'message': 'Network error: $e',
+        'statusCode': 500,
+      };
+    }
+  }
 
 
-}
+
+  static Future<Map<String, dynamic>> verifyLoginOtp({
+    String? email,
+    String? mobile,
+    required String code,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConstant.API_URL}/auth/verify-login-otp'),
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: {
+          if (email != null) 'email': email,
+          if (mobile != null) 'mobile': mobile,
+          'code': code,
+        },
+      );
+
+      final data = jsonDecode(response.body);
+      final prefs = await SharedPreferences.getInstance();
+      if (data['status'] == true) {
+        await prefs.setString('auth_token', data['data']['token'] ?? '');
+        await prefs.setString('user_data', jsonEncode(data['data']['user'] ?? {}));
+      }
+
+      return {
+        'status': data['status'] ?? false,
+        'message': data['message'] ?? 'Unknown error',
+        'statusCode': response.statusCode,
+        'data': data['data'], // Include the data field
+      };
+    } catch (e) {
+      return {
+        'status': false,
+        'message': 'Network error: $e',
+        'statusCode': 500,
+        'data': null, // Ensure data is null in case of error
+      };
+    }
+  }
+  }
+
+
+
+
+
+

@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.1+5
+version: 1.0.2+6
 
 environment:
   sdk: ^3.6.1
@@ -113,8 +113,9 @@ flutter:
     - assets/anim/sip_anim_6.json
     - assets/anim/sip_anim_7.json
     - assets/anim/sip_anim_success.json
+    - assets/logo/classia-logo.jpeg
 
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/logo/classia-logo.png"  # Path to your logo image
+  image_path: "assets/logo/classia-logo.jpeg"  # Path to your logo image

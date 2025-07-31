@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:classia_amc/screen/sip/sip_add_edit_goal_screen.dart';
+import 'package:classia_amc/screen/sip/sip_explore_goal_grid.dart';
 import 'package:classia_amc/screen/sip/sip_goal_based_fund_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -479,6 +480,20 @@ class _WishlistTabState extends State<WishlistTab> with TickerProviderStateMixin
   }
 }
 
+
+IconData getIconDataByName(String name) {
+  switch (name) {
+    case 'home': return Icons.home;
+    case 'car': return Icons.directions_car;
+    case 'travel': return Icons.flight;
+    case 'education': return Icons.school;
+    case 'star': return Icons.star;
+  // Add more as needed
+    default: return Icons.star; // fallback
+  }
+}
+
+
 class WishlistItem {
   final String name;
   final IconData icon;
@@ -510,7 +525,7 @@ class WishlistItem {
   factory WishlistItem.fromJson(Map<String, dynamic> json) {
     return WishlistItem(
       name: json['name'] ?? '',
-      icon: IconData(json['icon'] ?? Icons.star.codePoint, fontFamily: 'MaterialIcons'),
+      icon: getIconDataByName(json['icon'] ?? 'star'),
       targetAmount: (json['targetAmount'] as num?)?.toDouble() ?? 0.0,
       monthlySIP: (json['monthlySIP'] as num?)?.toDouble() ?? 0.0,
       progress: (json['progress'] as num?)?.toDouble() ?? 0.0,

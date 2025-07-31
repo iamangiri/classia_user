@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import '../../service/apiservice/auth_service.dart';
-import 'forgot_password_screen.dart';
-
+import '../../utills/constent/user_constant.dart'; // Corrected import path
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,28 +12,28 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _identifierController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _otpController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _isOtpSent = false;
 
-  Future<void> _login() async {
+  Future<void> _sendOtp() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
-    final id      = _identifierController.text.trim();
+    final id = _identifierController.text.trim();
     final isEmail = id.contains('@');
-    final result  = await AuthService.loginUser(
-      email:  isEmail ? id : null,
+
+    final result = await AuthService.loginOTPUser(
+      email: isEmail ? id : null,
       mobile: !isEmail ? id : null,
-      password: _passwordController.text,
     );
 
     setState(() => _isLoading = false);
 
-    final ok         = result['status']     as bool;
-    final msg        = result['message']    as String;
-    final statusCode = result['statusCode'] as int;
+    final ok = result['status'] as bool;
+    final msg = result['message'] as String;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -44,31 +43,61 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (ok) {
-      // Fully logged in
-      context.goNamed('main');  // or '/home'
-    }
-    else if (statusCode == 401) {
-      // Not verified yet — use the server message to pick the screen
-      final lower = msg.toLowerCase();
-      if (lower.contains('mobile')) {
-        context.goNamed(
-          'mobile_verify',
-        );
-      } else if (lower.contains('email')) {
-        context.goNamed(
-          'email_verify'
-        );
-      }
+      setState(() => _isOtpSent = true);
     }
   }
 
+  Future<void> _verifyOtp() async {
+    if (_otpController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please enter OTP'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
-  // Future<void> _login() async {
-  //   context.go('/main');
-  // }
+    setState(() => _isLoading = true);
 
+    final id = _identifierController.text.trim();
+    final isEmail = id.contains('@');
 
+    final result = await AuthService.verifyLoginOtp(
+      email: isEmail ? id : null,
+      mobile: !isEmail ? id : null,
+      code: _otpController.text.trim(),
+    );
 
+    setState(() => _isLoading = false);
+
+    final ok = result['status'] as bool;
+    final msg = result['message'] as String;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: ok ? Colors.green : Colors.red,
+      ),
+    );
+
+    if (ok) {
+      // Store user data using UserConstants
+      await UserConstants.storeUserData({
+        'token': result['data']['token'],
+        'user': result['data']['user'],
+      });
+
+      // Navigate based on verification status
+      if (UserConstants.IS_EMAIL_VERIFIED == false) {
+        context.goNamed('email_verify');
+      } else if (UserConstants.IS_MOBILE_VERIFIED == false) {
+        context.goNamed('mobile_verify');
+      } else {
+        context.goNamed('main');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +132,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     children: [
                       SizedBox(height: 60),
-
                       // Identifier Field
                       TextFormField(
                         controller: _identifierController,
@@ -145,66 +173,44 @@ class _LoginScreenState extends State<LoginScreen> {
                           }
                           return null;
                         },
+                        enabled: !_isOtpSent, // Disable after OTP sent
                       ),
-
                       SizedBox(height: 16),
-
-                      // Password Field
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        style: TextStyle(color: Colors.black),
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          labelStyle: TextStyle(color: Colors.grey),
-                          prefixIcon: Icon(Icons.lock, color: Colors.grey),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide(color: Colors.amber, width: 2),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide(color: Colors.amber, width: 2),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide(color: Colors.red, width: 2),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide(color: Colors.redAccent, width: 2),
-                          ),
-                        ),
-                        validator: (val) {
-                          if (val == null || val.isEmpty) return 'Please enter password';
-                          if (val.length < 6) return 'Password must be ≥ 6 chars';
-                          return null;
-                        },
-                      ),
-
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ForgotPasswordScreen(),
+                      // OTP Field (shown after OTP is sent)
+                      if (_isOtpSent)
+                        TextFormField(
+                          controller: _otpController,
+                          style: TextStyle(color: Colors.black),
+                          decoration: InputDecoration(
+                            labelText: 'Enter OTP',
+                            prefixIcon: Icon(Icons.lock, color: Colors.grey),
+                            labelStyle: TextStyle(color: Colors.grey),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: BorderSide(color: Colors.amber, width: 2),
                             ),
-                          );
-                        },
-
-                          child: Text('Forgot Password?', style: TextStyle(color: Colors.grey)),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: BorderSide(color: Colors.amber, width: 2),
+                            ),
+                            errorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: BorderSide(color: Colors.red, width: 2),
+                            ),
+                            focusedErrorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: BorderSide(color: Colors.redAccent, width: 2),
+                            ),
+                          ),
+                          keyboardType: TextInputType.number,
                         ),
-                      ),
-
                       SizedBox(height: 24),
-
-                      // Login Button
+                      // Send OTP or Verify OTP Button
                       SizedBox(
                         width: double.infinity,
                         height: 56,
                         child: ElevatedButton(
-                          onPressed: _isLoading ? null : _login,
+                          onPressed: _isLoading ? null : (_isOtpSent ? _verifyOtp : _sendOtp),
                           style: ElevatedButton.styleFrom(
                             shape: StadiumBorder(),
                             padding: EdgeInsets.zero,
@@ -221,39 +227,41 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Center(
                               child: _isLoading
                                   ? CircularProgressIndicator(color: Colors.white)
-                                  : Text('Login',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  )),
+                                  : Text(
+                                _isOtpSent ? 'Verify OTP' : 'Send OTP',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-
                       SizedBox(height: 16),
-
                       // Signup link
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text("Don't have an account? ",
-                              style: TextStyle(color: Colors.black54)),
-                          GestureDetector(
-                            onTap: () {
-                              context.goNamed('register');
-                            },
-
-                            child: Text("Signup",
-                                style: TextStyle(
-                                  color: Color(0xFFFFA500),
-                                  fontWeight: FontWeight.bold,
-                                )),
-                          ),
-                        ],
-                      ),
-
+                      // Row(
+                      //   mainAxisAlignment: MainAxisAlignment.center,
+                      //   children: [
+                      //     Text(
+                      //       "Don't have an account? ",
+                      //       style: TextStyle(color: Colors.black54),
+                      //     ),
+                      //     GestureDetector(
+                      //       onTap: () {
+                      //         context.goNamed('register');
+                      //       },
+                      //       child: Text(
+                      //         "Signup",
+                      //         style: TextStyle(
+                      //           color: Color(0xFFFFA500),
+                      //           fontWeight: FontWeight.bold,
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   ],
+                      // ),
                       SizedBox(height: 20),
                     ],
                   ),

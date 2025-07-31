@@ -53,7 +53,7 @@ final router = GoRouter(
       name: 'otp_verify',
       builder: (context, state) {
         final contact = state.extra as String?;
-        return OTPScreen(contact: contact ?? '');
+        return OTPScreen(contact: contact ?? '', type: '',);
       },
     ),
 
