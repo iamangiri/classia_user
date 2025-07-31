@@ -121,7 +121,7 @@ class TradeService {
   }
 
   // Main method to load enriched AMC data
-  Future<List<Map<String, dynamic>>> loadAmcData() async {
+  Future<List<Map<String, dynamic>>> loadAmcData({required String filter, required bool isBuy}) async {
     try {
       // First, get the list of AMCs
       final amcListData = await fetchAmcList();
