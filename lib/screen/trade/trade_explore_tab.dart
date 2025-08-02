@@ -77,28 +77,6 @@ class TradeExploreTab extends StatelessWidget {
                   fundName: amc['fundName'],
                   value: amc['value'],
                 ),
-                Positioned(
-                  right: 8.w,
-                  bottom: 8.h,
-                  child: ElevatedButton(
-                    onPressed: () => onBuy(amc),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.success,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                    ),
-                    child: Text(
-                      'Buy',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           );
