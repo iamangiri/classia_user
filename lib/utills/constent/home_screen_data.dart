@@ -64,6 +64,11 @@ class HomeScreenData {
       'color': Color(0xFF3F51B5), // indigo
     },
     {
+      'title': 'My Reports',
+      'icon': FontAwesomeIcons.fileDownload,
+      'color': Color(0xFFFF9800),
+    },
+    {
       'title': 'Deposit',
       'icon': FontAwesomeIcons.moneyBillWave,
       'color': Color(0xFF4CAF50), // green
@@ -71,13 +76,9 @@ class HomeScreenData {
     {
       'title': 'Withdraw',
       'icon': FontAwesomeIcons.wallet,
-      'color': Color(0xFFFF9800), // orange
+      'color': Color(0xFFE91E63), // orange
     },
-    {
-      'title': 'My Reports',
-      'icon': FontAwesomeIcons.fileDownload,
-      'color': Color(0xFF4CAF50),
-    },
+
   ];
 
 
