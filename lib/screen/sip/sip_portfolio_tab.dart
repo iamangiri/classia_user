@@ -653,7 +653,6 @@ class _PortfolioTabState extends State<PortfolioTab> with TickerProviderStateMix
               );
             },
           ),
-          SizedBox(height: 16.h),
           Text(
             'Your Investment Journey',
             style: TextStyle(
@@ -667,6 +666,7 @@ class _PortfolioTabState extends State<PortfolioTab> with TickerProviderStateMix
             'Manage your SIPs here',
             style: TextStyle(fontSize: 16.sp, color: AppColors.secondaryText ?? Colors.grey),
           ),
+          SizedBox(height: 8.h),
           FutureBuilder<List<Sip>>(
             future: _loadSips(),
             builder: (context, snapshot) {

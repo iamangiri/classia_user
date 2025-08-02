@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import '../../themes/app_colors.dart';
+
 class HomeScreenData {
   static final List<String> sliderImages = [
     "assets/images/slider-1.jpeg",
@@ -71,8 +73,13 @@ class HomeScreenData {
       'icon': FontAwesomeIcons.wallet,
       'color': Color(0xFFFF9800), // orange
     },
-
+    {
+      'title': 'My Reports',
+      'icon': FontAwesomeIcons.fileDownload,
+      'color': Color(0xFF4CAF50),
+    },
   ];
+
 
 
 

@@ -2,6 +2,7 @@ import 'package:classia_amc/screen/homefetures/investment_history_screen.dart';
 import 'package:classia_amc/screen/homefetures/market_news.dart';
 import 'package:classia_amc/screen/main/profile_heath_screen.dart';
 import 'package:classia_amc/screen/profile/learn_screen.dart';
+
 import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:classia_amc/widget/custom_heading.dart';
 import 'package:flutter/material.dart';
@@ -18,8 +19,8 @@ import '../home/home_slider.dart';
 import '../home/home_top_mutual_funds_section.dart';
 import '../home/home_trending_fund_widget.dart';
 import '../homefetures/lunchpad_screen.dart';
+import '../homefetures/my_report_screen.dart';
 import '../homefetures/withdraw_screen.dart';
-
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -44,7 +45,6 @@ class _HomeScreenState extends State<HomeScreen> {
     print(UserConstants.PHONE);
     print(UserConstants.KYC_STATUS);
     print(UserConstants.BANK_DETAILS);
-
 
     // Check KYC status and show popup if incomplete
     if (UserConstants.KYC_STATUS == null || UserConstants.KYC_STATUS == 0) {
@@ -77,6 +77,83 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       });
     }
+  }
+
+  void _navigateToFeature(String title, BuildContext context) {
+    Widget destination;
+    switch (title) {
+      case 'Withdraw':
+        destination = const WithdrawScreen();
+        break;
+      case 'Deposit':
+        destination = const InvestmentHistoryScreen();
+        break;
+      case 'Learn':
+        destination =  LearnScreen();
+        break;
+      case 'Market News':
+        destination = const MarketNewsScreen();
+        break;
+      case 'Launchpad':
+        destination =  LaunchpadScreen();
+        break;
+      case 'My Reports':
+        destination = const DownloadReportsScreen();
+        break;
+      default:
+        destination = Scaffold(
+          appBar: AppBar(
+            title: Text(
+              title,
+              style: TextStyle(color: AppColors.primaryText, fontSize: 18.sp),
+            ),
+          ),
+          backgroundColor: AppColors.screenBackground,
+          body: Center(
+            child: Text(
+              'Screen for $title',
+              style: TextStyle(color: AppColors.primaryText, fontSize: 16.sp),
+            ),
+          ),
+        );
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => destination),
+    );
+  }
+
+  Widget _buildProgressFab(BuildContext context) {
+    const totalProgress = 0.50;
+    return FloatingActionButton(
+      backgroundColor: AppColors.primaryGold,
+      elevation: 4,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          CircularProgressIndicator(
+            value: totalProgress,
+            strokeWidth: 3,
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryText),
+            backgroundColor: AppColors.screenBackground.withOpacity(0.5),
+          ),
+          Text(
+            '${(totalProgress * 100).toInt()}%',
+            style: TextStyle(
+              color: AppColors.primaryText,
+              fontSize: 14.sp,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ProfileHealthScreen()),
+        );
+      },
+    );
   }
 
   @override
@@ -134,77 +211,5 @@ class _HomeScreenState extends State<HomeScreen> {
         fund['price']!.isNotEmpty &&
         fund['change'] != null &&
         fund['change']!.isNotEmpty;
-  }
-
-  void _navigateToFeature(String title, BuildContext context) {
-    Widget destination;
-    switch (title) {
-      case 'Withdraw':
-        destination = const WithdrawScreen();
-        break;
-      case 'Deposit':
-        destination = const InvestmentHistoryScreen();
-        break;
-      case 'Learn':
-        destination = LearnScreen();
-        break;
-      case 'Market News':
-        destination = MarketNewsScreen();
-        break;
-      case 'Launchpad':
-        destination = LaunchpadScreen();
-        break;
-      default:
-        destination = Scaffold(
-          appBar: AppBar(
-            title: Text(
-              title,
-              style: TextStyle(color: AppColors.primaryText, fontSize: 18.sp),
-            ),
-          ),
-          backgroundColor: AppColors.screenBackground,
-          body: Center(
-            child: Text(
-              'Screen for $title',
-              style: TextStyle(color: AppColors.primaryText, fontSize: 16.sp),
-            ),
-          ),
-        );
-    }
-    Navigator.push(
-        context, MaterialPageRoute(builder: (context) => destination));
-  }
-
-  Widget _buildProgressFab(BuildContext context) {
-    const totalProgress = 0.50;
-    return FloatingActionButton(
-      backgroundColor: AppColors.primaryGold,
-      elevation: 4,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          CircularProgressIndicator(
-            value: totalProgress,
-            strokeWidth: 3,
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryText),
-            backgroundColor: AppColors.screenBackground.withOpacity(0.5),
-          ),
-          Text(
-            '${(totalProgress * 100).toInt()}%',
-            style: TextStyle(
-              color: AppColors.primaryText,
-              fontSize: 14.sp,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ProfileHealthScreen()),
-        );
-      },
-    );
   }
 }
