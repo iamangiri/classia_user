@@ -1,56 +1,14 @@
+import 'package:classia_amc/screen/sip/sip_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../themes/app_colors.dart';
-import 'jockey_sip_screen.dart';
 import 'sip_goal_based_fund_screen.dart';
 import 'dart:convert';
 
 
 
-class ExploreGoal {
-  final String name;
-  final IconData? icon;
-  final String description;
-  final Color color;
-  final String? lottieAsset;
-
-  ExploreGoal({
-    required this.name,
-    this.icon,
-    required this.description,
-    required this.color,
-    this.lottieAsset,
-  });
-
-  Map<String, dynamic> toJson() => {
-    'name': name,
-    'description': description,
-    'color': color.value,
-    'lottieAsset': lottieAsset,
-  };
-
-  factory ExploreGoal.fromJson(Map<String, dynamic> json) => ExploreGoal(
-    name: json['name'],
-    description: json['description'],
-    color: Color(json['color']),
-    lottieAsset: json['lottieAsset'],
-  );
-
-  // Convert ExploreGoal to Goal for navigation
-  Goal toGoal() => Goal(
-    id: DateTime.now().millisecondsSinceEpoch, // Unique ID
-    name: name,
-    icon: icon ?? Icons.star, // Fallback icon
-    target: 0.0, // Default, update in SipGoalBasedFundScreen
-    current: 0.0,
-    monthlyPayment: 0.0,
-    color: color,
-    progress: 0.0,
-    lottieAsset: lottieAsset ?? 'assets/anim/sip_anim_1.json',
-  );
-}
 
 class SipExploreGoalGrid extends StatefulWidget {
   const SipExploreGoalGrid({Key? key}) : super(key: key);

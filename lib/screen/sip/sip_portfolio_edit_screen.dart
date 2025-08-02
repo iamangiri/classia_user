@@ -7,33 +7,44 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../themes/app_colors.dart';
-import 'jockey_sip_screen.dart';
 
-class SipGoalBasedFundScreen extends StatefulWidget {
-  final ExploreGoal goal;
 
-  const SipGoalBasedFundScreen({super.key, required this.goal});
+class SipEditScreen extends StatefulWidget {
+  final Sip sip;
+
+  const SipEditScreen({super.key, required this.sip});
 
   @override
-  _SipGoalBasedFundScreenState createState() => _SipGoalBasedFundScreenState();
+  _SipEditScreenState createState() => _SipEditScreenState();
 }
 
-class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with TickerProviderStateMixin {
-  String _frequency = 'monthly';
-  double _period = 12;
-  double _monthlyAmount = 5000;
-  final List<Fund> _selectedAMCFunds = [];
-  final List<Fund> _selectedTopFunds = [];
-  final Map<Fund, double> _fundPercentages = {};
-  bool _topUpEnabled = false;
-  String _topUpType = 'value';
-  double _topUpValue = 0.0;
+class _SipEditScreenState extends State<SipEditScreen> with TickerProviderStateMixin {
+  late String _frequency;
+  late double _period;
+  late double _monthlyAmount;
+  late List<Fund> _selectedAMCFunds;
+  late List<Fund> _selectedTopFunds;
+  late Map<Fund, double> _fundPercentages;
+  late bool _topUpEnabled;
+  late String _topUpType;
+  late double _topUpValue;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
+    // Initialize with existing SIP data
+    _frequency = widget.sip.frequency;
+    _period = widget.sip.periodMonths.toDouble();
+    _monthlyAmount = widget.sip.monthlyAmount;
+    _selectedAMCFunds = [];
+    _selectedTopFunds = widget.sip.funds.map((allocation) => allocation.fund).toList();
+    _fundPercentages = {for (var allocation in widget.sip.funds) allocation.fund: allocation.percentage};
+    _topUpEnabled = widget.sip.topUp?.enabled ?? false;
+    _topUpType = widget.sip.topUp?.type ?? 'value';
+    _topUpValue = widget.sip.topUp?.value ?? 0.0;
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -50,11 +61,14 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
     super.dispose();
   }
 
-  Future<void> _saveSip(Sip sip) async {
+  Future<void> _updateSip(Sip sip) async {
     final prefs = await SharedPreferences.getInstance();
     List<String> sips = prefs.getStringList('sips') ?? [];
-    sips.add(jsonEncode(sip.toJson()));
-    await prefs.setStringList('sips', sips);
+    int index = sips.indexWhere((json) => Sip.fromJson(jsonDecode(json)).id == sip.id);
+    if (index != -1) {
+      sips[index] = jsonEncode(sip.toJson());
+      await prefs.setStringList('sips', sips);
+    }
   }
 
   void _showSelectedFundsBottomSheet() {
@@ -240,7 +254,7 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
               ),
               SizedBox(height: 16.h),
               Text(
-                'Your SIP is Ready to Start!',
+                'Confirm SIP Update',
                 style: TextStyle(
                   fontSize: 20.sp,
                   fontWeight: FontWeight.bold,
@@ -250,7 +264,7 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
               ),
               SizedBox(height: 12.h),
               Text(
-                'Goal: ${widget.goal.name}',
+                'Goal: ${widget.sip.goal.name}',
                 style: TextStyle(
                   fontSize: 16.sp,
                   color: AppColors.secondaryText ?? Colors.grey,
@@ -323,18 +337,18 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
                   ElevatedButton(
                     onPressed: () async {
                       Goal newGoal = Goal(
-                        id: widget.goal.toGoal().id,
-                        name: widget.goal.name,
-                        icon: widget.goal.icon ?? Icons.star,
+                        id: widget.sip.goal.id,
+                        name: widget.sip.goal.name,
+                        icon: widget.sip.goal.icon,
                         target: _monthlyAmount * _period,
-                        current: widget.goal.toGoal().current,
-                        monthlyPayment: widget.goal.toGoal().monthlyPayment,
-                        color: widget.goal.color,
-                        progress: widget.goal.toGoal().progress,
-                        lottieAsset: widget.goal.lottieAsset ?? 'assets/anim/sip_anim_1.json',
+                        current: widget.sip.goal.current,
+                        monthlyPayment: widget.sip.goal.monthlyPayment,
+                        color: widget.sip.goal.color,
+                        progress: widget.sip.goal.progress,
+                        lottieAsset: widget.sip.goal.lottieAsset,
                       );
-                      Sip newSip = Sip(
-                        id: DateTime.now().millisecondsSinceEpoch,
+                      Sip updatedSip = Sip(
+                        id: widget.sip.id,
                         goal: newGoal,
                         frequency: _frequency,
                         periodMonths: _period.round(),
@@ -352,11 +366,13 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
                           enabled: true,
                         )
                             : null,
+                        status: widget.sip.status,
                       );
-                      await _saveSip(newSip);
+                      await _updateSip(updatedSip);
                       if (mounted) {
                         Navigator.pop(context);
                         Navigator.pop(context);
+                        Navigator.pop(context); // Return to PortfolioTab
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -373,7 +389,7 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
                       ),
                     ),
                     child: Text(
-                      'Confirm SIP',
+                      'Update SIP',
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.bold,
@@ -393,7 +409,7 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
   Widget build(BuildContext context) {
     final allFunds = [..._selectedAMCFunds, ..._selectedTopFunds];
     return Scaffold(
-      appBar:  CommonAppBar(title: 'Invest in ${widget.goal.name}'),
+      appBar: CommonAppBar(title:  'Edit ${widget.sip.goal.name} SIP'),
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: SingleChildScrollView(
@@ -794,7 +810,7 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
                       onChanged: (value) => setState(() => _topUpEnabled = value),
                     ),
                     if (_topUpEnabled) ...[
-
+                      SizedBox(height: 12.h),
                       Row(
                         children: [
                           Expanded(
@@ -850,7 +866,7 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
                 ),
               ),
               SizedBox(height: 24.h),
-              // Start SIP Button and Selected Funds Count
+              // Update SIP Button and Selected Funds Count
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -869,7 +885,7 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
                         ),
                       ),
                       child: Text(
-                        'Start SIP Now',
+                        'Update SIP',
                         style: TextStyle(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.bold,
