@@ -1,3 +1,4 @@
+
 import 'package:classia_amc/screen/homefetures/withdraw_screen.dart';
 import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:classia_amc/widget/common_app_bar.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:classia_amc/themes/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../can/can_create_screen.dart';
 import '../profile/about_us_screen.dart';
 import '../profile/bank_info_screen.dart';
 import '../profile/customer_support_screen.dart';
@@ -25,7 +27,7 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.screenBackground,
       appBar: CommonAppBar(
-        title:'Profle'
+        title: 'Profile', // Fixed typo: 'Profle' to 'Profile'
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.w),
@@ -46,8 +48,6 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
-
-
 
   Widget _buildProfileSection(BuildContext context) {
     String userName = "${UserConstants.NAME}"; // Replace with actual username
@@ -124,6 +124,7 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildAccountOptionsList(BuildContext context) {
     final List<Map<String, String>> accountOptions = [
       {'title': 'KYC', 'icon': 'verified_user'},
+      {'title': 'CAN', 'icon': 'account_circle'}, // Added CAN option
       {'title': 'Manage Folio', 'icon': 'folio'},
       {'title': 'Security Settings', 'icon': 'security'},
       {'title': 'Bank Info', 'icon': 'account_balance'},
@@ -184,6 +185,9 @@ class ProfileScreen extends StatelessWidget {
       case 'privacy':
         iconData = Icons.privacy_tip;
         break;
+      case 'account_circle':
+        iconData = Icons.account_circle; // Icon for CAN
+        break;
       default:
         iconData = Icons.help;
     }
@@ -231,14 +235,17 @@ class ProfileScreen extends StatelessWidget {
   void _navigateToOption(BuildContext context, String optionTitle) {
     Widget destination;
     switch (optionTitle) {
+      case 'CAN':
+        destination = const CamsCreationScreen(); // Navigate to CamsCreationScreen
+        break;
       case 'Manage Folio':
         destination = const ManageFolioScreen();
         break;
       case 'Investment History':
-        destination =  InvestmentHistoryScreen();
+        destination = InvestmentHistoryScreen();
         break;
       case 'Withdrawals':
-        destination =  WithdrawScreen();
+        destination = WithdrawScreen();
         break;
       case 'Security Settings':
         destination = const SecuritySettingsScreen();
@@ -247,19 +254,19 @@ class ProfileScreen extends StatelessWidget {
         destination = const KYCVerificationScreen();
         break;
       case 'Bank Info':
-        destination =  BankInfoScreen();
+        destination = BankInfoScreen();
         break;
       case 'Learn':
-        destination =  LearnScreen();
+        destination = LearnScreen();
         break;
       case 'About Us':
-        destination =  AboutUsScreen();
+        destination = AboutUsScreen();
         break;
       case 'Help Center':
         destination = CustomerSupportScreen();
         break;
       case 'Privacy Policy':
-        destination =  PrivacyPolicyScreen();
+        destination = PrivacyPolicyScreen();
         break;
       default:
         destination = Scaffold(
@@ -308,11 +315,8 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: () async {
-                    // 1. Get the prefs instance
                     final prefs = await SharedPreferences.getInstance();
-                    // 2. Clear everything (all keys)
                     await prefs.clear();
-                    // 3. Pop this dialog/screen (and signal “true” if needed)
                     Navigator.pop(context, true);
                   },
                   child: Text(
@@ -320,7 +324,6 @@ class ProfileScreen extends StatelessWidget {
                     style: TextStyle(color: AppColors.error, fontSize: 14.sp),
                   ),
                 ),
-
               ],
             ),
           );

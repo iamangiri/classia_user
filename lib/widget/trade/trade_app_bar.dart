@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:lottie/lottie.dart';
 import '../../screen/calcutator/sip_calcutator.dart';
 import '../../screen/main/profile_screen.dart';
-import '../../screen/profile/customer_support_screen.dart';
 import '../../themes/app_colors.dart';
 import 'dart:async';
 

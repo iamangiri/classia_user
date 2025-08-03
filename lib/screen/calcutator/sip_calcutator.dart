@@ -86,8 +86,8 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
   @override
   Widget build(BuildContext context) {
     final investedAmount = calculateInvestedAmount();
-    final returns = calculateReturns();
-    final totalValue = investedAmount + returns;
+    final futureValue = calculateFutureValue();
+    final returns = futureValue - investedAmount;
 
     return Scaffold(
       backgroundColor: AppColors.screenBackground,
@@ -102,7 +102,7 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
             SizedBox(height: 24),
             _buildCalculatorInputs(),
             SizedBox(height: 24),
-            _buildResults(investedAmount, returns, totalValue),
+            _buildResults(investedAmount, returns, futureValue),
             SizedBox(height: 24),
             _buildPieChart(investedAmount, returns),
             SizedBox(height: 24),
@@ -587,7 +587,6 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
             MaterialPageRoute(builder: (context) => TradingScreen()),
           );
         },
-
         child: Text(
           'INVEST NOW',
           style: TextStyle(
@@ -600,38 +599,50 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
     );
   }
 
+  // FIXED: Calculate invested amount correctly
   double calculateInvestedAmount() {
     if (isSIPSelected) {
-      // For SIP, calculate based on time period
+      // For SIP, total invested = monthly investment * number of months
       final yearsEquivalent = getTimePeriodInYears();
-      return monthlyInvestment * yearsEquivalent * 12;
+      final totalMonths = yearsEquivalent * 12;
+      return monthlyInvestment * totalMonths;
     } else {
       // For lumpsum, invested amount is just the principal
       return monthlyInvestment;
     }
   }
 
-  double calculateReturns() {
+  // FIXED: Calculate future value using correct formulas
+  double calculateFutureValue() {
     final yearsEquivalent = getTimePeriodInYears();
 
     if (isSIPSelected) {
-      // SIP calculation using compound interest formula for regular payments
-      final monthlyRate = expectedReturn / 12 / 100;
-      final months = yearsEquivalent * 12;
+      // SIP Formula: FV = P × ({[1+r]^n - 1} / r) × (1+r)
+      // Where P = monthly investment, r = monthly rate, n = number of months
+
+      final annualRate = expectedReturn / 100; // Convert percentage to decimal
+      final monthlyRate = annualRate / 12; // Monthly rate
+      final totalMonths = yearsEquivalent * 12; // Total number of months
 
       if (monthlyRate == 0) {
-        return 0; // No returns if interest rate is 0
+        // If no interest, future value is just sum of investments
+        return monthlyInvestment * totalMonths;
       }
 
+      // Apply the SIP formula
       final futureValue = monthlyInvestment *
-          ((pow(1 + monthlyRate, months) - 1) / monthlyRate) *
-          (1 + monthlyRate);
+          (((pow(1 + monthlyRate, totalMonths) - 1) / monthlyRate) *
+              (1 + monthlyRate));
 
-      return futureValue - monthlyInvestment * months;
+      return futureValue;
     } else {
-      // Lumpsum calculation using compound interest formula
-      final futureValue = monthlyInvestment * pow(1 + expectedReturn / 100, yearsEquivalent);
-      return futureValue - monthlyInvestment;
+      // Lumpsum Formula: A = P × (1+i)^n
+      // Where P = principal, i = annual rate, n = number of years
+
+      final annualRate = expectedReturn / 100; // Convert percentage to decimal
+      final futureValue = monthlyInvestment * pow(1 + annualRate, yearsEquivalent);
+
+      return futureValue;
     }
   }
 }

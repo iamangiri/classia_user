@@ -6,7 +6,6 @@ import '../../widget/custom_app_bar.dart';
 import '../market/all_fund_screen.dart';
 import '../market/fund_deatils_screen.dart';
 import 'dart:ui';
-
 import '../sip/sip_animated_horse_widget.dart';
 
 class MarketScreen extends StatefulWidget {

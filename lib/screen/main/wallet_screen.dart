@@ -1,3 +1,4 @@
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:classia_amc/themes/app_colors.dart';
 import 'package:classia_amc/service/apiservice/wallet_service.dart';
@@ -17,6 +18,7 @@ class WalletScreen extends StatefulWidget {
 }
 
 class _WalletScreenState extends State<WalletScreen> {
+  String selectedTab = "Lumpsum"; // Default selected tab
   String selectedFilter = "All";
   final List<String> filters = [
     "All",
@@ -43,6 +45,7 @@ class _WalletScreenState extends State<WalletScreen> {
   }
 
   Future<void> _initializeWalletService() async {
+    if (!mounted) return;
     setState(() {
       _walletService = WalletService(token: '${UserConstants.TOKEN}');
     });
@@ -50,10 +53,11 @@ class _WalletScreenState extends State<WalletScreen> {
 
   Future<void> _fetchTransactions() async {
     if (!_hasMore || _isListLoading) return;
+    if (!mounted) return;
     setState(() => _isListLoading = true);
     try {
-      final response = await _walletService.getTransactionList(
-          _page, _limit); // No transactionType filter
+      final response = await _walletService.getTransactionList(_page, _limit);
+      if (!mounted) return;
       setState(() {
         transactions
             .addAll(List<Map<String, dynamic>>.from(response['transactions']));
@@ -62,6 +66,7 @@ class _WalletScreenState extends State<WalletScreen> {
         if (_hasMore) _page++;
       });
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(e.toString()),
@@ -69,6 +74,7 @@ class _WalletScreenState extends State<WalletScreen> {
         ),
       );
     } finally {
+      if (!mounted) return;
       setState(() => _isListLoading = false);
     }
   }
@@ -85,63 +91,153 @@ class _WalletScreenState extends State<WalletScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildBalanceSection(),
+            _buildTabBar(),
             SizedBox(height: 20.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Investments & Withdrawals",
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primaryText, // Replaced headingText
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => _showFilterOptions(context),
-                  child: Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                    decoration: BoxDecoration(
-                      color: AppColors.cardBackground,
-                      borderRadius: BorderRadius.circular(8.r),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.filter_list,
-                          size: 18.sp,
-                          color: AppColors.primaryGold, // Replaced accent
-                        ),
-                        SizedBox(width: 4.w),
-                        Text(
-                          'Filter',
-                          style: TextStyle(
-                            color: AppColors.primaryGold,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+            Expanded(
+              child: selectedTab == "Lumpsum"
+                  ? _buildLumpsumContent()
+                  : _buildSipContent(),
             ),
-            SizedBox(height: 12.h),
-            Text(
-              "Filter: $selectedFilter",
-              style: TextStyle(
-                color: AppColors.secondaryText,
-                fontSize: 14.sp,
-              ),
-            ),
-            SizedBox(height: 12.h),
-            Expanded(child: _buildInvestmentWithdrawList(context)),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTabBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          _buildTabButton("Lumpsum"),
+          _buildTabButton("SIP"),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabButton(String tabName) {
+    bool isSelected = selectedTab == tabName;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            selectedTab = tabName;
+          });
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 12.h),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primaryGold : Colors.transparent,
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: Center(
+            child: Text(
+              tabName,
+              style: TextStyle(
+                color: isSelected ? AppColors.buttonText : AppColors.primaryText,
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLumpsumContent() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildBalanceSection(),
+        SizedBox(height: 20.h),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Investments & Withdrawals",
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryText,
+              ),
+            ),
+            GestureDetector(
+              onTap: () => _showFilterOptions(context),
+              child: Container(
+                padding:
+                EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: AppColors.cardBackground,
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.filter_list,
+                      size: 18.sp,
+                      color: AppColors.primaryGold,
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      'Filter',
+                      style: TextStyle(
+                        color: AppColors.primaryGold,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 12.h),
+        Text(
+          "Filter: $selectedFilter",
+          style: TextStyle(
+            color: AppColors.secondaryText,
+            fontSize: 14.sp,
+          ),
+        ),
+        SizedBox(height: 12.h),
+        Flexible(
+          fit: FlexFit.loose,
+          child: _buildInvestmentWithdrawList(context),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSipContent() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.info_outline,
+            color: AppColors.secondaryText,
+            size: 120.sp,
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            'No SIP Data Available',
+            style: TextStyle(color: AppColors.primaryText, fontSize: 18.sp),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'SIP transaction history will appear here',
+            style: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp),
+          ),
+        ],
       ),
     );
   }
@@ -177,7 +273,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   return ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: selectedFilter == filter
-                          ? AppColors.primaryGold // Replaced accent
+                          ? AppColors.primaryGold
                           : AppColors.border,
                       padding: EdgeInsets.symmetric(
                           horizontal: 16.w, vertical: 10.h),
@@ -211,7 +307,6 @@ class _WalletScreenState extends State<WalletScreen> {
   }
 
   Widget _buildBalanceSection() {
-// Calculate totals from transactions
     final totalInvested = transactions
         .where((txn) => txn['TransactionType'] == 'DEPOSIT')
         .fold<double>(0, (sum, txn) => sum + (txn['Amount'] as int).toDouble());
@@ -269,7 +364,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
   Widget _buildInvestmentWithdrawList(BuildContext context) {
     List<Map<String, dynamic>> filteredTransactions =
-        transactions.where((transaction) {
+    transactions.where((transaction) {
       if (selectedFilter == "All") return true;
 
       DateTime transactionDate = DateTime.parse(transaction['CreatedAt']);
@@ -322,26 +417,26 @@ class _WalletScreenState extends State<WalletScreen> {
             padding: EdgeInsets.symmetric(vertical: 16.h),
             child: _isListLoading
                 ? Center(
-                    child: CircularProgressIndicator(
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(AppColors.primaryGold),
-                    ),
-                  )
+              child: CircularProgressIndicator(
+                valueColor:
+                AlwaysStoppedAnimation<Color>(AppColors.primaryGold),
+              ),
+            )
                 : ElevatedButton(
-                    onPressed: _fetchTransactions,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryGold,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.r)),
-                    ),
-                    child: Text(
-                      'Load More',
-                      style: TextStyle(
-                        color: AppColors.buttonText,
-                        fontSize: 14.sp,
-                      ),
-                    ),
-                  ),
+              onPressed: _fetchTransactions,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryGold,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r)),
+              ),
+              child: Text(
+                'Load More',
+                style: TextStyle(
+                  color: AppColors.buttonText,
+                  fontSize: 14.sp,
+                ),
+              ),
+            ),
           );
         }
         return _buildTransactionItem(context, filteredTransactions[index]);
@@ -352,13 +447,12 @@ class _WalletScreenState extends State<WalletScreen> {
   Widget _buildTransactionItem(
       BuildContext context, Map<String, dynamic> transaction) {
     bool isInvestment = transaction['TransactionType'] == 'DEPOSIT';
-// Mock logo and name since API doesn't provide them
     const mockLogo = 'https://via.placeholder.com/50';
     final mockName =
         '${isInvestment ? 'Deposit' : 'Withdrawal'} #${transaction['ID']}';
     final amount = (transaction['Amount'] as int).toDouble().toStringAsFixed(2);
     final date =
-        DateTime.parse(transaction['CreatedAt']).toString().split('.')[0];
+    DateTime.parse(transaction['CreatedAt']).toString().split('.')[0];
 
     return InkWell(
       onTap: () {
@@ -367,7 +461,9 @@ class _WalletScreenState extends State<WalletScreen> {
           MaterialPageRoute(
             builder: (context) => TradingDetailsScreen(
               logo: mockLogo,
-              name: mockName, value: 0, fundName: "",
+              name: mockName,
+              value: 0,
+              fundName: "",
             ),
           ),
         );
