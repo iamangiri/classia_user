@@ -21,6 +21,7 @@ import '../home/home_trending_fund_widget.dart';
 import '../homefetures/lunchpad_screen.dart';
 import '../homefetures/my_report_screen.dart';
 import '../homefetures/withdraw_screen.dart';
+import 'home_disclamer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -172,6 +173,9 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Carousel Slider
+              HomeDisclaimer(
+                message: "Mutual Fund investments are subject to market risks, read all scheme related documents carefully.",
+              ),
               HomeSliderWidget(),
               SizedBox(height: 24.h),
               // Features Section

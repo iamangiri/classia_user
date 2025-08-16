@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../../themes/app_colors.dart';
 import '../../widget/common_app_bar.dart';
+import '../main/home_disclamer.dart';
 
 class FundDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> fund;
@@ -60,7 +61,10 @@ class _FundDetailsScreenState extends State<FundDetailsScreen>
         opacity: _fadeAnimation,
         child: Column(
           children: [
-            _buildDisclaimer(),
+            HomeDisclaimer(
+              message: "Past performance may or may not be sustained in the future. Returns are not guaranteed.",
+            ),
+            //_buildDisclaimer(),
             _buildModernFundHeader(),
             _buildModernTabBar(),
             Expanded(child: _buildTabContent()),

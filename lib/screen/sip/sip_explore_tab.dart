@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../themes/app_colors.dart';
+import '../main/home_disclamer.dart';
 import 'jockey_sip_screen.dart';
 
 class ExploreTab extends StatefulWidget {
@@ -40,6 +41,9 @@ class _ExploreTabState extends State<ExploreTab> with TickerProviderStateMixin {
         children: [
           Column(
             children: [
+              HomeDisclaimer(
+                message: "Mutual Fund investments are subject to market risks, read all scheme related documents carefully.",
+              ),
               AnimatedBuilder(
                 animation: _horseAnimation,
                 builder: (context, child) {

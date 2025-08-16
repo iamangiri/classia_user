@@ -4,6 +4,8 @@ import 'package:classia_amc/themes/app_colors.dart';
 import 'package:classia_amc/widget/learn_app_bar.dart';
 import 'package:provider/provider.dart';
 
+import '../main/home_disclamer.dart';
+
 class UserPoints with ChangeNotifier {
   int _points = 1000;
   int get points => _points;
@@ -169,6 +171,9 @@ class _LearnScreenState extends State<LearnScreen> with SingleTickerProviderStat
         body: Column(
           children: [
             _buildClippedHeader(),
+            HomeDisclaimer(
+              message: "The information provided is for educational purposes only and does not constitute investment advice. ",
+            ),
             Container(
               color: AppColors.cardBackground,
               child: TabBar(

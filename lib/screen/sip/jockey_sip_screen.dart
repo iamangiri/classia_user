@@ -1,11 +1,8 @@
 import 'package:classia_amc/screen/sip/sip_explore_tab.dart';
-import 'package:classia_amc/screen/sip/sip_model.dart';
 import 'package:classia_amc/screen/sip/sip_portfolio_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
-import 'package:lottie/lottie.dart';
+
 import '../../themes/app_colors.dart';
 
 

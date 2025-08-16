@@ -499,6 +499,7 @@ import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../../themes/app_colors.dart';
+import '../main/home_disclamer.dart';
 import 'sip_animated_horse_widget.dart';
 
 
@@ -637,6 +638,9 @@ class _PortfolioTabState extends State<PortfolioTab> with TickerProviderStateMix
       padding: EdgeInsets.all(16.w),
       child: Column(
         children: [
+          HomeDisclaimer(
+            message: "Mutual Fund investments are subject to market risks, read all scheme related documents carefully.",
+          ),
           AnimatedBuilder(
             animation: _horseAnimation,
             builder: (context, child) {
