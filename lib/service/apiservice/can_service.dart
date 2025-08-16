@@ -9,7 +9,7 @@ class CamService {
 
   Future<dynamic> createCams(Map<String, dynamic> payload) async {
     final response = await http.post(
-      Uri.parse('http://localhost:8000/can/create'),
+      Uri.parse('https://classiahealth.com/can/create'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': '${UserConstants.TOKEN}',

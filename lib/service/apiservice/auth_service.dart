@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:classia_amc/utills/constent/app_constant.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../utills/constent/user_constant.dart';
 
 class AuthService {

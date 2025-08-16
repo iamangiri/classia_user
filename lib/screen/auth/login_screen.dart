@@ -88,14 +88,17 @@ class _LoginScreenState extends State<LoginScreen> {
         'user': result['data']['user'],
       });
 
+
+
+      context.goNamed('main');
       // Navigate based on verification status
-      if (UserConstants.IS_EMAIL_VERIFIED == false) {
-        context.goNamed('email_verify');
-      } else if (UserConstants.IS_MOBILE_VERIFIED == false) {
-        context.goNamed('mobile_verify');
-      } else {
-        context.goNamed('main');
-      }
+      // if (UserConstants.IS_EMAIL_VERIFIED == false) {
+      //   context.goNamed('email_verify');
+      // } else if (UserConstants.IS_MOBILE_VERIFIED == false) {
+      //   context.goNamed('mobile_verify');
+      // } else {
+      //   context.goNamed('main');
+      // }
     }
   }
 

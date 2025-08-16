@@ -14,80 +14,84 @@ class CustomerSupportScreen extends StatefulWidget {
 class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-
   final List<Map<String, dynamic>> supportOptions = [
-    {
-      'title': 'Live Chat',
-      'icon': Icons.chat,
-      'subtitle': 'Chat with our support team immediately',
-      'responseTime': 'Instant',
-      'contact': 'Start chat in-app',
-      'action': 'startChat',
-    },
+
+
     {
       'title': 'Email Support',
-      'icon': Icons.email,
-      'subtitle': 'Send us an email and we’ll respond shortly',
+      'icon': Icons.email_outlined,
+      'subtitle': 'Send detailed queries to our support team',
       'responseTime': 'Within 24 hours',
-      'contact': 'support@jockeytrading.com',
+      'contact': 'support@classiacapital.com',
       'action': 'sendEmail',
+      'priority': 'medium',
     },
     {
-      'title': 'Call Support',
-      'icon': Icons.call,
-      'subtitle': 'Reach our helpline 24/7',
+      'title': 'Phone Support',
+      'icon': Icons.phone_outlined,
+      'subtitle': 'Speak directly with our customer care team',
       'responseTime': 'Instant',
-      'contact': '+91 123-456-7890',
+      'contact': '+91 98869 88679',
       'action': 'makeCall',
+      'priority': 'high',
     },
     {
-      'title': 'FAQs',
-      'icon': Icons.help_outline,
-      'subtitle': 'Browse common questions and answers',
+      'title': 'Investment FAQs',
+      'icon': Icons.quiz_outlined,
+      'subtitle': 'Browse mutual fund and investment queries',
       'responseTime': 'Self-service',
-      'contact': 'In-app FAQ section',
+      'contact': 'Comprehensive FAQ section',
       'action': 'viewFAQs',
+      'priority': 'medium',
     },
     {
       'title': 'Submit Feedback',
-      'icon': Icons.feedback,
-      'subtitle': 'Help us improve by sharing your thoughts',
+      'icon': Icons.rate_review_outlined,
+      'subtitle': 'Share your experience and suggestions',
       'responseTime': 'Acknowledged within 48 hours',
-      'contact': 'feedback@jockeytrading.com',
+      'contact': 'feedback@classiacapital.com',
       'action': 'submitFeedback',
+      'priority': 'low',
     },
     {
-      'title': 'Create Support Ticket',
-      'icon': Icons.support,
-      'subtitle': 'Submit a detailed support ticket for assistance',
+      'title': 'Raise Support Ticket',
+      'icon': Icons.support_outlined,
+      'subtitle': 'Submit detailed investment-related queries',
       'responseTime': 'Within 24 hours',
-      'contact': 'In-app ticket submission',
+      'contact': 'Secure ticket system',
       'action': 'createSupportTicket',
+      'priority': 'medium',
     },
     {
-      'title': 'View Support Tickets',
-      'icon': Icons.list_alt,
-      'subtitle': 'View your submitted support tickets',
-      'responseTime': 'Instant',
-      'contact': 'In-app ticket list',
+      'title': 'My Support Tickets',
+      'icon': Icons.assignment_outlined,
+      'subtitle': 'Track your submitted queries and responses',
+      'responseTime': 'Real-time updates',
+      'contact': 'Personal ticket dashboard',
       'action': 'viewSupportTickets',
+      'priority': 'medium',
     },
   ];
 
   final List<Map<String, String>> quickTips = [
     {
-      'title': 'App Not Loading?',
-      'tip': 'Try restarting the app or checking your internet connection.',
+      'title': 'Investment Not Reflecting?',
+      'tip': 'Mutual fund investments may take 1-3 business days to reflect in your portfolio.',
     },
     {
-      'title': 'Transaction Issues?',
-      'tip': 'Verify your account details and ensure sufficient funds.',
+      'title': 'KYC Issues?',
+      'tip': 'Ensure all documents are clear and match your PAN details exactly.',
     },
     {
-      'title': 'Forgot Password?',
-      'tip': 'Use the "Forgot Password" link on the login screen.',
+      'title': 'Forgot Login Credentials?',
+      'tip': 'Use "Forgot Password" or contact support for account recovery assistance.',
+    },
+    {
+      'title': 'SIP Not Executed?',
+      'tip': 'Check if you have sufficient bank balance and valid mandate setup.',
     },
   ];
+
 
   @override
   void initState() {
@@ -601,7 +605,7 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.screenBackground,
-      appBar: CustomAppBar(
+      appBar: CommonAppBar(
         title: widget.option['title'],
       ),
       body: SingleChildScrollView(

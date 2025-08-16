@@ -1,4 +1,3 @@
-
 import 'package:classia_amc/screen/homefetures/withdraw_screen.dart';
 import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:classia_amc/widget/common_app_bar.dart';
@@ -27,7 +26,7 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.screenBackground,
       appBar: CommonAppBar(
-        title: 'Profile', // Fixed typo: 'Profle' to 'Profile'
+        title: 'Profile',
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.w),
@@ -50,8 +49,14 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildProfileSection(BuildContext context) {
-    String userName = "${UserConstants.NAME}"; // Replace with actual username
-    String userEmail = "${UserConstants.EMAIL}"; // Replace with actual email
+    // Safe handling of user data with null checks and fallbacks
+    String userName = UserConstants.NAME?.toString() ?? "User";
+    String userEmail = UserConstants.EMAIL?.toString() ?? "user@example.com";
+
+    // Ensure userName is not empty for avatar
+    if (userName.trim().isEmpty) {
+      userName = "User";
+    }
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -59,43 +64,46 @@ class ProfileScreen extends StatelessWidget {
         // Profile Avatar
         CircleAvatar(
           radius: 40,
-          backgroundColor: AppColors.border, // Light border color
+          backgroundColor: AppColors.border,
           child: Text(
-            userName[0], // Show first letter of user's name
+            userName.trim()[0].toUpperCase(), // Safe access with trim and uppercase
             style: TextStyle(
               fontSize: 30,
               fontWeight: FontWeight.bold,
-              color: AppColors.primaryText, // Dark text for contrast
+              color: AppColors.primaryText,
             ),
           ),
         ),
         SizedBox(width: 16),
         // User Name and Email
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              userName,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primaryText, // Dark text
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                userName,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryText,
+                ),
+                overflow: TextOverflow.ellipsis, // Handle long names
               ),
-            ),
-            SizedBox(height: 4),
-            Text(
-              userEmail,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.secondaryText, // Lighter secondary text
+              SizedBox(height: 4),
+              Text(
+                userEmail,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.secondaryText,
+                ),
+                overflow: TextOverflow.ellipsis, // Handle long emails
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-        Spacer(),
         // Edit Icon
         IconButton(
-          icon: Icon(Icons.edit, color: AppColors.accent), // Accent color for edit
+          icon: Icon(Icons.edit, color: AppColors.accent),
           onPressed: () {
             Navigator.push(
               context,
@@ -124,7 +132,7 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildAccountOptionsList(BuildContext context) {
     final List<Map<String, String>> accountOptions = [
       {'title': 'KYC', 'icon': 'verified_user'},
-      {'title': 'CAN', 'icon': 'account_circle'}, // Added CAN option
+      {'title': 'CAN', 'icon': 'account_circle'},
       {'title': 'Manage Folio', 'icon': 'folio'},
       {'title': 'Security Settings', 'icon': 'security'},
       {'title': 'Bank Info', 'icon': 'account_balance'},
@@ -186,7 +194,7 @@ class ProfileScreen extends StatelessWidget {
         iconData = Icons.privacy_tip;
         break;
       case 'account_circle':
-        iconData = Icons.account_circle; // Icon for CAN
+        iconData = Icons.account_circle;
         break;
       default:
         iconData = Icons.help;
@@ -236,7 +244,7 @@ class ProfileScreen extends StatelessWidget {
     Widget destination;
     switch (optionTitle) {
       case 'CAN':
-        destination = const CamsCreationScreen(); // Navigate to CamsCreationScreen
+        destination = const CamsCreationScreen();
         break;
       case 'Manage Folio':
         destination = const ManageFolioScreen();

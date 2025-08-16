@@ -7,13 +7,12 @@ import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:ui';
 
-import 'create_folio_screen.dart';
-
 class TradingDetailsScreen extends StatefulWidget {
   final String logo;
   final String name;
   final String fundName;
   final double value;
+  final bool isInvestMode; // New flag to toggle Invest/Withdraw
 
   const TradingDetailsScreen({
     Key? key,
@@ -21,6 +20,7 @@ class TradingDetailsScreen extends StatefulWidget {
     required this.name,
     required this.fundName,
     required this.value,
+    this.isInvestMode = true, // Default to Invest mode
   }) : super(key: key);
 
   @override
@@ -96,52 +96,18 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
     );
   }
 
-  Widget _buildDisclaimer() {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground?.withOpacity(0.8),
-        borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: AppColors.primaryGold!.withOpacity(0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8.r,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.info_outline,
-            color: AppColors.warning,
-            size: 20.sp,
-          ),
-          SizedBox(width: 8.w),
-          Expanded(
-            child: Text(
-              'This fund details page contains dummy data. Real data integration with AMC is coming soon!',
-              style: TextStyle(
-                fontSize: 11.sp,
-                color: AppColors.warning,
-                fontWeight: FontWeight.w500,
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildSliverAppBar() {
     return SliverAppBar(
       expandedHeight: 100.h,
       floating: true,
       pinned: true,
       backgroundColor: AppColors.primaryColor,
+      leading: IconButton(
+        icon: Icon(Icons.arrow_back, color: Colors.white, size: 22.sp),
+        onPressed: () {
+          Navigator.pop(context);
+        },
+      ),
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: BoxDecoration(
@@ -160,31 +126,8 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 48.r,
-                    height: 48.r,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 6.r,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: ClipOval(
-                      child: Image.network(
-                        widget.logo,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          color: Colors.grey[300],
-                          child: Icon(Icons.image, color: AppColors.error, size: 24.sp),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
+
+                  SizedBox(width: 30.w),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,41 +180,81 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
         ),
       ),
       actions: [
-        IconButton(
-          icon: Icon(Icons.share_rounded, color: Colors.white, size: 22.sp),
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Share feature coming soon!'),
-                backgroundColor: AppColors.success,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-              ),
-            );
-          },
-        ),
-        IconButton(
-          icon: Icon(
-            _isFavorite ? Icons.favorite : Icons.favorite_border,
-            color: _isFavorite ? Colors.red : Colors.white,
-            size: 22.sp,
-          ),
-          onPressed: () {
-            setState(() {
-              _isFavorite = !_isFavorite;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(_isFavorite ? 'Added to favorites' : 'Removed from favorites'),
-                backgroundColor: AppColors.success,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-              ),
-            );
-          },
-        ),
+        // IconButton(
+        //   icon: Icon(Icons.share_rounded, color: Colors.white, size: 22.sp),
+        //   onPressed: () {
+        //     ScaffoldMessenger.of(context).showSnackBar(
+        //       SnackBar(
+        //         content: Text('Share feature coming soon!'),
+        //         backgroundColor: AppColors.success,
+        //         behavior: SnackBarBehavior.floating,
+        //         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+        //       ),
+        //     );
+        //   },
+        // ),
+        // IconButton(
+        //   icon: Icon(
+        //     _isFavorite ? Icons.favorite : Icons.favorite_border,
+        //     color: _isFavorite ? Colors.red : Colors.white,
+        //     size: 22.sp,
+        //   ),
+        //   onPressed: () {
+        //     setState(() {
+        //       _isFavorite = !_isFavorite;
+        //     });
+        //     ScaffoldMessenger.of(context).showSnackBar(
+        //       SnackBar(
+        //         content: Text(_isFavorite ? 'Added to favorites' : 'Removed from favorites'),
+        //         backgroundColor: AppColors.success,
+        //         behavior: SnackBarBehavior.floating,
+        //         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+        //       ),
+        //     );
+        //   },
+        // ),
         SizedBox(width: 8.w),
       ],
+    );
+  }
+
+  Widget _buildDisclaimer() {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground?.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: AppColors.primaryGold!.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8.r,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.info_outline,
+            color: AppColors.warning,
+            size: 20.sp,
+          ),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Text(
+              'This fund details page contains dummy data. Real data integration with AMC is coming soon!',
+              style: TextStyle(
+                fontSize: 11.sp,
+                color: AppColors.warning,
+                fontWeight: FontWeight.w500,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -839,6 +822,8 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
   }
 
   Widget _buildHoldingItem(String name, double percentage, String sector) {
+    // Validate name to prevent RangeError
+    String displayInitial = name.isNotEmpty ? name.substring(0, 1) : 'N';
     return Container(
       margin: EdgeInsets.only(bottom: 8.h),
       padding: EdgeInsets.all(12.w),
@@ -858,7 +843,7 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
             ),
             child: Center(
               child: Text(
-                name.substring(0, 1),
+                displayInitial,
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w600,
@@ -873,7 +858,7 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name,
+                  name.isNotEmpty ? name : 'Unknown Holding',
                   style: TextStyle(
                     color: AppColors.primaryText,
                     fontSize: 13.sp,
@@ -881,7 +866,7 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
                   ),
                 ),
                 Text(
-                  sector,
+                  sector.isNotEmpty ? sector : 'Unknown Sector',
                   style: TextStyle(color: AppColors.secondaryText, fontSize: 11.sp),
                 ),
               ],
@@ -891,7 +876,7 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${percentage.toStringAsFixed(1)}%',
+                percentage.isNaN ? '0.0%' : '${percentage.toStringAsFixed(1)}%',
                 style: TextStyle(
                   color: AppColors.primaryText,
                   fontSize: 12.sp,
@@ -908,7 +893,7 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
                 ),
                 child: FractionallySizedBox(
                   alignment: Alignment.centerLeft,
-                  widthFactor: (percentage / 10).clamp(0.0, 1.0),
+                  widthFactor: percentage.isNaN ? 0.0 : (percentage / 10).clamp(0.0, 1.0),
                   child: Container(
                     decoration: BoxDecoration(
                       color: AppColors.primaryGold,
@@ -1132,7 +1117,7 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
                     ),
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: 'Investment Amount',
+                      labelText: widget.isInvestMode ? 'Investment Amount' : 'Withdrawal Amount',
                       hintText: '₹1,000',
                       labelStyle: TextStyle(color: AppColors.secondaryText, fontSize: 13.sp),
                       hintStyle: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp),
@@ -1169,7 +1154,7 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
                       if (value == null || value.isEmpty) return 'Enter an amount';
                       final amount = int.tryParse(value);
                       if (amount == null || amount <= 0) return 'Enter a valid amount';
-                      if (amount < 100) return 'Minimum investment is ₹100';
+                      if (amount < 100) return 'Minimum amount is ₹100';
                       return null;
                     },
                     onChanged: (value) => setState(() {}),
@@ -1189,69 +1174,65 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
               ],
             ),
             SizedBox(height: 12.h),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : () => _handleInvestOrWithdraw('Invest'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryGold!.withOpacity(0.9),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                      padding: EdgeInsets.symmetric(vertical: 12.h),
-                    ),
-                    child: _isLoading
-                        ? SizedBox(
-                      width: 18.w,
-                      height: 18.h,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.buttonText),
+            // Show only one button based on isInvestMode
+            SizedBox(
+              width: double.infinity,
+              child: widget.isInvestMode
+                  ? ElevatedButton(
+                onPressed: _isLoading ? null : () => _handleInvestOrWithdraw('Invest'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryGold!.withOpacity(0.9),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                ),
+                child: _isLoading
+                    ? SizedBox(
+                  width: 18.w,
+                  height: 18.h,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.buttonText),
+                  ),
+                )
+                    : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.trending_up, color: AppColors.buttonText, size: 16.sp),
+                    SizedBox(width: 6.w),
+                    Text(
+                      'Invest',
+                      style: TextStyle(
+                        color: AppColors.buttonText,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
                       ),
-                    )
-                        : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.trending_up, color: AppColors.buttonText, size: 16.sp),
-                        SizedBox(width: 6.w),
-                        Text(
-                          'Invest',
-                          style: TextStyle(
-                            color: AppColors.buttonText,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
                     ),
-                  ),
+                  ],
                 ),
-                SizedBox(width: 8.w),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _isLoading ? null : () => _handleInvestOrWithdraw('Withdraw'),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: AppColors.error, width: 1.5),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                      padding: EdgeInsets.symmetric(vertical: 12.h),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.trending_down, color: AppColors.error, size: 16.sp),
-                        SizedBox(width: 6.w),
-                        Text(
-                          'Withdraw',
-                          style: TextStyle(
-                            color: AppColors.error,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+              )
+                  : OutlinedButton(
+                onPressed: _isLoading ? null : () => _handleInvestOrWithdraw('Withdraw'),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: AppColors.error, width: 1.5),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
                 ),
-              ],
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.trending_down, color: AppColors.error, size: 16.sp),
+                    SizedBox(width: 6.w),
+                    Text(
+                      'Withdraw',
+                      style: TextStyle(
+                        color: AppColors.error,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),

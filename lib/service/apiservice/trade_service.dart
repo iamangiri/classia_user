@@ -3,10 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:classia_amc/utills/constent/user_constant.dart';
 
 class TradeService {
-  // API Configuration
   static const String baseUrl = 'https://classiahealth.com';
 
-  // Fetch mutual fund list from API
   Future<List<dynamic>> fetchAmcList() async {
     try {
       final response = await http.get(
@@ -32,7 +30,6 @@ class TradeService {
     }
   }
 
-  // Get AMC logo URL based on name
   String getAmcLogo(String amcName) {
     final logoMap = {
       'HDFC Asset Management Company': 'https://assets-netstorage.groww.in/mf-assets/logos/hdfc_groww.png',
@@ -52,7 +49,6 @@ class TradeService {
     return logoMap[amcName] ?? 'https://www.quantmutual.com/images/logo.png';
   }
 
-  // Get default AMC data as fallback
   List<Map<String, dynamic>> getDefaultAmcData() {
     return [
       {
@@ -60,28 +56,28 @@ class TradeService {
         "logo": "https://www.quantmutual.com/images/logo.png",
         "name": "Quant",
         "fundName": "Small Cap Fund",
-        "value": 0,
+        "value": 12.0,
       },
       {
         "id": 2,
         "logo": "https://www.nipponindiamf.com/assets/images/niam-logo.png",
         "name": "Nippon India",
         "fundName": "Small Cap Fund",
-        "value": 0,
+        "value": 12.0,
       },
       {
         "id": 3,
         "logo": "https://www.sbimf.com/images/default-source/default-album/sbi-mutual-fund-logo.png",
         "name": "SBI",
         "fundName": "Small Cap Fund",
-        "value": 0,
+        "value": 12.0,
       },
       {
         "id": 4,
         "logo": "https://www.icicipruamc.com/docs/default-source/default-document-library/icici-pru-logo.jpg",
         "name": "ICICI Prudential",
         "fundName": "Technology Fund",
-        "value": 0,
+        "value": 12.0,
       },
       {
         "id": 5,
@@ -93,7 +89,6 @@ class TradeService {
     ];
   }
 
-  // Map filter to API performance field
   String _getPerformanceField(String filter) {
     switch (filter) {
       case 'Live':
@@ -119,20 +114,20 @@ class TradeService {
     }
   }
 
-  // Parse performance value and handle null
   double _parsePerformanceValue(String? value) {
     if (value == null || value.isEmpty) {
-      return 0.0; // Default value for null
+      return 0.0; // Return 0 instead of 12.0 for consistency with UI requirement
     }
     try {
-      return double.parse(value.replaceAll('%', '')) ?? 12.0;
+      // Remove '%' and parse as double
+      double parsedValue = double.parse(value.replaceAll('%', ''));
+      return parsedValue.isNaN ? 0.0 : parsedValue;
     } catch (e) {
       print('Error parsing performance value: $e');
-      return 0.0; // Default value on error
+      return 0.0; // Return 0 on error to prevent NaN
     }
   }
 
-  // Main method to load enriched AMC data
   Future<List<Map<String, dynamic>>> loadAmcData({required String filter, required bool isBuy}) async {
     try {
       final amcListData = await fetchAmcList();

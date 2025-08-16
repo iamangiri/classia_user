@@ -6,7 +6,6 @@ import '../../widget/trade/trade_app_bar.dart';
 import '../../screen/trade/trade_explore_tab.dart';
 import '../../themes/app_colors.dart';
 import 'dart:async';
-
 import '../trade/trade_sell_tab.dart';
 
 class TradingScreen extends StatefulWidget {

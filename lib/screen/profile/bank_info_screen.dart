@@ -14,13 +14,6 @@ class BankInfoScreen extends StatefulWidget {
 class _BankInfoScreenState extends State<BankInfoScreen> {
   // Dummy bank details list; replace with actual data source
   List<Map<String, String>> bankDetails = [
-    {
-      "bankName": "Sample Bank",
-      "branch": "Mumbai",
-      "accountHolder": "John Doe",
-      "accountNumber": "1234567890",
-      "ifsc": "SBIN0001234",
-    },
   ];
 
   void _addBank(Map<String, String> newBank) {
@@ -61,13 +54,11 @@ class _BankInfoScreenState extends State<BankInfoScreen> {
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset(
-                        'assets/images/empty_bank.png',
-                        width: 120.w,
-                        height: 120.h,
-                        color: AppColors.secondaryText,
-                      ),
+                    children: [Icon(
+                      Icons.account_balance, // Bank icon
+                      size: 120.w, // same size as before
+                      color: AppColors.secondaryText,
+                    ),
                       SizedBox(height: 16.h),
                       Text(
                         "No bank details available",
