@@ -128,10 +128,55 @@ class Goal {
     required this.lottieAsset,
   });
 
+  // Helper method to convert IconData to a storable format
+  static Map<String, dynamic> _iconToJson(IconData icon) {
+    return {
+      'codePoint': icon.codePoint,
+      'fontFamily': icon.fontFamily,
+      'fontPackage': icon.fontPackage,
+      'matchTextDirection': icon.matchTextDirection,
+    };
+  }
+
+  // Helper method to convert stored format back to IconData
+  static IconData _iconFromJson(Map<String, dynamic> iconData) {
+    // Use a predefined map of common icons to avoid non-constant IconData
+    final codePoint = iconData['codePoint'] as int;
+    return _getIconFromCodePoint(codePoint);
+  }
+
+  // Map common icon code points to their IconData instances
+  static IconData _getIconFromCodePoint(int codePoint) {
+    const iconMap = {
+      0xe5ca: Icons.star,
+      0xe88a: Icons.home,
+      0xe559: Icons.directions_car,
+      0xe862: Icons.school,
+      0xe8cc: Icons.local_hospital,
+      0xe7fd: Icons.beach_access,
+      0xe8d2: Icons.business,
+      0xe890: Icons.work,
+      0xe7ee: Icons.savings,
+      0xe8b8: Icons.flight,
+      0xe5d2: Icons.restaurant,
+      0xe5c9: Icons.fitness_center,
+      0xe896: Icons.shopping_cart,
+      0xe5c3: Icons.child_care,
+      0xe1b1: Icons.pets,
+      0xe3e2: Icons.music_note,
+      0xe06d: Icons.sports_esports,
+      0xe430: Icons.camera_alt,
+      0xe870: Icons.phone,
+      0xe0b7: Icons.laptop,
+    };
+
+    return iconMap[codePoint] ?? Icons.star; // Default fallback
+  }
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
-    'icon': icon.codePoint,
+    'icon': _iconToJson(icon),
     'target': target,
     'current': current,
     'monthlyPayment': monthlyPayment,
@@ -143,7 +188,9 @@ class Goal {
   factory Goal.fromJson(Map<String, dynamic> json) => Goal(
     id: json['id'],
     name: json['name'],
-    icon: IconData(json['icon'], fontFamily: 'MaterialIcons'),
+    icon: json['icon'] is Map<String, dynamic>
+        ? _iconFromJson(json['icon'])
+        : _getIconFromCodePoint(json['icon'] as int), // Use the safe method
     target: json['target'].toDouble(),
     current: json['current'].toDouble(),
     monthlyPayment: json['monthlyPayment'].toDouble(),
@@ -179,10 +226,6 @@ class Scheme {
     color: Colors.blueGrey,
   );
 }
-
-
-
-
 
 // SipExploreGoalGrid (Unchanged)
 class ExploreGoal {

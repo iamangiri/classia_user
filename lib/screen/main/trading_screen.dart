@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import '../../service/apiservice/trade_service.dart';
 import '../../widget/trade/trade_app_bar.dart';
-import '../../widget/trade/trade_overlay.dart';
 import '../../screen/trade/trade_explore_tab.dart';
-import '../../screen/trade/trade_sell_tab.dart';
 import '../../themes/app_colors.dart';
 import 'dart:async';
+
+import '../trade/trade_sell_tab.dart';
 
 class TradingScreen extends StatefulWidget {
   const TradingScreen({super.key});
@@ -21,7 +20,6 @@ class _TradingScreenState extends State<TradingScreen> with TickerProviderStateM
   List<Map<String, dynamic>> amcList = [];
   bool isLoading = true;
   String? errorMessage;
-  bool showMarketClosedOverlay = false;
   String selectedFilter = 'Live'; // Default filter
   int _currentTabIndex = 1; // Default to Buy Trade
   late AnimationController _fadeController;
@@ -42,41 +40,12 @@ class _TradingScreenState extends State<TradingScreen> with TickerProviderStateM
     );
     _fadeController.forward();
     _loadAmcData();
-    _checkMarketStatus();
   }
 
   @override
   void dispose() {
     _fadeController.dispose();
     super.dispose();
-  }
-
-  void _checkMarketStatus() {
-    if (selectedFilter == 'Live' && !_isMarketOpen()) {
-      setState(() {
-        showMarketClosedOverlay = true;
-      });
-    } else {
-      setState(() {
-        showMarketClosedOverlay = false;
-      });
-    }
-  }
-
-  bool _isMarketOpen() {
-    final now = DateTime.now();
-    final weekday = now.weekday;
-
-    // Check if it's Saturday (6) or Sunday (7)
-    if (weekday == 6 || weekday == 7) {
-      return false;
-    }
-
-    // Market hours: 9:15 AM to 3:30 PM (Indian Stock Exchange)
-    final marketOpen = DateTime(now.year, now.month, now.day, 9, 15);
-    final marketClose = DateTime(now.year, now.month, now.day, 15, 30);
-
-    return now.isAfter(marketOpen) && now.isBefore(marketClose);
   }
 
   Future<void> _loadAmcData() async {
@@ -105,7 +74,6 @@ class _TradingScreenState extends State<TradingScreen> with TickerProviderStateM
         errorMessage = 'Using default data due to API error';
       });
     }
-    _checkMarketStatus(); // Re-check market status after data load
   }
 
   Future<void> _refreshData() async {
@@ -232,52 +200,20 @@ class _TradingScreenState extends State<TradingScreen> with TickerProviderStateM
           onFilterSelected: _onFilterSelected,
           onTabSelected: _onTabSelected,
           currentTabIndex: _currentTabIndex,
+          selectedFilter: selectedFilter,
         ),
-        body: Stack(
-          children: [
-            // Main Content
-            RefreshIndicator(
-              onRefresh: _refreshData,
-              color: AppColors.primaryGold,
-              child: Column(
-                children: [
-                  _buildCompactErrorMessage(),
-                  Expanded(
-                    child: _buildContent(),
-                  ),
-                ],
+        body: RefreshIndicator(
+          onRefresh: _refreshData,
+          color: AppColors.primaryGold,
+          child: Column(
+            children: [
+              _buildCompactErrorMessage(),
+              Expanded(
+                child: _buildContent(),
               ),
-            ),
-            // Market Closed Overlay
-            if (showMarketClosedOverlay && selectedFilter == 'Live')
-              Positioned.fill(
-                child: MarketClosedOverlay(
-                  onExploreFunds: () {
-                    context.goNamed('main', queryParameters: {'index': '1'});
-                  },
-                ),
-              ),
-          ],
-        ),
-        floatingActionButton: !_isMarketOpen() && !showMarketClosedOverlay
-            ? FloatingActionButton.extended(
-          onPressed: () {
-            setState(() {
-              showMarketClosedOverlay = true;
-            });
-          },
-          backgroundColor: AppColors.primaryGold,
-          icon: Icon(Icons.access_time, color: Colors.white),
-          label: Text(
-            'Market Status',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
+            ],
           ),
-        )
-
-            : null,
+        ),
       ),
     );
   }

@@ -4,13 +4,13 @@ import 'package:classia_amc/utills/constent/user_constant.dart';
 
 class TradeService {
   // API Configuration
-  static const String baseUrl = 'https://api.classiacapital.com';
+  static const String baseUrl = 'https://classiahealth.com';
 
-  // Fetch AMC list from API
+  // Fetch mutual fund list from API
   Future<List<dynamic>> fetchAmcList() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/amc/list?page=1&limit=50'),
+        Uri.parse('$baseUrl/mutual-fund/list?page=1&sizePerPage=1000'),
         headers: {
           'Authorization': 'Bearer ${UserConstants.TOKEN}',
           'Content-Type': 'application/json',
@@ -20,45 +20,16 @@ class TradeService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['status'] == true) {
-          return data['data']['users'];
+          return data['data']['usersList'];
         } else {
           throw Exception('API returned error: ${data['message']}');
         }
       } else {
-        throw Exception('Failed to load AMC list: ${response.statusCode}');
+        throw Exception('Failed to load mutual fund list: ${response.statusCode}');
       }
     } catch (e) {
       throw Exception('Network error: $e');
     }
-  }
-
-  // Fetch AMC performance data
-  Future<double> fetchAmcPerformance(int amcId) async {
-    try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/user/amc/performance?amcId=$amcId'),
-        headers: {
-          'Authorization': 'Bearer ${UserConstants.TOKEN}',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['status'] == true) {
-          // Parse the averagePercentChange string (e.g., "-0.69%")
-          String percentStr = data['data']['averagePercentChange'];
-          // Remove the % sign and parse as double
-          double percentValue = double.parse(percentStr.replaceAll('%', ''));
-          return percentValue;
-        }
-      }
-    } catch (e) {
-      print('Error fetching performance for AMC $amcId: $e');
-    }
-
-    // Return random default value between -5 and 5 if API fails
-    return (DateTime.now().millisecondsSinceEpoch % 1000) / 100 - 5;
   }
 
   // Get AMC logo URL based on name
@@ -74,6 +45,8 @@ class TradeService {
       'Invesco Mutual Fund': 'https://assets-netstorage.groww.in/mf-assets/logos/invesco_groww.png',
       'Franklin Templeton Mutual Fund': 'https://assets-netstorage.groww.in/mf-assets/logos/franklin_groww.png',
       'Motilal Oswal AMC': 'https://assets-netstorage.groww.in/mf-assets/logos/motilal_groww.png',
+      'UTI Mutual Fund': 'https://assets-netstorage.groww.in/mf-assets/logos/uti_groww.png',
+      'Groww Mutual Fund': 'https://assets-netstorage.groww.in/mf-assets/logos/groww_groww.png',
     };
 
     return logoMap[amcName] ?? 'https://www.quantmutual.com/images/logo.png';
@@ -87,79 +60,103 @@ class TradeService {
         "logo": "https://www.quantmutual.com/images/logo.png",
         "name": "Quant",
         "fundName": "Small Cap Fund",
-        "value": 51.2,
+        "value": 0,
       },
       {
         "id": 2,
         "logo": "https://www.nipponindiamf.com/assets/images/niam-logo.png",
         "name": "Nippon India",
         "fundName": "Small Cap Fund",
-        "value": 46.8,
+        "value": 0,
       },
       {
         "id": 3,
         "logo": "https://www.sbimf.com/images/default-source/default-album/sbi-mutual-fund-logo.png",
         "name": "SBI",
         "fundName": "Small Cap Fund",
-        "value": 41.5,
+        "value": 0,
       },
       {
         "id": 4,
         "logo": "https://www.icicipruamc.com/docs/default-source/default-document-library/icici-pru-logo.jpg",
         "name": "ICICI Prudential",
         "fundName": "Technology Fund",
-        "value": 43.1,
+        "value": 0,
       },
       {
         "id": 5,
         "logo": "https://upload.wikimedia.org/wikipedia/commons/7/70/HDFC_Bank_Logo.svg",
         "name": "HDFC",
         "fundName": "Mid-Cap Opportunities Fund",
-        "value": 38.7,
+        "value": 12.0,
       },
     ];
+  }
+
+  // Map filter to API performance field
+  String _getPerformanceField(String filter) {
+    switch (filter) {
+      case 'Live':
+        return 'dayChange';
+      case 'Last 7 Days':
+        return 'weekChange';
+      case '1 Month':
+        return 'monthChange';
+      case '3 Months':
+        return 'threeMonthsChange';
+      case '6 Months':
+        return 'sixMonthChange';
+      case '1 Year':
+        return 'oneYearChange';
+      case '3 Years':
+        return 'threeYearsChange';
+      case '5 Years':
+        return 'fiveYearsChange';
+      case 'All':
+        return 'allTime';
+      default:
+        return 'dayChange';
+    }
+  }
+
+  // Parse performance value and handle null
+  double _parsePerformanceValue(String? value) {
+    if (value == null || value.isEmpty) {
+      return 0.0; // Default value for null
+    }
+    try {
+      return double.parse(value.replaceAll('%', '')) ?? 12.0;
+    } catch (e) {
+      print('Error parsing performance value: $e');
+      return 0.0; // Default value on error
+    }
   }
 
   // Main method to load enriched AMC data
   Future<List<Map<String, dynamic>>> loadAmcData({required String filter, required bool isBuy}) async {
     try {
-      // First, get the list of AMCs
       final amcListData = await fetchAmcList();
+      final performanceField = _getPerformanceField(filter);
 
-      // Then, get performance data for each AMC
-      List<Map<String, dynamic>> enrichedAmcList = [];
+      List<Map<String, dynamic>> enrichedAmcList = amcListData.map((amc) {
+        return {
+          'id': amc['id'],
+          'logo': getAmcLogo(amc['amc']),
+          'name': amc['amc'],
+          'fundName': amc['scheamName'],
+          'value': _parsePerformanceValue(amc[performanceField]),
+          'scheamCode': amc['scheamCode'],
+          'isDeleted': amc['isDeleted'],
+          'createdAt': amc['createdAt'],
+          'updatedAt': amc['updatedAt'],
+          'deletedAt': amc['deletedAt'],
+        };
+      }).toList();
 
-      for (var amc in amcListData) {
-        final performanceData = await fetchAmcPerformance(amc['ID']);
-
-        enrichedAmcList.add({
-          'id': amc['ID'],
-          'logo': getAmcLogo(amc['Name']),
-          'name': amc['Name'],
-          'fundName': amc['FundName'] ?? 'Mutual Fund', // Use dynamic fund name from API
-          'value': performanceData,
-          'email': amc['Email'],
-          'mobile': amc['Mobile'],
-          'address': amc['Address'],
-          'city': amc['City'],
-          'state': amc['State'],
-          'pinCode': amc['PinCode'],
-          'contactPersonName': amc['ContactPersonName'],
-          'contactPersonDesignation': amc['ContactPerDesignation'],
-          'panNumber': amc['PanNumber'],
-          'equityPer': amc['EquityPer'],
-          'debtPer': amc['DebtPer'],
-          'cashSplit': amc['CashSplit'],
-        });
-      }
-
-      // Sort by performance value in descending order
       enrichedAmcList.sort((a, b) => b['value'].compareTo(a['value']));
-
       return enrichedAmcList;
     } catch (e) {
       print('Error in TradeService.loadAmcData: $e');
-      // Return default data as fallback
       final defaultData = getDefaultAmcData();
       defaultData.sort((a, b) => b["value"].compareTo(a["value"]));
       return defaultData;

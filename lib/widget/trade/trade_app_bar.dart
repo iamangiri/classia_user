@@ -4,13 +4,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../screen/calcutator/sip_calcutator.dart';
 import '../../screen/main/profile_screen.dart';
 import '../../themes/app_colors.dart';
-import 'dart:async';
 
 class TradeAppBar extends StatefulWidget implements PreferredSizeWidget {
   final Function(String) onFilterSelected;
   final Function(int) onTabSelected;
   final int currentTabIndex;
-  final String? selectedFilter; // Add this to track selected filter
+  final String? selectedFilter;
 
   const TradeAppBar({
     Key? key,
@@ -28,11 +27,8 @@ class TradeAppBar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin {
-  DateTime currentTime = DateTime.now();
-  Timer? _timer;
   bool _isProfileHovered = false;
   bool _isCalcHovered = false;
-  bool _isSupportHovered = false;
   bool _isFilterHovered = false;
   String? _selectedFilter;
   late AnimationController _filterAnimationController;
@@ -41,14 +37,11 @@ class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin
   @override
   void initState() {
     super.initState();
-    _startTimer();
     _selectedFilter = widget.selectedFilter ?? 'Live';
-
     _filterAnimationController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-
     _filterScaleAnimation = Tween<double>(
       begin: 1.0,
       end: 0.95,
@@ -60,54 +53,8 @@ class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin
 
   @override
   void dispose() {
-    _timer?.cancel();
     _filterAnimationController.dispose();
     super.dispose();
-  }
-
-  void _startTimer() {
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      if (mounted) {
-        setState(() {
-          currentTime = DateTime.now();
-        });
-      }
-    });
-  }
-
-  bool _isMarketOpen() {
-    final now = DateTime.now();
-    final weekday = now.weekday;
-
-    if (weekday == 6 || weekday == 7) {
-      return false;
-    }
-
-    final marketOpen = DateTime(now.year, now.month, now.day, 9, 15);
-    final marketClose = DateTime(now.year, now.month, now.day, 15, 30);
-
-    return now.isAfter(marketOpen) && now.isBefore(marketClose);
-  }
-
-  String _formatTime(DateTime time) {
-    String period = time.hour >= 12 ? 'PM' : 'AM';
-    int hour = time.hour > 12 ? time.hour - 12 : (time.hour == 0 ? 12 : time.hour);
-    String minute = time.minute.toString().padLeft(2, '0');
-    String second = time.second.toString().padLeft(2, '0');
-    return '$hour:$minute:$second $period';
-  }
-
-  Widget _buildMarketStatusIndicator() {
-    final isOpen = _isMarketOpen();
-    return Text(
-      '${isOpen ? 'LIVE' : 'CLOSED'} ${_formatTime(currentTime)}',
-      style: TextStyle(
-        color: AppColors.primaryGold,
-        fontSize: 12.sp,
-        fontWeight: FontWeight.w600,
-        fontFamily: 'monospace',
-      ),
-    );
   }
 
   void _showFilterBottomSheet(BuildContext context) {
@@ -129,7 +76,6 @@ class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  stops: [0.0, 1.0],
                 ),
                 borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
                 boxShadow: [
@@ -137,7 +83,6 @@ class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin
                     color: Colors.black.withOpacity(0.15),
                     blurRadius: 24.r,
                     offset: Offset(0, -8.h),
-                    spreadRadius: 0,
                   ),
                 ],
                 border: Border.all(
@@ -147,7 +92,6 @@ class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin
               ),
               child: Column(
                 children: [
-                  // Handle bar
                   Container(
                     margin: EdgeInsets.only(top: 12.h),
                     width: 40.w,
@@ -157,8 +101,6 @@ class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin
                       borderRadius: BorderRadius.circular(2.r),
                     ),
                   ),
-
-                  // Header with close button
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
                     child: Row(
@@ -193,7 +135,6 @@ class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin
                                     fontSize: 22.sp,
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.primaryColor ?? Colors.blue,
-                                    letterSpacing: -0.5,
                                   ),
                                 ),
                                 Text(
@@ -220,8 +161,6 @@ class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin
                       ],
                     ),
                   ),
-
-                  // Filter options
                   Expanded(
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -236,13 +175,11 @@ class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin
                         itemBuilder: (context, index) {
                           final filter = _getFilterOptions()[index];
                           final isSelected = _selectedFilter == filter['value'];
-                          final isLive = filter['value'] == 'Live';
-                          final isMarketOpen = _isMarketOpen();
 
                           return AnimatedContainer(
                             duration: Duration(milliseconds: 300),
                             curve: Curves.easeInOut,
-                            height: isSelected ? 65.h : 55.h, // Different heights
+                            height: isSelected ? 65.h : 55.h,
                             decoration: BoxDecoration(
                               gradient: isSelected
                                   ? LinearGradient(
@@ -272,7 +209,6 @@ class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin
                                   color: AppColors.primaryColor?.withOpacity(0.3) ?? Colors.blue.withOpacity(0.3),
                                   blurRadius: 12.r,
                                   offset: Offset(0, 4.h),
-                                  spreadRadius: 0,
                                 ),
                               ]
                                   : [
@@ -291,11 +227,7 @@ class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin
                                   setModalState(() {
                                     _selectedFilter = filter['value'];
                                   });
-
-                                  // Add haptic feedback
                                   HapticFeedback.selectionClick();
-
-                                  // Delay to show selection animation
                                   Future.delayed(Duration(milliseconds: 200), () {
                                     widget.onFilterSelected(filter['value']);
                                     Navigator.pop(context);
@@ -305,7 +237,6 @@ class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin
                                   padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                                   child: Row(
                                     children: [
-                                      // Icon section
                                       Container(
                                         width: 36.w,
                                         height: 36.h,
@@ -317,62 +248,30 @@ class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin
                                         ),
                                         child: Icon(
                                           filter['icon'],
-                                          color: isSelected
-                                              ? Colors.white
-                                              : AppColors.primaryColor ?? Colors.blue,
+                                          color: isSelected ? Colors.white : AppColors.primaryColor ?? Colors.blue,
                                           size: 18.sp,
                                         ),
                                       ),
                                       SizedBox(width: 12.w),
-
-                                      // Text section
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
-                                            Row(
-                                              children: [
-                                                Flexible(
-                                                  child: Text(
-                                                    filter['label'],
-                                                    style: TextStyle(
-                                                      color: isSelected
-                                                          ? Colors.white
-                                                          : Colors.grey[800],
-                                                      fontSize: 15.sp,
-                                                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                                                      letterSpacing: -0.2,
-                                                    ),
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                                if (isLive && isMarketOpen)
-                                                  Container(
-                                                    margin: EdgeInsets.only(left: 6.w),
-                                                    width: 8.w,
-                                                    height: 8.h,
-                                                    decoration: BoxDecoration(
-                                                      color: AppColors.success ?? Colors.green,
-                                                      shape: BoxShape.circle,
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color: (AppColors.success ?? Colors.green).withOpacity(0.5),
-                                                          blurRadius: 4.r,
-                                                          spreadRadius: 1.r,
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                              ],
+                                            Text(
+                                              filter['label'],
+                                              style: TextStyle(
+                                                color: isSelected ? Colors.white : Colors.grey[800],
+                                                fontSize: 15.sp,
+                                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                             if (filter['subtitle'] != null)
                                               Text(
                                                 filter['subtitle'],
                                                 style: TextStyle(
-                                                  color: isSelected
-                                                      ? Colors.white.withOpacity(0.8)
-                                                      : Colors.grey[600],
+                                                  color: isSelected ? Colors.white.withOpacity(0.8) : Colors.grey[600],
                                                   fontSize: 11.sp,
                                                   fontWeight: FontWeight.w400,
                                                 ),
@@ -380,8 +279,6 @@ class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin
                                           ],
                                         ),
                                       ),
-
-                                      // Selection indicator
                                       if (isSelected)
                                         Container(
                                           width: 24.w,
@@ -406,8 +303,6 @@ class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin
                       ),
                     ),
                   ),
-
-                  // Apply button
                   Container(
                     padding: EdgeInsets.all(24.w),
                     child: SizedBox(
@@ -422,7 +317,6 @@ class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin
                           backgroundColor: AppColors.primaryColor ?? Colors.blue,
                           foregroundColor: Colors.white,
                           elevation: 0,
-                          shadowColor: Colors.transparent,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16.r),
                           ),
@@ -432,7 +326,6 @@ class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin
                           style: TextStyle(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5,
                           ),
                         ),
                       ),
@@ -449,63 +342,17 @@ class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin
 
   List<Map<String, dynamic>> _getFilterOptions() {
     return [
-      {
-        'label': 'Live',
-        'value': 'Live',
-        'icon': Icons.radio_button_checked,
-        'subtitle': 'Live',
-      },
-      {
-        'label': 'Last 7 Days',
-        'value': 'Last 7 Days',
-        'icon': Icons.calendar_today,
-        'subtitle': 'Weekly',
-      },
-      {
-        'label': '1 Month',
-        'value': '1 Month',
-        'icon': Icons.date_range,
-        'subtitle': 'Monthly',
-      },
-      {
-        'label': '3 Months',
-        'value': '3 Months',
-        'icon': Icons.view_timeline,
-        'subtitle': 'Quarterly',
-      },
-      {
-        'label': '6 Months',
-        'value': '6 Months',
-        'icon': Icons.timeline,
-        'subtitle': 'Halfyearly',
-      },
-      {
-        'label': '1 Year',
-        'value': '1 Year',
-        'icon': Icons.trending_up,
-        'subtitle': 'Yearly',
-      },
-      {
-        'label': '3 Years',
-        'value': '3 Years',
-        'icon': Icons.show_chart,
-        'subtitle': 'Longterm',
-      },
-      {
-        'label': '5 Years',
-        'value': '5 Years',
-        'icon': Icons.analytics,
-        'subtitle': 'Extended',
-      },
-      {
-        'label': 'All Time',
-        'value': 'All',
-        'icon': Icons.all_inclusive,
-        'subtitle': 'Alltime',
-      },
+      {'label': 'Live', 'value': 'Live', 'icon': Icons.radio_button_checked, 'subtitle': 'Daily'},
+      {'label': 'Last 7 Days', 'value': 'Last 7 Days', 'icon': Icons.calendar_today, 'subtitle': 'Weekly'},
+      {'label': '1 Month', 'value': '1 Month', 'icon': Icons.date_range, 'subtitle': 'Monthly'},
+      {'label': '3 Months', 'value': '3 Months', 'icon': Icons.view_timeline, 'subtitle': 'Quarterly'},
+      {'label': '6 Months', 'value': '6 Months', 'icon': Icons.timeline, 'subtitle': 'Halfyearly'},
+      {'label': '1 Year', 'value': '1 Year', 'icon': Icons.trending_up, 'subtitle': 'Yearly'},
+      {'label': '3 Years', 'value': '3 Years', 'icon': Icons.show_chart, 'subtitle': 'Longterm'},
+      {'label': '5 Years', 'value': '5 Years', 'icon': Icons.analytics, 'subtitle': 'Extended'},
+      {'label': 'All Time', 'value': 'All', 'icon': Icons.all_inclusive, 'subtitle': 'Alltime'},
     ];
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -518,216 +365,208 @@ class _TradeAppBarState extends State<TradeAppBar> with TickerProviderStateMixin
       flexibleSpace: Container(
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         child: SafeArea(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              MouseRegion(
+                onEnter: (_) => setState(() => _isProfileHovered = true),
+                onExit: (_) => setState(() => _isProfileHovered = false),
+                child: IconButton(
+                  icon: Icon(
+                    Icons.person,
+                    color: AppColors.primaryGold,
+                    size: 24.sp,
+                  ),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ProfileScreen()),
+                  ),
+                  tooltip: 'Profile',
+                  padding: EdgeInsets.all(8.w),
+                  splashRadius: 20.r,
+                  color: _isProfileHovered
+                      ? AppColors.primaryGold.withOpacity(0.8)
+                      : AppColors.primaryGold,
+                ),
+              ),
+              Container(
+                height: 36.h,
+                width: 200.w,
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.black.withOpacity(0.3) : Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(18.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8.r,
+                      offset: Offset(0, 2.h),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  children: [
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      left: widget.currentTabIndex == 1 ? 0 : 100.w,
+                      child: Container(
+                        width: 100.w,
+                        height: 36.h,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: widget.currentTabIndex == 1
+                                ? [
+                              AppColors.success ?? Colors.green,
+                              AppColors.success?.withOpacity(0.8) ?? Colors.green.withOpacity(0.8),
+                            ]
+                                : [
+                              AppColors.error ?? Colors.red,
+                              AppColors.error?.withOpacity(0.8) ?? Colors.red.withOpacity(0.8),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16.r),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => widget.onTabSelected(1),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              decoration: BoxDecoration(
+                                color: Colors.transparent,
+                                borderRadius: BorderRadius.circular(16.r),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Buy',
+                                  style: TextStyle(
+                                    color: widget.currentTabIndex == 1
+                                        ? AppColors.buttonText ?? Colors.white
+                                        : AppColors.primaryGold ?? const Color(0xFFDAA520),
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14.sp,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => widget.onTabSelected(0),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              decoration: BoxDecoration(
+                                color: Colors.transparent,
+                                borderRadius: BorderRadius.circular(16.r),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Sell',
+                                  style: TextStyle(
+                                    color: widget.currentTabIndex == 0
+                                        ? AppColors.buttonText ?? Colors.white
+                                        : AppColors.primaryGold ?? const Color(0xFFDAA520),
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14.sp,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   MouseRegion(
-                    onEnter: (_) => setState(() => _isProfileHovered = true),
-                    onExit: (_) => setState(() => _isProfileHovered = false),
+                    onEnter: (_) => setState(() => _isCalcHovered = true),
+                    onExit: (_) => setState(() => _isCalcHovered = false),
                     child: IconButton(
                       icon: Icon(
-                        Icons.person,
-                        color: AppColors.primaryGold,
+                        Icons.calculate,
+                        color: _isCalcHovered
+                            ? AppColors.primaryGold.withOpacity(0.8)
+                            : AppColors.primaryGold,
                         size: 24.sp,
                       ),
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => ProfileScreen()),
+                        MaterialPageRoute(builder: (context) => InvestmentCalculator()),
                       ),
-                      tooltip: 'Profile',
+                      tooltip: 'Calculator',
                       padding: EdgeInsets.all(8.w),
                       splashRadius: 20.r,
-                      color: _isProfileHovered
-                          ? AppColors.primaryGold.withOpacity(0.8)
-                          : AppColors.primaryGold,
                     ),
                   ),
-                  Container(
-                    height: 36.h,
-                    width: 200.w,
-                    decoration: BoxDecoration(
-                      color: isDarkMode ? Colors.black.withOpacity(0.3) : Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(18.r),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8.r,
-                          offset: Offset(0, 2.h),
+                  ScaleTransition(
+                    scale: _filterScaleAnimation,
+                    child: MouseRegion(
+                      onEnter: (_) {
+                        setState(() => _isFilterHovered = true);
+                        _filterAnimationController.forward();
+                      },
+                      onExit: (_) {
+                        setState(() => _isFilterHovered = false);
+                        _filterAnimationController.reverse();
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: _isFilterHovered
+                              ? LinearGradient(
+                            colors: [
+                              AppColors.primaryGold?.withOpacity(0.2) ?? Colors.amber.withOpacity(0.2),
+                              AppColors.primaryGold?.withOpacity(0.1) ?? Colors.amber.withOpacity(0.1),
+                            ],
+                          )
+                              : null,
+                          borderRadius: BorderRadius.circular(12.r),
                         ),
-                      ],
-                    ),
-                    child: Stack(
-                      children: [
-                        AnimatedPositioned(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                          left: widget.currentTabIndex == 1 ? 0 : 100.w,
-                          child: Container(
-                            width: 100.w,
-                            height: 36.h,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: widget.currentTabIndex == 1
-                                    ? [
-                                  AppColors.success ?? Colors.green,
-                                  AppColors.success?.withOpacity(0.8) ?? Colors.green.withOpacity(0.8),
-                                ]
-                                    : [
-                                  AppColors.error ?? Colors.red,
-                                  AppColors.error?.withOpacity(0.8) ?? Colors.red.withOpacity(0.8),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(16.r),
-                            ),
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () => widget.onTabSelected(1),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  decoration: BoxDecoration(
-                                    color: Colors.transparent,
-                                    borderRadius: BorderRadius.circular(16.r),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      'Buy',
-                                      style: TextStyle(
-                                        color: widget.currentTabIndex == 1
-                                            ? AppColors.buttonText ?? Colors.white
-                                            : AppColors.primaryGold ?? const Color(0xFFDAA520),
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14.sp,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () => widget.onTabSelected(0),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  decoration: BoxDecoration(
-                                    color: Colors.transparent,
-                                    borderRadius: BorderRadius.circular(16.r),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      'Sell',
-                                      style: TextStyle(
-                                        color: widget.currentTabIndex == 0
-                                            ? AppColors.buttonText ?? Colors.white
-                                            : AppColors.primaryGold ?? const Color(0xFFDAA520),
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14.sp,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      MouseRegion(
-                        onEnter: (_) => setState(() => _isCalcHovered = true),
-                        onExit: (_) => setState(() => _isCalcHovered = false),
                         child: IconButton(
-                          icon: Icon(
-                            Icons.calculate,
-                            color: _isCalcHovered
-                                ? AppColors.primaryGold.withOpacity(0.8)
-                                : AppColors.primaryGold,
-                            size: 24.sp,
+                          icon: Stack(
+                            children: [
+                              Icon(
+                                Icons.tune,
+                                color: _isFilterHovered
+                                    ? AppColors.primaryGold
+                                    : AppColors.primaryGold?.withOpacity(0.9),
+                                size: 24.sp,
+                              ),
+                              if (_selectedFilter != null && _selectedFilter != 'Live')
+                                Positioned(
+                                  right: 0,
+                                  top: 0,
+                                  child: Container(
+                                    width: 8.w,
+                                    height: 8.h,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.success ?? Colors.green,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 1),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => InvestmentCalculator()),
-                          ),
-                          tooltip: 'Calculator',
+                          onPressed: () => _showFilterBottomSheet(context),
+                          tooltip: 'Filter Trades',
                           padding: EdgeInsets.all(8.w),
                           splashRadius: 20.r,
                         ),
                       ),
-
-                      ScaleTransition(
-                        scale: _filterScaleAnimation,
-                        child: MouseRegion(
-                          onEnter: (_) {
-                            setState(() => _isFilterHovered = true);
-                            _filterAnimationController.forward();
-                          },
-                          onExit: (_) {
-                            setState(() => _isFilterHovered = false);
-                            _filterAnimationController.reverse();
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: _isFilterHovered
-                                  ? LinearGradient(
-                                colors: [
-                                  AppColors.primaryGold?.withOpacity(0.2) ?? Colors.amber.withOpacity(0.2),
-                                  AppColors.primaryGold?.withOpacity(0.1) ?? Colors.amber.withOpacity(0.1),
-                                ],
-                              )
-                                  : null,
-                              borderRadius: BorderRadius.circular(12.r),
-                            ),
-                            child: IconButton(
-                              icon: Stack(
-                                children: [
-                                  Icon(
-                                    Icons.tune,
-                                    color: _isFilterHovered
-                                        ? AppColors.primaryGold
-                                        : AppColors.primaryGold?.withOpacity(0.9),
-                                    size: 24.sp,
-                                  ),
-                                  if (_selectedFilter != null && _selectedFilter != 'Live')
-                                    Positioned(
-                                      right: 0,
-                                      top: 0,
-                                      child: Container(
-                                        width: 8.w,
-                                        height: 8.h,
-                                        decoration: BoxDecoration(
-                                          color: AppColors.success ?? Colors.green,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(color: Colors.white, width: 1),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              onPressed: () => _showFilterBottomSheet(context),
-                              tooltip: 'Filter Trades',
-                              padding: EdgeInsets.all(8.w),
-                              splashRadius: 20.r,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
-              SizedBox(height: 8.h),
-              _buildMarketStatusIndicator(),
             ],
           ),
         ),
