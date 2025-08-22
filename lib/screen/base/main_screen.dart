@@ -6,6 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../service/localauth/auth_service.dart';
 import '../calcutator/sip_calcutator.dart';
 import '../main/home_screen.dart';
+import '../main/jt_mutual_fund_screen.dart';
 import '../main/market_screen.dart';
 import '../main/trading_screen.dart';
 import '../main/wallet_screen.dart';
@@ -32,8 +33,9 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(),           // 0
     MarketScreen(),         // 1
     TradingScreen(),        // 2
-    JockeySipScreen(),      // 3
-    WalletScreen(),         // 4
+    JockeySipScreen(),
+    JtMutualFundScreen()// 3
+    //WalletScreen(),         // 4
   ];
 
 
@@ -166,9 +168,9 @@ class _MainScreenState extends State<MainScreen> {
           ),
           TabItem(
             icon: FaIcon(FontAwesomeIcons.bullseye, size: 24), // 🎯 SIP Goals icon
-            title: 'SIP Goals',
+            title: 'piggy SIP',
           ),
-          TabItem(icon: FaIcon(FontAwesomeIcons.wallet, size: 24), title: 'Wallet'),
+          TabItem(icon: FaIcon(FontAwesomeIcons.moneyBillWave, size: 24), title: 'Lumpsum'),
 
         ],
         initialActiveIndex: currentPage,

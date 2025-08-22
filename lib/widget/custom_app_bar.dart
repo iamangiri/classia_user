@@ -1,3 +1,4 @@
+import 'package:classia_amc/screen/main/wallet_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../screen/calcutator/sip_calcutator.dart';
@@ -49,6 +50,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           onPressed: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => InvestmentCalculator()),
+          ),
+        ),
+        IconButton(
+          icon: Icon(Icons.wallet, color: AppColors.primaryGold),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => WalletScreen()),
           ),
         ),
         IconButton(

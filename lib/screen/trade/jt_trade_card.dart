@@ -1,30 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../screenutills/trade_details_screen.dart';
 import '../../themes/app_colors.dart';
-import '../screenutills/trade_details_screen.dart';
 
 
-class TradingCard extends StatefulWidget {
+
+class JtTradeCard extends StatefulWidget {
   final String logo;
   final String name;
   final String fundName;
   final double value;
-  //final double prediction;
 
-  const TradingCard({
+  const JtTradeCard({
     Key? key,
     required this.logo,
     required this.name,
     required this.fundName,
     required this.value,
-   // required this.prediction,
   }) : super(key: key);
 
   @override
   _TradingCardState createState() => _TradingCardState();
 }
 
-class _TradingCardState extends State<TradingCard> with SingleTickerProviderStateMixin {
+class _TradingCardState extends State<JtTradeCard> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -39,7 +38,7 @@ class _TradingCardState extends State<TradingCard> with SingleTickerProviderStat
   }
 
   @override
-  void didUpdateWidget(covariant TradingCard oldWidget) {
+  void didUpdateWidget(covariant JtTradeCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.value != oldWidget.value) {
       _updateAnimation();
@@ -187,15 +186,7 @@ class _TradingCardState extends State<TradingCard> with SingleTickerProviderStat
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        'Prediction: 3%',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
-                      ),
-                      Text(
-                        'Achive: ${widget.value.toStringAsFixed(2)}%',
+                        '${widget.value.toStringAsFixed(2)}%',
                         style: TextStyle(
                           fontSize: 14.sp,
                           fontWeight: FontWeight.bold,

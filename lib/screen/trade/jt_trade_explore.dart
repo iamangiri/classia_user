@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../themes/app_colors.dart';
 import '../../widget/trading_card.dart';
+import 'jt_trade_card.dart';
 
-class TradeExploreTab extends StatelessWidget {
+class JtTradeExplore extends StatelessWidget {
   final List<Map<String, dynamic>> amcList;
   final Function(Map<String, dynamic>) onBuy;
 
-  const TradeExploreTab({
+  const JtTradeExplore({
     Key? key,
     required this.amcList,
     required this.onBuy,
@@ -71,12 +72,11 @@ class TradeExploreTab extends StatelessWidget {
             margin: EdgeInsets.only(bottom: 12.h),
             child: Stack(
               children: [
-                TradingCard(
+                JtTradeCard(
                   logo: amc['logo'],
                   name: amc['name'],
                   fundName: amc['fundName'],
                   value: amc['value'],
-                 // prediction: amc['prediction'],
                 ),
               ],
             ),

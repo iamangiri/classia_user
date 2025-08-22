@@ -1,10 +1,9 @@
 import 'package:classia_amc/screen/sip/sip_explore_goal_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import '../../themes/app_colors.dart';
 import '../main/home_disclamer.dart';
-import 'jockey_sip_screen.dart';
+
 
 class ExploreTab extends StatefulWidget {
   const ExploreTab({super.key});
