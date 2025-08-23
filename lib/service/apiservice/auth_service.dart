@@ -197,7 +197,8 @@ class AuthService {
       final data = jsonDecode(response.body);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('login_response', jsonEncode(data));
-
+      print(response.body);
+      print(response.statusCode);
       return {
         'status': data['status'] ?? false,
         'message': data['message'] ?? 'Unknown error',

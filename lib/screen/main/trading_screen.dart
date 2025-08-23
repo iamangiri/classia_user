@@ -196,10 +196,8 @@ class _TradingScreenState extends State<TradingScreen> with TickerProviderStateM
       child: Scaffold(
         backgroundColor: isDarkMode ? Color(0xFF121212) : AppColors.backgroundColor,
         appBar: TradeAppBar(
-          onFilterSelected: _onFilterSelected,
           onTabSelected: _onTabSelected,
           currentTabIndex: _currentTabIndex,
-          selectedFilter: selectedFilter,
         ),
         body: RefreshIndicator(
           onRefresh: _refreshData,

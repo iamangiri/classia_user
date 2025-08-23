@@ -6,6 +6,7 @@ import '../../widget/trade/trade_app_bar.dart';
 
 import '../../themes/app_colors.dart';
 import 'dart:async';
+import '../trade/jt_trade_app_bar.dart';
 import '../trade/jt_trade_explore.dart';
 import '../trade/trade_sell_tab.dart';
 
@@ -196,7 +197,7 @@ class _JtMutualFundScreenState extends State<JtMutualFundScreen> with TickerProv
       opacity: _fadeAnimation,
       child: Scaffold(
         backgroundColor: isDarkMode ? Color(0xFF121212) : AppColors.backgroundColor,
-        appBar: TradeAppBar(
+        appBar: JtTradeAppBar(
           onFilterSelected: _onFilterSelected,
           onTabSelected: _onTabSelected,
           currentTabIndex: _currentTabIndex,

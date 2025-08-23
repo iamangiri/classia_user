@@ -162,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: AppColors.screenBackground,
       appBar: CustomAppBar(
-        title: 'Jockey Trading',
+        title: 'Classia Capital',
       ),
       body: RefreshIndicator(
         onRefresh: () async => await Future.delayed(const Duration(seconds: 1)),

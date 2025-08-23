@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../themes/app_colors.dart';
+import '../calcutator/sip_calcutator.dart';
+import '../main/profile_screen.dart';
+import '../profile/customer_support_screen.dart';
 
 
 
@@ -72,7 +75,12 @@ class _JockeySipScreenState extends State<JockeySipScreen>
                               color: AppColors.primaryGold ??
                                   const Color(0xFFDAA520),
                               size: 24.sp),
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => ProfileScreen()),
+                            );
+                          },
                           tooltip: 'Profile',
                         ),
                       ),
@@ -181,7 +189,12 @@ class _JockeySipScreenState extends State<JockeySipScreen>
                                   color: AppColors.primaryGold ??
                                       const Color(0xFFDAA520),
                                   size: 24.sp),
-                              onPressed: () {},
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => InvestmentCalculator()),
+                                );
+                              },
                               tooltip: 'Calculator',
                             ),
                           ),
@@ -195,7 +208,12 @@ class _JockeySipScreenState extends State<JockeySipScreen>
                                   color: AppColors.primaryGold ??
                                       const Color(0xFFDAA520),
                                   size: 24.sp),
-                              onPressed: () {},
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => CustomerSupportScreen()),
+                                );
+                              },
                               tooltip: 'Support',
                             ),
                           ),

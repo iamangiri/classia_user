@@ -20,7 +20,7 @@ final router = GoRouter(
     GoRoute(
       path: '/',
       name: 'splash',
-      builder: (context, state) => SplashScreen(),
+      builder: (context, state) => MainScreen(),
     ),
 
     GoRoute(

@@ -63,12 +63,12 @@ class TradeExploreTab extends StatelessWidget {
         ),
       )
           : ListView.builder(
-        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h), // Slightly increased padding
         itemCount: amcList.length,
         itemBuilder: (context, index) {
           var amc = amcList[index];
           return Container(
-            margin: EdgeInsets.only(bottom: 12.h),
+            margin: EdgeInsets.only(bottom: 6.h), // Slightly increased bottom margin
             child: Stack(
               children: [
                 TradingCard(
@@ -76,7 +76,6 @@ class TradeExploreTab extends StatelessWidget {
                   name: amc['name'],
                   fundName: amc['fundName'],
                   value: amc['value'],
-                 // prediction: amc['prediction'],
                 ),
               ],
             ),

@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
         builder: (context, child) {
           return MaterialApp.router(
             debugShowCheckedModeBanner: false,
-            title: 'Jockey Trading',
+            title: 'Classia Capital',
             routerConfig: router,
           );
         },
