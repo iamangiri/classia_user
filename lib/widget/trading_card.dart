@@ -186,22 +186,44 @@ class _TradingCardState extends State<TradingCard> with SingleTickerProviderStat
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
-                        'Prediction: 3%',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.trending_up,
+                            color: textColor,
+                            size: 16.sp,
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            '3%', // Prediction value
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        'Achive: ${widget.value.toStringAsFixed(2)}%',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
+                      SizedBox(height: 4.h),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.bar_chart,
+                            color: textColor,
+                            size: 16.sp,
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            '${widget.value.toStringAsFixed(2)}%',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                            ),
+                          ),
+                        ],
                       ),
+                      SizedBox(height: 4.h),
                       Text(
                         isPositive ? 'Growth' : 'Decline',
                         style: TextStyle(
@@ -211,6 +233,7 @@ class _TradingCardState extends State<TradingCard> with SingleTickerProviderStat
                       ),
                     ],
                   ),
+
                 ],
               ),
               SizedBox(height: 14.h),

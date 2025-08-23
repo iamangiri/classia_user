@@ -17,10 +17,67 @@ class CamService {
       body: jsonEncode(payload),
     );
 
+     print('can api response');
+     print(response.body);
+     print(response.statusCode);
+
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to create CAMS: ${response.body}');
     }
   }
+
+
+
+
+  Future<Map<String, dynamic>> registerPayZee(Map<String, dynamic> payload) async {
+    try {
+      const String url = 'https://classiahealth.com/payez/register';
+
+      // Get the authorization token (you may need to modify this based on your token storage)
+      const String authToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFtYW5naXJpMDM4MUBnbWFpbC5jb20iLCJleHAiOjE3NTU5NDQ3OTMsImlhdCI6MTc1NTg1ODM5MywibW9iaWxlIjoiIiwibmFtZSI6IiIsInJvbGUiOiJVU0VSIiwidXNlcklkIjo0MX0.0_Ey78zS1d_1wbj6UNP9GrSMTaqu8U4-3lPzSL3Ob88';
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authToken,
+        },
+        body: json.encode(payload),
+      );
+
+      print('PayZee Registration Request: ${json.encode(payload)}');
+      print('PayZee Registration Response Status: ${response.statusCode}');
+      print('PayZee Registration Response Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = json.decode(response.body);
+        return responseData;
+      } else if (response.statusCode == 400) {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['message'] ?? 'Invalid request data');
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized. Please check your authentication token.');
+      } else if (response.statusCode == 403) {
+        throw Exception('Access forbidden. You don\'t have permission to perform this action.');
+      } else if (response.statusCode == 404) {
+        throw Exception('Service not found. Please try again later.');
+      } else if (response.statusCode == 500) {
+        throw Exception('Server error. Please try again later.');
+      } else {
+        throw Exception('Failed to register PayZee account. Status: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in PayZee Registration: $e');
+      if (e.toString().contains('SocketException') || e.toString().contains('TimeoutException')) {
+        throw Exception('Network error. Please check your internet connection.');
+      } else if (e.toString().contains('FormatException')) {
+        throw Exception('Invalid response format from server.');
+      } else {
+        rethrow;
+      }
+    }
+  }
+
 }

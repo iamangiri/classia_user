@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:classia_amc/themes/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../can/can_create_screen.dart';
+import '../can/payezz_registration_screen.dart';
 import '../profile/about_us_screen.dart';
 import '../profile/bank_info_screen.dart';
 import '../profile/customer_support_screen.dart';
@@ -133,6 +134,7 @@ class ProfileScreen extends StatelessWidget {
     final List<Map<String, String>> accountOptions = [
       {'title': 'KYC', 'icon': 'verified_user'},
       {'title': 'CAN', 'icon': 'account_circle'},
+      {'title': 'PayZee Registration', 'icon': 'payment'}, // Added PayZee option
       {'title': 'Manage Folio', 'icon': 'folio'},
       {'title': 'Security Settings', 'icon': 'security'},
       {'title': 'Bank Info', 'icon': 'account_balance'},
@@ -196,6 +198,9 @@ class ProfileScreen extends StatelessWidget {
       case 'account_circle':
         iconData = Icons.account_circle;
         break;
+      case 'payment': // Added case for PayZee
+        iconData = Icons.payment;
+        break;
       default:
         iconData = Icons.help;
     }
@@ -245,6 +250,9 @@ class ProfileScreen extends StatelessWidget {
     switch (optionTitle) {
       case 'CAN':
         destination = const CamsCreationScreen();
+        break;
+      case 'PayZee Registration': // Added case for PayZee Registration
+        destination = const PayZeeRegistrationScreen();
         break;
       case 'Manage Folio':
         destination = const ManageFolioScreen();
