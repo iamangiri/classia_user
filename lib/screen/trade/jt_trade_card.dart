@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../screenutills/trade_details_screen.dart';
 import '../../themes/app_colors.dart';
+import 'jt_trade_deatils_screen.dart' show JtTradeDeatilsScreen;
 
 
 
@@ -84,7 +84,7 @@ class _TradingCardState extends State<JtTradeCard> with SingleTickerProviderStat
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => TradingDetailsScreen(
+            builder: (context) => JtTradeDeatilsScreen(
               logo: widget.logo,
               name: widget.name,
               fundName: widget.fundName,
