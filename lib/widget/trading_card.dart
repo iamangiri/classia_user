@@ -3,11 +3,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../themes/app_colors.dart';
 import '../screenutills/trade_details_screen.dart';
 
+
 class TradingCard extends StatefulWidget {
   final String logo;
   final String name;
   final String fundName;
   final double value;
+  final double projection;
 
   const TradingCard({
     Key? key,
@@ -15,6 +17,7 @@ class TradingCard extends StatefulWidget {
     required this.name,
     required this.fundName,
     required this.value,
+    required this.projection,
   }) : super(key: key);
 
   @override
@@ -44,9 +47,6 @@ class _TradingCardState extends State<TradingCard> with SingleTickerProviderStat
   }
 
   void _updateAnimation() {
-    // Increased sensitivity for better animation visibility
-    // For values like 1.34%, this will show significant movement
-    // Values above 20% will show full bar animation
     double normalizedValue = (widget.value.abs() / 20).clamp(0.0, 1.0); // Changed from 100 to 20 for much better visibility
     _animation = Tween<double>(
       begin: 0,
@@ -87,6 +87,8 @@ class _TradingCardState extends State<TradingCard> with SingleTickerProviderStat
               name: widget.name,
               fundName: widget.fundName,
               value: widget.value,
+              projection: widget.projection,
+
             ),
           ),
         );
@@ -169,15 +171,15 @@ class _TradingCardState extends State<TradingCard> with SingleTickerProviderStat
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              SizedBox(height: 2.h), // Slightly increased spacing
-                              // Text(
-                              //   _truncateText(widget.fundName, maxWords: 3), // Reduced max words
-                              //   style: TextStyle(
-                              //     fontSize: 11.sp, // Slightly increased font size
-                              //     color: isDarkMode ? Colors.grey[400] : Colors.black54,
-                              //   ),
-                              //   overflow: TextOverflow.ellipsis,
-                              // ),
+                              Text(
+                                'Projection: ${widget.projection.toStringAsFixed(2)}%',
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primaryGold,
+                                ),
+                              ),
+
                             ],
                           ),
                         ),
@@ -187,6 +189,7 @@ class _TradingCardState extends State<TradingCard> with SingleTickerProviderStat
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
+
                       Row(
                         children: [
                           Icon(
@@ -280,3 +283,4 @@ class _TradingCardState extends State<TradingCard> with SingleTickerProviderStat
     );
   }
 }
+

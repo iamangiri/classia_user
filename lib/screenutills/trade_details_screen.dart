@@ -12,6 +12,7 @@ class TradingDetailsScreen extends StatefulWidget {
   final String name;
   final String fundName;
   final double value;
+  final double projection;
   final bool isInvestMode;
 
   const TradingDetailsScreen({
@@ -20,6 +21,7 @@ class TradingDetailsScreen extends StatefulWidget {
     required this.name,
     required this.fundName,
     required this.value,
+    required this.projection,
     this.isInvestMode = true,
   }) : super(key: key);
 
@@ -250,47 +252,34 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
           child: Column(
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Jockey Point Score',
-                        style: TextStyle(
-                          color: AppColors.secondaryText,
-                          fontSize: 13.sp,
-                        ),
-                      ),
-                      SizedBox(height: 6.h),
-                      Text(
-                        '${widget.value}%',
-                        style: TextStyle(
-                          color: AppColors.primaryText,
-                          fontSize: 24.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: EdgeInsets.all(12.w),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryGold!.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: FaIcon(
+                  Expanded(
+                    child: _buildStatCard(
+                      'Today\'s Growth',
+                      widget.value,
                       FontAwesomeIcons.star,
-                      color: AppColors.primaryGold,
-                      size: 24.sp,
+                      AppColors.primaryGold!,
+                      isMainStat: true,
+                    ),
+                  ),
+                  SizedBox(width: 5),
+                  Expanded(
+                    child: _buildStatCard(
+                      'Today\'s Projection',
+                      widget.projection,
+                      FontAwesomeIcons.arrowTrendUp,
+                      widget.projection >= 0 ? AppColors.success : AppColors.error,
+                      isMainStat: true,
                     ),
                   ),
                 ],
               ),
+
               SizedBox(height: 16.h),
 
               // New performance table
               _buildPerformanceTable([
+              //  {'range': 'Today', 'predicted': '${widget.value}', 'achieved': '${widget.projection}'},
                 {'range': '1 Day', 'predicted': '3.4%', 'achieved': '3%'},
                 {'range': '7 Days', 'predicted': '7%', 'achieved': '7.2%'},
                 {'range': '15 Days', 'predicted': '6%', 'achieved': '6.7%'},
@@ -1285,4 +1274,76 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
       ),
     );
   }
+
+
+  Widget _buildStatCard(String label, double value, IconData icon, Color color, {bool isMainStat = false}) {
+    return Container(
+      padding: EdgeInsets.all(8.w),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: AppColors.secondaryText,
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.all(6.w),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: FaIcon(
+                  icon,
+                  color: color,
+                  size: 14.sp,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: '${value.toStringAsFixed(3)}', // Show 3 digits after decimal
+                  style: TextStyle(
+                    color: color,
+                    fontSize: isMainStat ? 20.sp : 18.sp,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                TextSpan(
+                  text: '%',
+                  style: TextStyle(
+                    color: color.withOpacity(0.8),
+                    fontSize: isMainStat ? 16.sp : 14.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
+
+

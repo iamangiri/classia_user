@@ -59,6 +59,10 @@ class TradeService {
         "name": "Quant",
         "fundName": "Small Cap Fund",
         "value": _generateRandomPerformance(),
+        "projection": _generateRandomProjection(),
+        "projection": _generateRandomProjection(),
+        "projection": _generateRandomProjection(),
+        "projection": _generateRandomProjection(),
       },
       {
         "id": 2,
@@ -97,6 +101,12 @@ class TradeService {
     return 1.0 + (_random.nextDouble() * 9.0);
   }
 
+  /// Generates random projection value between 1.0 and 10.0
+  double _generateRandomProjection() {
+    // Generate random double between 1.0 and 10.0
+    return 1.0 + (_random.nextDouble() * 9.0);
+  }
+
   /// Generates random performance based on filter type with realistic ranges
   double _generateRandomPerformanceByFilter(String filter) {
     switch (filter) {
@@ -129,6 +139,42 @@ class TradeService {
         return _random.nextDouble() * 300.0;
       default:
         return _generateRandomPerformance();
+    }
+  }
+
+  /// Generates random projection based on filter type with realistic ranges
+  /// Projections are typically more optimistic than current performance
+  double _generateRandomProjectionByFilter(String filter) {
+    switch (filter) {
+      case 'Live':
+      // Daily projections: 0% to +5%
+        return _random.nextDouble() * 5.0;
+      case 'Last 7 Days':
+      // Weekly projections: 2% to +15%
+        return 2.0 + (_random.nextDouble() * 13.0);
+      case '1 Month':
+      // Monthly projections: 5% to +20%
+        return 5.0 + (_random.nextDouble() * 15.0);
+      case '3 Months':
+      // Quarterly projections: 8% to +35%
+        return 8.0 + (_random.nextDouble() * 27.0);
+      case '6 Months':
+      // Half-yearly projections: 12% to +45%
+        return 12.0 + (_random.nextDouble() * 33.0);
+      case '1 Year':
+      // Annual projections: 15% to +65%
+        return 15.0 + (_random.nextDouble() * 50.0);
+      case '3 Years':
+      // 3-year projections: 25% to +120%
+        return 25.0 + (_random.nextDouble() * 95.0);
+      case '5 Years':
+      // 5-year projections: 40% to +200%
+        return 40.0 + (_random.nextDouble() * 160.0);
+      case 'All':
+      // All-time projections: 60% to +400%
+        return 60.0 + (_random.nextDouble() * 340.0);
+      default:
+        return _generateRandomProjection();
     }
   }
 
@@ -182,6 +228,7 @@ class TradeService {
           'name': amc['Name'], // Updated field name
           'fundName': amc['FundName'], // Updated field name
           'value': _generateRandomPerformanceByFilter(filter), // Generate random performance
+          'projection': _generateRandomProjectionByFilter(filter), // Generate random projection
           'email': amc['Email'],
           'mobile': amc['Mobile'],
           'role': amc['Role'],
@@ -213,12 +260,20 @@ class TradeService {
     }
   }
 
-  /// Optional: Method to refresh performance values for existing data
+  /// Optional: Method to refresh performance and projection values for existing data
   void refreshPerformanceValues(List<Map<String, dynamic>> amcList, String filter) {
     for (var amc in amcList) {
       amc['value'] = _generateRandomPerformanceByFilter(filter);
+      amc['projection'] = _generateRandomProjectionByFilter(filter);
     }
     // Re-sort after updating values
     amcList.sort((a, b) => b['value'].compareTo(a['value']));
+  }
+
+  /// Optional: Method to refresh only projection values for existing data
+  void refreshProjectionValues(List<Map<String, dynamic>> amcList, String filter) {
+    for (var amc in amcList) {
+      amc['projection'] = _generateRandomProjectionByFilter(filter);
+    }
   }
 }

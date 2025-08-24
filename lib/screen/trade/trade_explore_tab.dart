@@ -76,6 +76,7 @@ class TradeExploreTab extends StatelessWidget {
                   name: amc['name'],
                   fundName: amc['fundName'],
                   value: amc['value'],
+                  projection: amc['projection'],
                 ),
               ],
             ),

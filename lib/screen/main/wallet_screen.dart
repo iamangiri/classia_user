@@ -465,6 +465,7 @@ class _WalletScreenState extends State<WalletScreen> {
               name: mockName,
               value: 0,
               fundName: "",
+              projection:  0,
             ),
           ),
         );

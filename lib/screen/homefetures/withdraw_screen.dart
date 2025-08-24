@@ -326,7 +326,7 @@ context,
 MaterialPageRoute(
 builder: (context) => TradingDetailsScreen(
 logo: mockLogo,
-name: mockName, value: 0, fundName: "",
+name: mockName, value: 0, fundName: "",projection: 0,
 ),
 ),
 );
