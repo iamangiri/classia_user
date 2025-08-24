@@ -5,6 +5,7 @@ import '../../themes/app_colors.dart';
 import '../../widget/custom_app_bar.dart';
 import '../market/all_fund_screen.dart';
 import '../market/fund_deatils_screen.dart';
+import '../market/market_stock_screen.dart';
 import 'dart:ui';
 import '../sip/sip_animated_horse_widget.dart';
 
@@ -18,6 +19,9 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
   final List<String> _filters = ['All', 'Equity', 'Debt', 'Hybrid', 'Tax Saving'];
   String _searchQuery = '';
 
+  // Tab Controller
+  late TabController _tabController;
+
   late AnimationController _searchAnimationController;
   late AnimationController _filterAnimationController;
   late Animation<double> _searchAnimation;
@@ -26,6 +30,8 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+
     _searchAnimationController = AnimationController(
       duration: Duration(milliseconds: 800),
       vsync: this,
@@ -54,6 +60,7 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
 
   @override
   void dispose() {
+    _tabController.dispose();
     _searchAnimationController.dispose();
     _filterAnimationController.dispose();
     super.dispose();
@@ -66,78 +73,191 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
 
     return Scaffold(
       appBar: CustomAppBar(
-        title: 'Mutual Funds Market',
+        title: 'Market',
       ),
       backgroundColor: AppColors.screenBackground ?? Colors.white,
-      body: CustomScrollView(
-        slivers: [
-          // Search Bar Section
-          SliverToBoxAdapter(
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: Offset(0, -0.5),
-                end: Offset.zero,
-              ).animate(_searchAnimation),
-              child: FadeTransition(
-                opacity: _searchAnimation,
-                child: _buildSearchSection(),
-              ),
-            ),
-          ),
+      body: Column(
+        children: [
+          // Custom Tab Bar
+          _buildCustomTabBar(),
 
-          // Filter Chips Section
-          SliverToBoxAdapter(
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: Offset(-0.5, 0),
-                end: Offset.zero,
-              ).animate(_filterAnimation),
-              child: FadeTransition(
-                opacity: _filterAnimation,
-                child: _buildFilterSection(),
-              ),
-            ),
-          ),
+          // Tab Content
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                // Mutual Fund Tab
+                _buildMutualFundTab(),
 
-          // Fund Categories List
-          SliverToBoxAdapter(
-            child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: MutualFondData.mutualFunds,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return _buildLoadingState();
-                } else if (snapshot.hasError) {
-                  return _buildErrorState(snapshot.error.toString());
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return _buildEmptyState();
-                }
-
-                final funds = snapshot.data!
-                    .where((fund) =>
-                _searchQuery.isEmpty ||
-                    fund['name'].toString().toLowerCase().contains(_searchQuery.toLowerCase()))
-                    .where((fund) => _selectedFilter == 'All' || fund['category'] == _selectedFilter)
-                    .toList();
-
-                if (funds.isEmpty) {
-                  return _buildEmptyState();
-                }
-
-                return Column(
-                  children: [
-                    _buildCategorySection('🚀 Top Performing', Icons.trending_up, 'Equity', funds, 0),
-                    _buildCategorySection('📈 Equity Funds', Icons.show_chart, 'Equity', funds, 100),
-                    _buildCategorySection('💰 Debt Funds', Icons.assessment, 'Debt', funds, 200),
-                    _buildCategorySection('🛡️ Tax Saving', Icons.savings, 'Tax Saving', funds, 300),
-                    _buildCategorySection('⚖️ Hybrid Funds', Icons.balance, 'Hybrid', funds, 400),
-                    SizedBox(height: 20),
-                  ],
-                );
-              },
+                // Stock Market Tab
+                StockMarketScreen(),
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCustomTabBar() {
+    return Container(
+      margin: EdgeInsets.all(20),
+      padding: EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withOpacity(0.9),
+            Colors.white.withOpacity(0.7),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: (AppColors.primaryGold ?? Color(0xFFDAA520)).withOpacity(0.3),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (AppColors.primaryGold ?? Color(0xFFDAA520)).withOpacity(0.1),
+            blurRadius: 20,
+            offset: Offset(0, 8),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TabBar(
+        controller: _tabController,
+        indicator: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColors.primaryGold ?? Color(0xFFDAA520),
+              (AppColors.primaryGold ?? Color(0xFFDAA520)).withOpacity(0.8),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: (AppColors.primaryGold ?? Color(0xFFDAA520)).withOpacity(0.3),
+              blurRadius: 8,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        indicatorSize: TabBarIndicatorSize.tab,
+        dividerColor: Colors.transparent,
+        labelColor: Colors.white,
+        unselectedLabelColor: AppColors.primaryText ?? Colors.black87,
+        labelStyle: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
+        ),
+        unselectedLabelStyle: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.5,
+        ),
+        tabs: [
+          Tab(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.trending_up, size: 20),
+                SizedBox(width: 8),
+                Text('Mutual Fund'),
+              ],
+            ),
+          ),
+          Tab(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.show_chart, size: 20),
+                SizedBox(width: 8),
+                Text('Stock Market'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMutualFundTab() {
+    return CustomScrollView(
+      slivers: [
+        // Search Bar Section
+        SliverToBoxAdapter(
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: Offset(0, -0.5),
+              end: Offset.zero,
+            ).animate(_searchAnimation),
+            child: FadeTransition(
+              opacity: _searchAnimation,
+              child: _buildSearchSection(),
+            ),
+          ),
+        ),
+
+        // Filter Chips Section
+        SliverToBoxAdapter(
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: Offset(-0.5, 0),
+              end: Offset.zero,
+            ).animate(_filterAnimation),
+            child: FadeTransition(
+              opacity: _filterAnimation,
+              child: _buildFilterSection(),
+            ),
+          ),
+        ),
+
+        // Fund Categories List
+        SliverToBoxAdapter(
+          child: FutureBuilder<List<Map<String, dynamic>>>(
+            future: MutualFondData.mutualFunds,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return _buildLoadingState();
+              } else if (snapshot.hasError) {
+                return _buildErrorState(snapshot.error.toString());
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return _buildEmptyState();
+              }
+
+              final funds = snapshot.data!
+                  .where((fund) =>
+              _searchQuery.isEmpty ||
+                  fund['name'].toString().toLowerCase().contains(_searchQuery.toLowerCase()))
+                  .where((fund) => _selectedFilter == 'All' || fund['category'] == _selectedFilter)
+                  .toList();
+
+              if (funds.isEmpty) {
+                return _buildEmptyState();
+              }
+
+              return Column(
+                children: [
+                  _buildCategorySection('🚀 Top Performing', Icons.trending_up, 'Equity', funds, 0),
+                  _buildCategorySection('📈 Equity Funds', Icons.show_chart, 'Equity', funds, 100),
+                  _buildCategorySection('💰 Debt Funds', Icons.assessment, 'Debt', funds, 200),
+                  _buildCategorySection('🛡️ Tax Saving', Icons.savings, 'Tax Saving', funds, 300),
+                  _buildCategorySection('⚖️ Hybrid Funds', Icons.balance, 'Hybrid', funds, 400),
+                  SizedBox(height: 20),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -596,9 +716,6 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
       ),
     );
   }
-
-
-
 
   Widget _buildErrorState(String error) {
     return Container(
