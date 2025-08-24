@@ -12,6 +12,7 @@ import '../../themes/app_colors.dart';
 import '../../widget/custom_app_bar.dart';
 import '../home/home_certificate_section.dart';
 import '../home/home_features_widget.dart';
+import '../home/home_jockey_trading_section.dart';
 import '../home/home_learn_section.dart';
 import '../home/home_pending_kyc_dialog_box.dart';
 import '../home/home_sip_goal_section.dart';
@@ -185,6 +186,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 onFeatureTap: _navigateToFeature,
               ),
               SizedBox(height: 24.h),
+
+              HomeJockeyTradeSection(),
               // New Section: Learn & Earn
               HomeLearnSection(),
               SizedBox(height: 24.h),
