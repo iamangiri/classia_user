@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../screen/auth/login_screen.dart';
+import '../screen/auth/login_with_password_screen.dart';
 import '../screen/auth/otp_verify_screen.dart';
 import '../screen/auth/email_verification_screen.dart';   // ← import it
 import '../screen/auth/registration_screen.dart';
@@ -20,7 +21,7 @@ final router = GoRouter(
     GoRoute(
       path: '/',
       name: 'splash',
-      builder: (context, state) => MainScreen(),
+      builder: (context, state) => SplashScreen(),
     ),
 
     GoRoute(
@@ -39,6 +40,12 @@ final router = GoRouter(
       path: '/register',
       name: 'register',
       builder: (context, state) => RegistrationScreen(),
+    ),
+
+    GoRoute(
+      path: '/loginwithpassword',
+      name: 'loginwithpassword',
+      builder: (context, state) => LoginWithPasswordScreen(),
     ),
 
     GoRoute(

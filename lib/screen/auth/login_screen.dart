@@ -243,28 +243,28 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       SizedBox(height: 16),
-                      // Signup link
-                      // Row(
-                      //   mainAxisAlignment: MainAxisAlignment.center,
-                      //   children: [
-                      //     Text(
-                      //       "Don't have an account? ",
-                      //       style: TextStyle(color: Colors.black54),
-                      //     ),
-                      //     GestureDetector(
-                      //       onTap: () {
-                      //         context.goNamed('register');
-                      //       },
-                      //       child: Text(
-                      //         "Signup",
-                      //         style: TextStyle(
-                      //           color: Color(0xFFFFA500),
-                      //           fontWeight: FontWeight.bold,
-                      //         ),
-                      //       ),
-                      //     ),
-                      //   ],
-                      // ),
+                   //   Signup link
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Login with Id/Password ",
+                            style: TextStyle(color: Colors.black54),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              context.goNamed('loginwithpassword');
+                            },
+                            child: Text(
+                              "Click here",
+                              style: TextStyle(
+                                color: Color(0xFFFFA500),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                       SizedBox(height: 20),
                     ],
                   ),

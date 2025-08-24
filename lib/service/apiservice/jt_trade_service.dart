@@ -1,16 +1,14 @@
 import 'dart:convert';
-import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:classia_amc/utills/constent/user_constant.dart';
 
-class TradeService {
-  static const String baseUrl = 'https://api.classiacapital.com';
-  final Random _random = Random();
+class JtTradeService  {
+  static const String baseUrl = 'https://classiahealth.com';
 
   Future<List<dynamic>> fetchAmcList() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/amc/list?page=1&limit=10'),
+        Uri.parse('$baseUrl/mutual-fund/list?page=1&sizePerPage=1000'),
         headers: {
           'Authorization': 'Bearer ${UserConstants.TOKEN}',
           'Content-Type': 'application/json',
@@ -20,12 +18,12 @@ class TradeService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['status'] == true) {
-          return data['data']['users']; // Updated to match new API response structure
+          return data['data']['usersList'];
         } else {
           throw Exception('API returned error: ${data['message']}');
         }
       } else {
-        throw Exception('Failed to load AMC list: ${response.statusCode}');
+        throw Exception('Failed to load mutual fund list: ${response.statusCode}');
       }
     } catch (e) {
       throw Exception('Network error: $e');
@@ -58,78 +56,37 @@ class TradeService {
         "logo": "https://www.quantmutual.com/images/logo.png",
         "name": "Quant",
         "fundName": "Small Cap Fund",
-        "value": _generateRandomPerformance(),
+        "value": 12.0,
       },
       {
         "id": 2,
         "logo": "https://www.nipponindiamf.com/assets/images/niam-logo.png",
         "name": "Nippon India",
         "fundName": "Small Cap Fund",
-        "value": _generateRandomPerformance(),
+        "value": 12.0,
       },
       {
         "id": 3,
         "logo": "https://www.sbimf.com/images/default-source/default-album/sbi-mutual-fund-logo.png",
         "name": "SBI",
         "fundName": "Small Cap Fund",
-        "value": _generateRandomPerformance(),
+        "value": 12.0,
       },
       {
         "id": 4,
         "logo": "https://www.icicipruamc.com/docs/default-source/default-document-library/icici-pru-logo.jpg",
         "name": "ICICI Prudential",
         "fundName": "Technology Fund",
-        "value": _generateRandomPerformance(),
+        "value": 12.0,
       },
       {
         "id": 5,
         "logo": "https://upload.wikimedia.org/wikipedia/commons/7/70/HDFC_Bank_Logo.svg",
         "name": "HDFC",
         "fundName": "Mid-Cap Opportunities Fund",
-        "value": _generateRandomPerformance(),
+        "value": 12.0,
       },
     ];
-  }
-
-  /// Generates random performance value between 1.0 and 10.0
-  double _generateRandomPerformance() {
-    // Generate random double between 1.0 and 10.0
-    return 1.0 + (_random.nextDouble() * 9.0);
-  }
-
-  /// Generates random performance based on filter type with realistic ranges
-  double _generateRandomPerformanceByFilter(String filter) {
-    switch (filter) {
-      case 'Live':
-      // Daily changes are usually smaller: -2% to +3%
-        return -2.0 + (_random.nextDouble() * 5.0);
-      case 'Last 7 Days':
-      // Weekly changes: -5% to +8%
-        return -5.0 + (_random.nextDouble() * 13.0);
-      case '1 Month':
-      // Monthly changes: -8% to +12%
-        return -8.0 + (_random.nextDouble() * 20.0);
-      case '3 Months':
-      // Quarterly changes: -15% to +25%
-        return -15.0 + (_random.nextDouble() * 40.0);
-      case '6 Months':
-      // Half-yearly changes: -20% to +35%
-        return -20.0 + (_random.nextDouble() * 55.0);
-      case '1 Year':
-      // Annual changes: -30% to +50%
-        return -30.0 + (_random.nextDouble() * 80.0);
-      case '3 Years':
-      // 3-year changes: -20% to +80%
-        return -20.0 + (_random.nextDouble() * 100.0);
-      case '5 Years':
-      // 5-year changes: 0% to +150%
-        return _random.nextDouble() * 150.0;
-      case 'All':
-      // All-time changes: 0% to +300%
-        return _random.nextDouble() * 300.0;
-      default:
-        return _generateRandomPerformance();
-    }
   }
 
   String _getPerformanceField(String filter) {
@@ -159,7 +116,7 @@ class TradeService {
 
   double _parsePerformanceValue(String? value) {
     if (value == null || value.isEmpty) {
-      return 0.0;
+      return 0.0; // Return 0 instead of 12.0 for consistency with UI requirement
     }
     try {
       // Remove '%' and parse as double
@@ -167,42 +124,30 @@ class TradeService {
       return parsedValue.isNaN ? 0.0 : parsedValue;
     } catch (e) {
       print('Error parsing performance value: $e');
-      return 0.0;
+      return 0.0; // Return 0 on error to prevent NaN
     }
   }
 
   Future<List<Map<String, dynamic>>> loadAmcData({required String filter, required bool isBuy}) async {
     try {
       final amcListData = await fetchAmcList();
+      final performanceField = _getPerformanceField(filter);
 
-      List<Map<String, dynamic>> enrichedAmcList = amcListData.map<Map<String, dynamic>>((amc) {
+      List<Map<String, dynamic>> enrichedAmcList = amcListData.map((amc) {
         return {
-          'id': amc['ID'], // Updated field name from API response
-          'logo': getAmcLogo(amc['Name']), // Updated field name
-          'name': amc['Name'], // Updated field name
-          'fundName': amc['FundName'], // Updated field name
-          'value': _generateRandomPerformanceByFilter(filter), // Generate random performance
-          'email': amc['Email'],
-          'mobile': amc['Mobile'],
-          'role': amc['Role'],
-          'panNumber': amc['PanNumber'],
-          'address': amc['Address'],
-          'city': amc['City'],
-          'state': amc['State'],
-          'pinCode': amc['PinCode'],
-          'contactPersonName': amc['ContactPersonName'],
-          'contactPerDesignation': amc['ContactPerDesignation'],
-          'equityPer': amc['EquityPer'],
-          'debtPer': amc['DebtPer'],
-          'cashSplit': amc['CashSplit'],
-          'isDeleted': amc['IsDeleted'],
-          'createdAt': amc['CreatedAt'],
-          'updatedAt': amc['UpdatedAt'],
-          'deletedAt': amc['DeletedAt'],
+          'id': amc['id'],
+          'logo': getAmcLogo(amc['amc']),
+          'name': amc['amc'],
+          'fundName': amc['scheamName'],
+          'value': _parsePerformanceValue(amc[performanceField]),
+          'scheamCode': amc['scheamCode'],
+          'isDeleted': amc['isDeleted'],
+          'createdAt': amc['createdAt'],
+          'updatedAt': amc['updatedAt'],
+          'deletedAt': amc['deletedAt'],
         };
       }).toList();
 
-      // Sort by performance value in descending order
       enrichedAmcList.sort((a, b) => b['value'].compareTo(a['value']));
       return enrichedAmcList;
     } catch (e) {
@@ -211,14 +156,5 @@ class TradeService {
       defaultData.sort((a, b) => b["value"].compareTo(a["value"]));
       return defaultData;
     }
-  }
-
-  /// Optional: Method to refresh performance values for existing data
-  void refreshPerformanceValues(List<Map<String, dynamic>> amcList, String filter) {
-    for (var amc in amcList) {
-      amc['value'] = _generateRandomPerformanceByFilter(filter);
-    }
-    // Re-sort after updating values
-    amcList.sort((a, b) => b['value'].compareTo(a['value']));
   }
 }

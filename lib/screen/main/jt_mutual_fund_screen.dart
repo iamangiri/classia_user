@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lottie/lottie.dart';
+import '../../service/apiservice/jt_trade_service.dart';
 import '../../service/apiservice/trade_service.dart';
 import '../../widget/trade/trade_app_bar.dart';
 
@@ -27,7 +28,7 @@ class _JtMutualFundScreenState extends State<JtMutualFundScreen> with TickerProv
   late Animation<double> _fadeAnimation;
 
   // Create instance of TradeService
-  final TradeService _tradeService = TradeService();
+  final JtTradeService _tradeService = JtTradeService();
 
   @override
   void initState() {
