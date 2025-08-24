@@ -201,7 +201,7 @@ class _JtMutualFundScreenState extends State<JtMutualFundScreen> with TickerProv
           onFilterSelected: _onFilterSelected,
           onTabSelected: _onTabSelected,
           currentTabIndex: _currentTabIndex,
-          selectedFilter: selectedFilter,
+          selectedFilter: selectedFilter, onCategorySelected: (String ) {  },
         ),
         body: RefreshIndicator(
           onRefresh: _refreshData,
