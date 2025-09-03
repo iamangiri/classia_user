@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:classia_amc/utills/constent/user_constant.dart';
 
 class TradeService {
-  static const String baseUrl = 'https://api.classiacapital.com';
+  static const String baseUrl = 'https://goapi.classiacapital.com';
   final Random _random = Random();
 
   Future<List<dynamic>> fetchAmcList() async {

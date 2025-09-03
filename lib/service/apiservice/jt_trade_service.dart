@@ -1,14 +1,14 @@
 import 'dart:convert';
+import 'package:classia_amc/utills/constent/app_constant.dart';
 import 'package:http/http.dart' as http;
 import 'package:classia_amc/utills/constent/user_constant.dart';
 
 class JtTradeService  {
-  static const String baseUrl = 'https://classiahealth.com';
 
   Future<List<dynamic>> fetchAmcList() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/mutual-fund/list?page=1&sizePerPage=1000'),
+        Uri.parse('${AppConstant.NODE_API_URL}/mutual-fund/list?page=1&sizePerPage=1000'),
         headers: {
           'Authorization': 'Bearer ${UserConstants.TOKEN}',
           'Content-Type': 'application/json',

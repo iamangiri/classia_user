@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:classia_amc/service/apiservice/api_service.dart';
+import 'package:classia_amc/utills/constent/app_constant.dart';
 import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:http/http.dart' as http;
 
@@ -9,7 +11,7 @@ class CamService {
 
   Future<dynamic> createCams(Map<String, dynamic> payload) async {
     final response = await http.post(
-      Uri.parse('https://classiahealth.com/can/create'),
+      Uri.parse('${AppConstant.NODE_API_URL}/can/create'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': '${UserConstants.TOKEN}',
@@ -33,16 +35,15 @@ class CamService {
 
   Future<Map<String, dynamic>> registerPayZee(Map<String, dynamic> payload) async {
     try {
-      const String url = 'https://classiahealth.com/payez/register';
+      const String url = '${AppConstant.API_URL}/payez/register';
 
       // Get the authorization token (you may need to modify this based on your token storage)
-      const String authToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFtYW5naXJpMDM4MUBnbWFpbC5jb20iLCJleHAiOjE3NTU5NDQ3OTMsImlhdCI6MTc1NTg1ODM5MywibW9iaWxlIjoiIiwibmFtZSI6IiIsInJvbGUiOiJVU0VSIiwidXNlcklkIjo0MX0.0_Ey78zS1d_1wbj6UNP9GrSMTaqu8U4-3lPzSL3Ob88';
 
       final response = await http.post(
         Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': authToken,
+          'Authorization': '${UserConstants.TOKEN}',
         },
         body: json.encode(payload),
       );

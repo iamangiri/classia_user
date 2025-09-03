@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../themes/app_colors.dart';
-import '../../widget/trading_card.dart';
 import 'jt_trade_card.dart';
 
 class JtTradeExplore extends StatelessWidget {
@@ -45,7 +44,7 @@ class JtTradeExplore extends StatelessWidget {
             ),
             SizedBox(height: 20.h),
             Text(
-              'No recent trades available',
+              'Mutual fund data is not available',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 18.sp,
@@ -54,7 +53,7 @@ class JtTradeExplore extends StatelessWidget {
             ),
             SizedBox(height: 8.h),
             Text(
-              'Check back later or adjust filters',
+              'Data unavailable, please try again shortly',
               style: TextStyle(
                 color: Colors.grey[500],
                 fontSize: 14.sp,

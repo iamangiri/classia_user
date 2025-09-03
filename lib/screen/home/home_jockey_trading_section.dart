@@ -58,7 +58,6 @@ class _HomeJockeyTradeSectionState extends State<HomeJockeyTradeSection>
     },
   ];
 
-
   @override
   void initState() {
     super.initState();
@@ -72,8 +71,8 @@ class _HomeJockeyTradeSectionState extends State<HomeJockeyTradeSection>
     );
 
     _horseAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
+      begin: 0.1,
+      end: 0.1,
     ).animate(CurvedAnimation(
       parent: _horseController,
       curve: Curves.easeInOut,
@@ -97,128 +96,96 @@ class _HomeJockeyTradeSectionState extends State<HomeJockeyTradeSection>
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme
-        .of(context)
-        .brightness == Brightness.dark;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: Container(
-        margin: EdgeInsets.all(5.w),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDarkMode
-                ? [
-              Colors.grey[900]!.withOpacity(0.95),
-              Colors.grey[800]!.withOpacity(0.9),
-            ]
-                : [
-              Colors.white.withOpacity(0.95),
-              Colors.grey[50]!.withOpacity(0.9),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(20.r),
-
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 20.r,
-              offset: Offset(0, 8.h),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          child: Container(
+            margin: EdgeInsets.all(5.w),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDarkMode
+                    ? [
+                  Colors.grey[900]!.withOpacity(0.95),
+                  Colors.grey[800]!.withOpacity(0.9),
+                ]
+                    : [
+                  Colors.white.withOpacity(0.95),
+                  Colors.grey[50]!.withOpacity(0.9),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(20.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 20.r,
+                  offset: Offset(0, 8.h),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header with Horse Animation
-            _buildHeader(),
-
-            SizedBox(height: 20.h),
-
-            // Jockey Stats Cards
-            _buildJockeyStats(),
-
-            SizedBox(height: 20.h),
-
-            // Active Jockeys List
-            _buildActiveJockeys(),
-
-
-          ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(),
+                SizedBox(height: 20.h),
+                _buildJockeyStats(),
+                SizedBox(height: 20.h),
+                _buildActiveJockeys(),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
+  /// ✅ Fixed Header with Horse Animation inside Stack
   Widget _buildHeader() {
     return Container(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+      child: Row(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Jockey Trading',
-                    style: TextStyle(
-                      fontSize: 24.sp,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primaryText ?? Colors.black87,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    'Bet on the jockey, not the horse.',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: AppColors.secondaryText ?? Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+              Text(
+                'Jockey Trading',
+                style: TextStyle(
+                  fontSize: 24.sp,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primaryText ?? Colors.black87,
+                  letterSpacing: 0.5,
+                ),
               ),
-
-              AnimatedBuilder(
-                animation: _horseAnimation,
-                builder: (context, child) {
-                  double containerWidth = MediaQuery
-                      .of(context)
-                      .size
-                      .width - 80.w;
-                  double horsePosition = _horseAnimation.value *
-                      (containerWidth - 60.w);
-
-                  return Positioned(
-                    left: horsePosition + 20.w,
-                    top: 5.h,
-                    child: Container(
-                      height: 100.h,
-                      width: 140.w,
-                      child: Image.asset(
-                        'assets/images/jt1.gif',
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  );
-                },
+              SizedBox(height: 4.h),
+              Text(
+                'Bet on the jockey, not the horse.',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: AppColors.secondaryText ?? Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),
-
-
-          // Horse Animation Track
-
+          SizedBox(
+            height: 80.h,
+            width: 80.w,
+            child: Image.asset(
+              'assets/images/jt1.gif',
+              fit: BoxFit.contain,
+            ),
+          ),
         ],
       ),
     );
   }
 
+  /// Jockey Stats Row
   Widget _buildJockeyStats() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -255,8 +222,8 @@ class _HomeJockeyTradeSectionState extends State<HomeJockeyTradeSection>
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon,
-      Color color) {
+  Widget _buildStatCard(
+      String title, String value, IconData icon, Color color) {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -298,6 +265,7 @@ class _HomeJockeyTradeSectionState extends State<HomeJockeyTradeSection>
     );
   }
 
+  /// Active Jockeys List
   Widget _buildActiveJockeys() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,8 +300,8 @@ class _HomeJockeyTradeSectionState extends State<HomeJockeyTradeSection>
           ),
         ),
         SizedBox(height: 12.h),
-        Container(
-          height: 140.h,
+        SizedBox(
+          height: 160.h,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -348,9 +316,12 @@ class _HomeJockeyTradeSectionState extends State<HomeJockeyTradeSection>
     );
   }
 
+  /// ✅ Responsive Jockey Card
   Widget _buildJockeyCard(Map<String, dynamic> jockey) {
+    double cardWidth = MediaQuery.of(context).size.width * 0.42;
+
     return Container(
-      width: 160.w,
+      width: cardWidth,
       margin: EdgeInsets.only(right: 12.w),
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -397,26 +368,23 @@ class _HomeJockeyTradeSectionState extends State<HomeJockeyTradeSection>
                 ),
               ),
               Spacer(),
-              Container(
-                width: 8.w,
-                height: 8.h,
-                decoration: BoxDecoration(
-                  color: jockey['isActive'] ? Colors.green : Colors.grey,
-                  shape: BoxShape.circle,
-                ),
-              ),
+              Icon(Icons.circle,
+                  size: 8.sp,
+                  color: jockey['isActive'] ? Colors.green : Colors.grey),
             ],
           ),
           SizedBox(height: 8.h),
-          Text(
-            jockey['name'],
-            style: TextStyle(
-              fontSize: 13.sp,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primaryText ?? Colors.black87,
+          Flexible(
+            child: Text(
+              jockey['name'],
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primaryText ?? Colors.black87,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
           SizedBox(height: 2.h),
           Text(
@@ -454,5 +422,4 @@ class _HomeJockeyTradeSectionState extends State<HomeJockeyTradeSection>
       ),
     );
   }
-
 }

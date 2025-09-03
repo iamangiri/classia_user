@@ -1,9 +1,7 @@
 import 'dart:math';
 import 'package:classia_amc/themes/app_colors.dart';
-import 'package:classia_amc/widget/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
 import '../../widget/common_app_bar.dart';
 import '../main/trading_screen.dart';
 
@@ -123,7 +121,11 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
         children: [
           Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => isSIPSelected = true),
+              onTap: () => setState(() {
+                isSIPSelected = true;
+                monthlyInvestment = 25000;
+                _investmentController.text = monthlyInvestment.toStringAsFixed(0);
+              }),
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
@@ -147,7 +149,11 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
           ),
           Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => isSIPSelected = false),
+              onTap: () => setState(() {
+                isSIPSelected = false;
+                monthlyInvestment = 25000;
+                _investmentController.text = monthlyInvestment.toStringAsFixed(0);
+              }),
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
@@ -178,7 +184,7 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
     return Column(
       children: [
         _buildInputField(
-          label: isSIPSelected ? 'Monthly Investment' : 'Lumpsum Investment',
+          label: isSIPSelected ? 'Monthly Investment' : 'Total Investment',
           value: monthlyInvestment,
           min: 500,
           max: isSIPSelected ? 100000 : 10000000,
@@ -286,14 +292,12 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
                         if (newValue != null) {
                           setState(() {
                             timeUnit = newValue;
-                            // Adjust timePeriod to fit within new unit's limits
                             final newLimits = getTimeLimits();
                             if (timePeriod > newLimits['max']!) {
                               timePeriod = newLimits['max']!;
                             } else if (timePeriod < newLimits['min']!) {
                               timePeriod = newLimits['min']!;
                             }
-                            // Update controller text
                             _timePeriodController.text = timePeriod.toStringAsFixed(0);
                           });
                         }
@@ -335,7 +339,6 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
     String? suffix,
     required Function(double) onChanged,
   }) {
-    // Determine which controller to use based on the label
     TextEditingController controller;
     if (label.contains('Investment')) {
       controller = _investmentController;
@@ -401,10 +404,9 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
           min: min,
           max: max,
           divisions: (max - min).toInt(),
-          label: value.toStringAsFixed(0),
+          label: prefix != null ? '$prefix${_currencyFormat.format(value)}' : value.toStringAsFixed(0),
           onChanged: (newValue) {
             onChanged(newValue);
-            // Update the corresponding controller
             controller.text = newValue.toStringAsFixed(0);
             setState(() {});
           },
@@ -505,7 +507,7 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
             style: TextStyle(color: AppColors.secondaryText),
           ),
           Text(
-            '₹${_currencyFormat.format(value)}',
+            '₹${_currencyFormat.format(value.round())}',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -519,8 +521,8 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
 
   Widget _buildPieChart(double invested, double returns) {
     final total = invested + returns;
-    final investedAngle = (invested / total) * 360;
-    final returnsAngle = (returns / total) * 360;
+    final investedAngle = total > 0 ? (invested / total) * 360 : 0.0;
+    final returnsAngle = total > 0 ? (returns / total) * 360 : 0.0;
 
     return Column(
       children: [
@@ -599,49 +601,41 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
     );
   }
 
-  // FIXED: Calculate invested amount correctly
   double calculateInvestedAmount() {
     if (isSIPSelected) {
-      // For SIP, total invested = monthly investment * number of months
       final yearsEquivalent = getTimePeriodInYears();
-      final totalMonths = yearsEquivalent * 12;
+      final totalMonths = (yearsEquivalent * 12).roundToDouble();
       return monthlyInvestment * totalMonths;
     } else {
-      // For lumpsum, invested amount is just the principal
       return monthlyInvestment;
     }
   }
 
-  // FIXED: Calculate future value using correct formulas
+  // FIXED SIP CALCULATION - Using standard SIP formula
   double calculateFutureValue() {
     final yearsEquivalent = getTimePeriodInYears();
+    final annualRate = expectedReturn / 100; // Convert percentage to decimal
 
     if (isSIPSelected) {
-      // SIP Formula: FV = P × ({[1+r]^n - 1} / r) × (1+r)
+      // Standard SIP Formula: FV = P × [((1 + r)^n - 1) / r] × (1 + r)
       // Where P = monthly investment, r = monthly rate, n = number of months
 
-      final annualRate = expectedReturn / 100; // Convert percentage to decimal
-      final monthlyRate = annualRate / 12; // Monthly rate
-      final totalMonths = yearsEquivalent * 12; // Total number of months
+      final monthlyRate = annualRate / 12; // Simple monthly rate
+      final totalMonths = yearsEquivalent * 12;
 
       if (monthlyRate == 0) {
-        // If no interest, future value is just sum of investments
+        // If rate is 0%, simple multiplication
         return monthlyInvestment * totalMonths;
       }
 
-      // Apply the SIP formula
+      // SIP Future Value calculation with compounding
       final futureValue = monthlyInvestment *
-          (((pow(1 + monthlyRate, totalMonths) - 1) / monthlyRate) *
-              (1 + monthlyRate));
+          (((pow(1 + monthlyRate, totalMonths) - 1) / monthlyRate) * (1 + monthlyRate));
 
       return futureValue;
     } else {
-      // Lumpsum Formula: A = P × (1+i)^n
-      // Where P = principal, i = annual rate, n = number of years
-
-      final annualRate = expectedReturn / 100; // Convert percentage to decimal
+      // Lumpsum Formula: FV = P × (1 + r)^n
       final futureValue = monthlyInvestment * pow(1 + annualRate, yearsEquivalent);
-
       return futureValue;
     }
   }

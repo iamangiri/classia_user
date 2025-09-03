@@ -2,7 +2,6 @@ import 'package:classia_amc/screen/sip/sip_explore_tab.dart';
 import 'package:classia_amc/screen/sip/sip_portfolio_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import '../../themes/app_colors.dart';
 import '../calcutator/sip_calcutator.dart';
 import '../main/profile_screen.dart';

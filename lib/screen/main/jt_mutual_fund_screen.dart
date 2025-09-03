@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lottie/lottie.dart';
 import '../../service/apiservice/jt_trade_service.dart';
-import '../../service/apiservice/trade_service.dart';
-import '../../widget/trade/trade_app_bar.dart';
-
 import '../../themes/app_colors.dart';
 import 'dart:async';
 import '../trade/jt_trade_app_bar.dart';

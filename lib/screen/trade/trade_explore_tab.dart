@@ -44,7 +44,7 @@ class TradeExploreTab extends StatelessWidget {
             ),
             SizedBox(height: 20.h),
             Text(
-              'No recent trades available',
+              'Amc list not list',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 18.sp,
@@ -53,7 +53,7 @@ class TradeExploreTab extends StatelessWidget {
             ),
             SizedBox(height: 8.h),
             Text(
-              'Check back later or adjust filters',
+              'Data unavailable, please try again shortly',
               style: TextStyle(
                 color: Colors.grey[500],
                 fontSize: 14.sp,

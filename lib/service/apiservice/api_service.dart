@@ -1,20 +1,22 @@
 import 'dart:convert';
+import 'package:classia_amc/utills/constent/app_constant.dart';
+import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:http/http.dart' as http;
 
 import '../../models/mutual_fund_models.dart';
 
 
 class ApiService {
-  static const String _baseUrl = 'https://classiahealth.com';
+
   static const String _mutualFundEndpoint =
       '/mutual-fund/list?page=1&sizePerPage=100';
 
   Future<MutualFundResponse> fetchMutualFunds() async {
     try {
       final response = await http.get(
-        Uri.parse(_baseUrl + _mutualFundEndpoint),
+        Uri.parse( AppConstant.NODE_API_URL+ _mutualFundEndpoint),
         headers: {
-          'Authorization': '', // Add your token here if required
+          'Authorization': '${UserConstants.TOKEN}',
         },
       );
 
