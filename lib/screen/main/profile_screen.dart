@@ -18,6 +18,7 @@ import '../profile/learn_screen.dart';
 import '../profile/manage_folio_screen.dart';
 import '../profile/privicy_policy.dart';
 import '../profile/security_setting _screen.dart';
+import '../profile/demat_account_screen.dart'; // Add this import
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -134,7 +135,8 @@ class ProfileScreen extends StatelessWidget {
     final List<Map<String, String>> accountOptions = [
       {'title': 'KYC', 'icon': 'verified_user'},
       {'title': 'CAN', 'icon': 'account_circle'},
-      {'title': 'PayZee Registration', 'icon': 'payment'}, // Added PayZee option
+      {'title': 'PayZee Registration', 'icon': 'payment'},
+      {'title': 'Demat Account', 'icon': 'account_balance_wallet'}, // Added Demat Account option
       {'title': 'Manage Folio', 'icon': 'folio'},
       {'title': 'Security Settings', 'icon': 'security'},
       {'title': 'Bank Info', 'icon': 'account_balance'},
@@ -198,8 +200,11 @@ class ProfileScreen extends StatelessWidget {
       case 'account_circle':
         iconData = Icons.account_circle;
         break;
-      case 'payment': // Added case for PayZee
+      case 'payment':
         iconData = Icons.payment;
+        break;
+      case 'account_balance_wallet': // Added case for Demat Account
+        iconData = Icons.account_balance_wallet;
         break;
       default:
         iconData = Icons.help;
@@ -251,8 +256,11 @@ class ProfileScreen extends StatelessWidget {
       case 'CAN':
         destination = const CamsCreationScreen();
         break;
-      case 'PayZee Registration': // Added case for PayZee Registration
+      case 'PayZee Registration':
         destination = const PayZeeRegistrationScreen();
+        break;
+      case 'Demat Account': // Added case for Demat Account
+        destination = const DematAccountScreen();
         break;
       case 'Manage Folio':
         destination = const ManageFolioScreen();
