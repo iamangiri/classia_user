@@ -588,6 +588,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../screen/calcutator/sip_calcutator.dart';
 import '../../screen/main/profile_screen.dart';
 import '../../themes/app_colors.dart';
+import '../calcutator/main_calcutator_screen.dart';
 
 class JtTradeAppBar extends StatefulWidget implements PreferredSizeWidget {
   final Function(String) onFilterSelected;

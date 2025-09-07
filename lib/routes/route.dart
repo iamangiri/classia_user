@@ -8,6 +8,7 @@ import '../screen/auth/otp_verify_screen.dart';
 import '../screen/auth/email_verification_screen.dart';   // ← import it
 import '../screen/auth/registration_screen.dart';
 import '../screen/base/main_screen.dart';
+import '../screen/calcutator/calcutator.dart';
 import '../screen/onBoarding/onBoarding_screen.dart';
 import '../screen/onBoarding/splash_screen.dart';
 import '../screenutills/horse_riding_screen.dart';

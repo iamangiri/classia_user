@@ -1,6 +1,7 @@
 import 'package:classia_amc/screen/main/wallet_screen.dart';
 import 'package:flutter/material.dart';
 
+import '../screen/calcutator/main_calcutator_screen.dart';
 import '../screen/calcutator/sip_calcutator.dart';
 import '../screen/homefetures/notification_screen.dart';
 import '../screen/main/profile_screen.dart';
