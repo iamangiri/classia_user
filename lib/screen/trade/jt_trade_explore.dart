@@ -76,12 +76,13 @@ class JtTradeExplore extends StatelessWidget {
                   name: amc['name'],
                   fundName: amc['fundName'],
                   value: amc['value'],
+                  fundData: amc, // Pass the entire AMC data
                 ),
               ],
             ),
           );
         },
-      ),
+      )
     );
   }
 }
