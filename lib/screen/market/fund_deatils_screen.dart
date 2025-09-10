@@ -1332,10 +1332,16 @@
 //     );
 //   }
 // }
+
+
+
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../themes/app_colors.dart';
 import '../../widget/common_app_bar.dart';
+import '../../service/apiservice/mutual_fund_service.dart';
 import '../main/home_disclamer.dart';
 
 class FundDetailsScreen extends StatefulWidget {
@@ -1948,154 +1954,255 @@ class _FundDetailsScreenState extends State<FundDetailsScreen>
   }
 
   void _showInvestmentBottomSheet(String investmentType) {
+    final TextEditingController amountController = TextEditingController();
+    String? frequency = investmentType == 'SIP' ? 'M' : null; // Default to Monthly for SIP
+    String errorMessage = '';
+    bool isLoading = false;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.6,
-          decoration: BoxDecoration(
-            color: AppColors.cardBackground?.withOpacity(0.8) ?? Colors.grey[100]!.withOpacity(0.8),
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(16),
-              topRight: Radius.circular(16),
-            ),
-            border: Border.all(
-              color: AppColors.primaryGold?.withOpacity(0.3) ?? Color(0xFFDAA520).withOpacity(0.3),
-            ),
-          ),
-          child: Column(
-            children: [
-              Container(
-                margin: EdgeInsets.symmetric(vertical: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryText?.withOpacity(0.3) ?? Colors.grey.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(2),
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.6,
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground?.withOpacity(0.8) ?? Colors.grey[100]!.withOpacity(0.8),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+                border: Border.all(
+                  color: AppColors.primaryGold?.withOpacity(0.3) ?? Color(0xFFDAA520).withOpacity(0.3),
                 ),
               ),
-              Padding(
-                padding: EdgeInsets.all(12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '$investmentType Investment',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primaryText ?? Colors.black87,
-                      ),
+              child: Column(
+                children: [
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical: 12),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryText?.withOpacity(0.3) ?? Colors.grey.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: Icon(Icons.close, color: AppColors.secondaryText ?? Colors.grey, size: 20),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.screenBackground ?? Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: AppColors.primaryGold?.withOpacity(0.2) ?? Color(0xFFDAA520).withOpacity(0.2),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '$investmentType Investment',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryText ?? Colors.black87,
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: Icon(Icons.close, color: AppColors.secondaryText ?? Colors.grey, size: 20),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.screenBackground ?? Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
                                 color: AppColors.primaryGold?.withOpacity(0.2) ?? Color(0xFFDAA520).withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.account_balance,
-                                color: AppColors.primaryGold ?? Color(0xFFDAA520),
-                                size: 20,
                               ),
                             ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    widget.fund['name']?.toString() ?? 'Unknown Fund',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.primaryText ?? Colors.black87,
-                                    ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryGold?.withOpacity(0.2) ?? Color(0xFFDAA520).withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                  Text(
-                                    'Category: ${widget.fund['category']?.toString() ?? 'Equity'}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.secondaryText ?? Colors.grey,
-                                    ),
+                                  child: Icon(
+                                    Icons.account_balance,
+                                    color: AppColors.primaryGold ?? Color(0xFFDAA520),
+                                    size: 20,
                                   ),
-                                ],
+                                ),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        widget.fund['name']?.toString() ?? 'Unknown Fund',
+                                        style: TextStyle(
+                                          fontSize: 14.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.primaryText ?? Colors.black87,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Category: ${widget.fund['category']?.toString() ?? 'Equity'}',
+                                        style: TextStyle(
+                                          fontSize: 12.sp,
+                                          color: AppColors.secondaryText ?? Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 12),
+                          TextField(
+                            controller: amountController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              labelText: 'Investment Amount',
+                              labelStyle: TextStyle(color: AppColors.secondaryText ?? Colors.grey),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: AppColors.primaryGold?.withOpacity(0.3) ?? Color(0xFFDAA520).withOpacity(0.3),
+                                ),
                               ),
+                              prefixIcon: Icon(
+                                Icons.currency_rupee,
+                                color: AppColors.primaryGold ?? Color(0xFFDAA520),
+                              ),
+                              errorText: errorMessage.isNotEmpty ? errorMessage : null,
+                            ),
+                            style: TextStyle(color: AppColors.primaryText ?? Colors.black87),
+                          ),
+                          if (investmentType == 'SIP') ...[
+                            SizedBox(height: 12),
+                            DropdownButtonFormField<String>(
+                              value: frequency,
+                              decoration: InputDecoration(
+                                labelText: 'SIP Frequency',
+                                labelStyle: TextStyle(color: AppColors.secondaryText ?? Colors.grey),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: AppColors.primaryGold?.withOpacity(0.3) ?? Color(0xFFDAA520).withOpacity(0.3),
+                                  ),
+                                ),
+                              ),
+                              items: [
+                                DropdownMenuItem(value: 'M', child: Text('Monthly')),
+                                DropdownMenuItem(value: 'D', child: Text('Daily')),
+                              ],
+                              onChanged: (value) {
+                                setModalState(() {
+                                  frequency = value;
+                                });
+                              },
+                              style: TextStyle(color: AppColors.primaryText ?? Colors.black87),
                             ),
                           ],
-                        ),
-                      ),
-                      SizedBox(height: 12),
-                      Expanded(
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 64,
-                                height: 64,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryGold?.withOpacity(0.1) ?? Color(0xFFDAA520).withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(32),
-                                ),
-                                child: Icon(
-                                  investmentType == 'SIP' ? Icons.repeat : Icons.account_balance_wallet,
-                                  color: AppColors.primaryGold ?? Color(0xFFDAA520),
-                                  size: 32,
-                                ),
+                          SizedBox(height: 16),
+                          isLoading
+                              ? CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              AppColors.primaryGold ?? Color(0xFFDAA520),
+                            ),
+                          )
+                              : ElevatedButton(
+                            onPressed: () async {
+                              final amount = double.tryParse(amountController.text);
+                              if (amount == null || amount <= 0) {
+                                setModalState(() {
+                                  errorMessage = 'Please enter a valid amount';
+                                });
+                                return;
+                              }
+                              setModalState(() {
+                                isLoading = true;
+                                errorMessage = '';
+                              });
+
+                              try {
+                                Map<String, dynamic> response;
+                                String approvalLink;
+
+                                if (investmentType == 'Lumpsum') {
+                                  response = await MutualFundService.purchaseLumpsum(
+                                    totAmt: amount,
+                                    rtaAmcCode: widget.fund['rtaAmcCode']?.toString() ?? 'FTI',
+                                    rtaSchCode: widget.fund['rtaSchCode']?.toString() ?? '010',
+                                    folio: widget.fund['folio']?.toString() ?? 'AKA031415712',
+                                  );
+                                } else {
+                                  response = await MutualFundService.registerSip(
+                                    totAmt: amount,
+                                    rtaAmcCode: widget.fund['rtaAmcCode']?.toString() ?? 'FTI',
+                                    rtaSchCode: widget.fund['rtaSchCode']?.toString() ?? '010',
+                                    folio: widget.fund['folio']?.toString() ?? 'FT000001115',
+                                    frequency: frequency!,
+                                    day: 25, // Default day
+                                    startMonth: 9, // Default start month (current month)
+                                    startYear: 2025, // Default start year
+                                    endMonth: 12, // Default end month
+                                    endYear: 2026, // Default end year
+                                  );
+                                }
+
+                                if (response['status'] == true) {
+                                  approvalLink = response['data']?['approvalLink']?.toString() ?? '';
+                                  if (await canLaunchUrl(Uri.parse(approvalLink))) {
+                                    await launchUrl(Uri.parse(approvalLink), mode: LaunchMode.externalApplication);
+                                  } else {
+                                    setModalState(() {
+                                      errorMessage = 'Unable to open approval link';
+                                      isLoading = false;
+                                    });
+                                  }
+                                } else {
+                                  setModalState(() {
+                                    errorMessage = response['message']?.toString() ?? 'Transaction failed';
+                                    isLoading = false;
+                                  });
+                                }
+                              } catch (e) {
+                                setModalState(() {
+                                  errorMessage = 'Error: $e';
+                                  isLoading = false;
+                                });
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryGold?.withOpacity(0.9) ?? Color(0xFFDAA520).withOpacity(0.9),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            ),
+                            child: Text(
+                              'Confirm $investmentType',
+                              style: TextStyle(
+                                color: AppColors.buttonText ?? Colors.white,
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w600,
                               ),
-                              SizedBox(height: 12),
-                              Text(
-                                '$investmentType Investment',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primaryText ?? Colors.black87,
-                                ),
-                              ),
-                              Text(
-                                'This feature is coming soon!',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.secondaryText ?? Colors.grey,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
