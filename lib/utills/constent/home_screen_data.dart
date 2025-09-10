@@ -1,16 +1,12 @@
 import 'dart:ui';
-
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
-import '../../themes/app_colors.dart';
 
 class HomeScreenData {
   static final List<String> sliderImages = [
     "assets/images/slider-1.jpeg",
     "assets/images/slider-2.jpeg",
-    "assets/images/slider-3.jpeg"
+    "assets/images/slider-3.jpeg",
   ];
-
 
   static List<Map<String, String>> mutualFunds = [
     {
@@ -64,9 +60,14 @@ class HomeScreenData {
       'color': Color(0xFF3F51B5), // indigo
     },
     {
+      'title': 'Transactions',
+      'icon': FontAwesomeIcons.history,
+      'color': Color(0xFF2196F3), // blue
+    },
+    {
       'title': 'My Reports',
       'icon': FontAwesomeIcons.fileDownload,
-      'color': Color(0xFFFF9800),
+      'color': Color(0xFFFF9800), // orange
     },
     {
       'title': 'Deposit',
@@ -76,13 +77,10 @@ class HomeScreenData {
     {
       'title': 'Withdraw',
       'icon': FontAwesomeIcons.wallet,
-      'color': Color(0xFFE91E63), // orange
+      'color': Color(0xFFE91E63), // pink (reused for consistency)
     },
 
   ];
-
-
-
 
   static List<Map<String, String>> trendingFunds = [
     {

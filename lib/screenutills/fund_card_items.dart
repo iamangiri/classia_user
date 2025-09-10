@@ -1,7 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../screen/market/fund_deatils_screen.dart';
+import 'dart:ui';
 import '../themes/app_colors.dart';
+import '../screen/market/fund_deatils_screen.dart';
 
 class FundCard extends StatefulWidget {
   final Map<String, dynamic> fund;
@@ -24,25 +24,20 @@ class _FundCardState extends State<FundCard> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-
     _hoverController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-
     _tapController = AnimationController(
       duration: const Duration(milliseconds: 100),
       vsync: this,
     );
-
     _elevationAnimation = Tween<double>(begin: 2.0, end: 8.0).animate(
       CurvedAnimation(parent: _hoverController, curve: Curves.easeOutCubic),
     );
-
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.98).animate(
       CurvedAnimation(parent: _tapController, curve: Curves.easeInOut),
     );
-
     _rotateAnimation = Tween<double>(begin: 0.0, end: 0.01).animate(
       CurvedAnimation(parent: _hoverController, curve: Curves.easeOutCubic),
     );
@@ -57,11 +52,9 @@ class _FundCardState extends State<FundCard> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final String name = widget.fund['name']?.toString() ?? 'Demo Fund';
-    final String returns = widget.fund['returns']?.toString() ?? '0%';
-    final String minSip = widget.fund['minSip']?.toString() ?? '₹1000';
-    final String rating = widget.fund['rating']?.toString() ?? '0.0';
-    final double returnValue = double.tryParse(returns.replaceAll('%', '')) ?? 0.0;
+    final String name = widget.fund['name']?.toString() ?? 'Unknown Fund';
+    final String category = widget.fund['category']?.toString() ?? 'Equity';
+    final double oneYearChange = (widget.fund['oneYearChange'] ?? 0).toDouble();
 
     return MouseRegion(
       onEnter: (_) {
@@ -94,8 +87,7 @@ class _FundCardState extends State<FundCard> with TickerProviderStateMixin {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: (AppColors.primaryGold ?? Color(0xFFDAA520))
-                            .withOpacity(0.1),
+                        color: (AppColors.primaryGold ?? Color(0xFFDAA520)).withOpacity(0.1),
                         blurRadius: _elevationAnimation.value * 2,
                         offset: Offset(0, _elevationAnimation.value),
                         spreadRadius: 1,
@@ -128,15 +120,13 @@ class _FundCardState extends State<FundCard> with TickerProviderStateMixin {
                           ),
                           border: Border.all(
                             color: _isHovered
-                                ? (AppColors.primaryGold ?? Color(0xFFDAA520))
-                                .withOpacity(0.6)
+                                ? (AppColors.primaryGold ?? Color(0xFFDAA520)).withOpacity(0.6)
                                 : Colors.white.withOpacity(0.2),
                             width: 1.5,
                           ),
                         ),
                         child: Stack(
                           children: [
-                            // Animated background pattern
                             Positioned.fill(
                               child: AnimatedOpacity(
                                 duration: Duration(milliseconds: 300),
@@ -147,8 +137,7 @@ class _FundCardState extends State<FundCard> with TickerProviderStateMixin {
                                       center: Alignment.topRight,
                                       radius: 1.5,
                                       colors: [
-                                        (AppColors.primaryGold ?? Color(0xFFDAA520))
-                                            .withOpacity(0.3),
+                                        (AppColors.primaryGold ?? Color(0xFFDAA520)).withOpacity(0.3),
                                         Colors.transparent,
                                       ],
                                     ),
@@ -156,8 +145,6 @@ class _FundCardState extends State<FundCard> with TickerProviderStateMixin {
                                 ),
                               ),
                             ),
-
-                            // Top accent line with animation
                             AnimatedContainer(
                               duration: Duration(milliseconds: 300),
                               height: 4,
@@ -166,24 +153,19 @@ class _FundCardState extends State<FundCard> with TickerProviderStateMixin {
                                 gradient: LinearGradient(
                                   colors: [
                                     AppColors.primaryGold ?? Color(0xFFDAA520),
-                                    (AppColors.primaryGold ?? Color(0xFFDAA520))
-                                        .withOpacity(0.3),
+                                    (AppColors.primaryGold ?? Color(0xFFDAA520)).withOpacity(0.3),
                                     Colors.transparent,
                                   ],
                                 ),
                                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                               ),
                             ),
-
-                            // Main content
                             Padding(
                               padding: EdgeInsets.all(16),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   SizedBox(height: 8),
-
-                                  // Header with icon and title
                                   Row(
                                     children: [
                                       Hero(
@@ -195,16 +177,13 @@ class _FundCardState extends State<FundCard> with TickerProviderStateMixin {
                                           decoration: BoxDecoration(
                                             gradient: LinearGradient(
                                               colors: [
-                                                (AppColors.primaryGold ?? Color(0xFFDAA520))
-                                                    .withOpacity(0.2),
-                                                (AppColors.primaryGold ?? Color(0xFFDAA520))
-                                                    .withOpacity(0.1),
+                                                (AppColors.primaryGold ?? Color(0xFFDAA520)).withOpacity(0.2),
+                                                (AppColors.primaryGold ?? Color(0xFFDAA520)).withOpacity(0.1),
                                               ],
                                             ),
                                             borderRadius: BorderRadius.circular(12),
                                             border: Border.all(
-                                              color: (AppColors.primaryGold ?? Color(0xFFDAA520))
-                                                  .withOpacity(0.3),
+                                              color: (AppColors.primaryGold ?? Color(0xFFDAA520)).withOpacity(0.3),
                                               width: 1,
                                             ),
                                           ),
@@ -236,12 +215,11 @@ class _FundCardState extends State<FundCard> with TickerProviderStateMixin {
                                             Container(
                                               padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                               decoration: BoxDecoration(
-                                                color: (AppColors.primaryGold ?? Color(0xFFDAA520))
-                                                    .withOpacity(0.1),
+                                                color: (AppColors.primaryGold ?? Color(0xFFDAA520)).withOpacity(0.1),
                                                 borderRadius: BorderRadius.circular(8),
                                               ),
                                               child: Text(
-                                                'Mutual Fund',
+                                                category,
                                                 style: TextStyle(
                                                   fontSize: 9,
                                                   fontWeight: FontWeight.w500,
@@ -254,19 +232,16 @@ class _FundCardState extends State<FundCard> with TickerProviderStateMixin {
                                       ),
                                     ],
                                   ),
-
                                   Spacer(),
-
-                                  // Compact Returns section
                                   Container(
-                                    padding: EdgeInsets.all(8), // Reduced from 12
+                                    padding: EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: returnValue >= 0
+                                      color: oneYearChange >= 0
                                           ? (AppColors.success ?? Colors.green).withOpacity(0.08)
                                           : (AppColors.error ?? Colors.red).withOpacity(0.08),
-                                      borderRadius: BorderRadius.circular(10), // Slightly reduced
+                                      borderRadius: BorderRadius.circular(10),
                                       border: Border.all(
-                                        color: returnValue >= 0
+                                        color: oneYearChange >= 0
                                             ? (AppColors.success ?? Colors.green).withOpacity(0.25)
                                             : (AppColors.error ?? Colors.red).withOpacity(0.25),
                                       ),
@@ -277,51 +252,49 @@ class _FundCardState extends State<FundCard> with TickerProviderStateMixin {
                                         Row(
                                           children: [
                                             Icon(
-                                              returnValue >= 0 ? Icons.trending_up_rounded : Icons.trending_down_rounded,
-                                              size: 14, // Smaller icon
-                                              color: returnValue >= 0
+                                              oneYearChange >= 0 ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                                              size: 14,
+                                              color: oneYearChange >= 0
                                                   ? AppColors.success ?? Colors.green
                                                   : AppColors.error ?? Colors.red,
                                             ),
                                             SizedBox(width: 4),
                                             Text(
-                                              'Returns',
+                                              '1Y Return',
                                               style: TextStyle(
-                                                fontSize: 12, // Slightly smaller text
+                                                fontSize: 12,
                                                 color: AppColors.secondaryText ?? Colors.grey[600],
                                                 fontWeight: FontWeight.w500,
                                               ),
                                             ),
                                             SizedBox(width: 4),
                                             Text(
-                                              returns,
+                                              '${oneYearChange.toStringAsFixed(2)}%',
                                               style: TextStyle(
-                                                fontSize: 12, // Reduced from 18
+                                                fontSize: 12,
                                                 fontWeight: FontWeight.w700,
-                                                color: returnValue >= 0
+                                                color: oneYearChange >= 0
                                                     ? AppColors.success ?? Colors.green
                                                     : AppColors.error ?? Colors.red,
                                               ),
                                             ),
                                           ],
                                         ),
-
-
-                                        SizedBox(height: 2), // Reduced from 6
+                                        SizedBox(height: 2),
                                         Container(
-                                          height: 2.5, // Slightly thinner
+                                          height: 2.5,
                                           decoration: BoxDecoration(
                                             color: Colors.grey.withOpacity(0.2),
                                             borderRadius: BorderRadius.circular(2),
                                           ),
                                           child: AnimatedFractionallySizedBox(
-                                            duration: Duration(milliseconds: 600), // Slightly quicker
+                                            duration: Duration(milliseconds: 600),
                                             curve: Curves.easeOutCubic,
-                                            widthFactor: (returnValue.abs() / 50).clamp(0.1, 1.0),
+                                            widthFactor: (oneYearChange.abs() / 50).clamp(0.1, 1.0),
                                             child: Container(
                                               decoration: BoxDecoration(
                                                 gradient: LinearGradient(
-                                                  colors: returnValue >= 0
+                                                  colors: oneYearChange >= 0
                                                       ? [
                                                     AppColors.success ?? Colors.green,
                                                     (AppColors.success ?? Colors.green).withOpacity(0.6),
@@ -339,18 +312,15 @@ class _FundCardState extends State<FundCard> with TickerProviderStateMixin {
                                       ],
                                     ),
                                   ),
-
                                   Spacer(),
-
-                                  // Bottom section with SIP and rating
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
                                       Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            'Min SIP',
+                                            'SIP Allowed',
                                             style: TextStyle(
                                               fontSize: 9,
                                               color: AppColors.secondaryText ?? Colors.grey[600],
@@ -358,7 +328,7 @@ class _FundCardState extends State<FundCard> with TickerProviderStateMixin {
                                             ),
                                           ),
                                           Text(
-                                            minSip,
+                                            widget.fund['sipAllowed'] == true ? 'Yes' : 'No',
                                             style: TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w700,
@@ -368,39 +338,11 @@ class _FundCardState extends State<FundCard> with TickerProviderStateMixin {
                                           ),
                                         ],
                                       ),
-                                      Container(
-                                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: (AppColors.warning ?? Colors.amber).withOpacity(0.15),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons.star_rounded,
-                                              color: AppColors.warning ?? Colors.amber,
-                                              size: 14,
-                                            ),
-                                            SizedBox(width: 2),
-                                            Text(
-                                              rating,
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
-                                                color: AppColors.warning ?? Colors.amber,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
                                     ],
                                   ),
                                 ],
                               ),
                             ),
-
-                            // Modern floating action button
                             Positioned(
                               right: 12,
                               bottom: 12,
@@ -418,8 +360,7 @@ class _FundCardState extends State<FundCard> with TickerProviderStateMixin {
                                     borderRadius: BorderRadius.circular(12),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: (AppColors.primaryGold ?? Color(0xFFDAA520))
-                                            .withOpacity(0.3),
+                                        color: (AppColors.primaryGold ?? Color(0xFFDAA520)).withOpacity(0.3),
                                         blurRadius: 8,
                                         offset: Offset(0, 4),
                                       ),

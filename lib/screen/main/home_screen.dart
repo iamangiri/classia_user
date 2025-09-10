@@ -8,6 +8,7 @@ import 'package:classia_amc/widget/custom_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../../screenutills/mutual_fund_transation.dart';
 import '../../themes/app_colors.dart';
 import '../../widget/custom_app_bar.dart';
 import '../home/home_certificate_section.dart';
@@ -91,37 +92,70 @@ class _HomeScreenState extends State<HomeScreen> {
         destination = const InvestmentHistoryScreen();
         break;
       case 'Learn':
-        destination =  LearnScreen();
+        destination = LearnScreen();
         break;
       case 'Market News':
         destination = const MarketNewsScreen();
         break;
       case 'Launchpad':
-        destination =  LaunchpadScreen();
+        destination = LaunchpadScreen();
         break;
       case 'My Reports':
         destination = const DownloadReportsScreen();
+        break;
+      case 'Transactions':
+        destination = TransactionScreen();
         break;
       default:
         destination = Scaffold(
           appBar: AppBar(
             title: Text(
               title,
-              style: TextStyle(color: AppColors.primaryText, fontSize: 18.sp),
+              style: TextStyle(
+                color: AppColors.primaryText ?? Colors.black87,
+                fontSize: 18.sp,
+              ),
             ),
+            backgroundColor: AppColors.screenBackground ?? Colors.white,
           ),
-          backgroundColor: AppColors.screenBackground,
+          backgroundColor: AppColors.screenBackground ?? Colors.white,
           body: Center(
             child: Text(
               'Screen for $title',
-              style: TextStyle(color: AppColors.primaryText, fontSize: 16.sp),
+              style: TextStyle(
+                color: AppColors.primaryText ?? Colors.black87,
+                fontSize: 16.sp,
+              ),
             ),
           ),
         );
     }
+
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => destination),
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => destination,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0); // Slide from right
+          const end = Offset.zero;
+          const curve = Curves.easeInOutCubic;
+
+          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+            CurvedAnimation(parent: animation, curve: curve),
+          );
+
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: FadeTransition(
+              opacity: fadeAnimation,
+              child: child,
+            ),
+          );
+        },
+        transitionDuration: Duration(milliseconds: 400),
+        reverseTransitionDuration: Duration(milliseconds: 300),
+      ),
     );
   }
 
