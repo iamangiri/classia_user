@@ -1,10 +1,9 @@
 import 'package:classia_amc/routes/route.dart';
 import 'package:classia_amc/screen/profile/learn_screen.dart';
+import 'package:classia_amc/service/WithoutLogin/auth_login_check_service.dart' hide UserPoints;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart'; // Import provider package
-
-
+import 'package:provider/provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,17 +16,18 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => UserPoints()), // Add your provider here
+        ChangeNotifierProvider(create: (_) => UserPoints()),
       ],
       child: ScreenUtilInit(
-        designSize: const Size(375, 812), // Reference design size (e.g., iPhone X)
-        minTextAdapt: true, // Adapt font sizes to screen size
-        splitScreenMode: true, // Support split-screen or foldable devices
+        designSize: const Size(375, 812),
+        minTextAdapt: true,
+        splitScreenMode: true,
         builder: (context, child) {
           return MaterialApp.router(
             debugShowCheckedModeBanner: false,
             title: 'Classia Capital',
             routerConfig: router,
+
           );
         },
       ),

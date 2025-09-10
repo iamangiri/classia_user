@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:classia_amc/utills/constent/app_constant.dart';
 import 'package:http/http.dart' as http;
 import '../../models/user_kyc_model.dart';
+import '../WithoutLogin/auth_login_check_service.dart';
 
 class UserService {
 
@@ -28,6 +29,7 @@ class UserService {
     final data = jsonDecode(response.body);
     print(response.statusCode);
     print(response.body);
+    await checkValidUserWithRouter(response.statusCode);
     if (response.statusCode == 200 && data['status'] == true) {
       return AadhaarOtpResponse.fromJson(data['data']);
     } else {
@@ -49,6 +51,7 @@ class UserService {
     );
     print(response.statusCode);
     print(response.body);
+    await checkValidUserWithRouter(response.statusCode);
     final data = jsonDecode(response.body);
     if (response.statusCode == 200 && data['status'] == true) {
       return;
@@ -70,6 +73,7 @@ class UserService {
     );
     print(response.statusCode);
     print(response.body);
+    await checkValidUserWithRouter(response.statusCode);
     final data = jsonDecode(response.body);
     if (response.statusCode == 200 && data['status'] == true) {
       return PanAadhaarStatusResponse.fromJson(data['data']);
@@ -89,6 +93,7 @@ class UserService {
     );
     print(response.statusCode);
     print(response.body);
+    await checkValidUserWithRouter(response.statusCode);
     final data = jsonDecode(response.body);
     if (response.statusCode == 200 && data['status'] == true) {
       return BankDetailsResponse.fromJson(data['data']);
@@ -111,6 +116,7 @@ class UserService {
     );
     print(response.statusCode);
     print(response.body);
+    await checkValidUserWithRouter(response.statusCode);
     final data = jsonDecode(response.body);
     if (response.statusCode == 200 && data['status'] == true) {
       return;
@@ -127,6 +133,7 @@ class UserService {
     );
    print(response.statusCode);
    print(response.body);
+    await checkValidUserWithRouter(response.statusCode);
     final data = jsonDecode(response.body);
     if (response.statusCode == 200 && data['status'] == true) {
       return data['data'];

@@ -4,6 +4,8 @@ import 'package:classia_amc/utills/constent/app_constant.dart';
 import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:http/http.dart' as http;
 
+import '../WithoutLogin/auth_login_check_service.dart';
+
 
 class CamService {
 
@@ -51,7 +53,7 @@ class CamService {
       print('PayZee Registration Request: ${json.encode(payload)}');
       print('PayZee Registration Response Status: ${response.statusCode}');
       print('PayZee Registration Response Body: ${response.body}');
-
+      await checkValidUserWithRouter(response.statusCode);
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = json.decode(response.body);
         return responseData;

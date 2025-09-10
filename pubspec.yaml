@@ -54,6 +54,7 @@ dependencies:
   url_launcher: ^6.3.2
   fl_chart: ^1.0.0
   webview_flutter: ^4.13.0
+  fluttertoast: ^8.2.12
 
 
 dev_dependencies:

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../utills/constent/app_constant.dart';
 import '../../utills/constent/user_constant.dart';
+import '../WithoutLogin/auth_login_check_service.dart';
 
 class SupportService {
 
@@ -19,7 +20,7 @@ class SupportService {
           'description': description,
         },
       );
-
+      await checkValidUserWithRouter(response.statusCode);
       print(response.statusCode);
       print(response.body);
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -41,7 +42,7 @@ class SupportService {
           'Authorization': 'Bearer ${UserConstants.TOKEN}',
         },
       );
-
+      await checkValidUserWithRouter(response.statusCode);
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {

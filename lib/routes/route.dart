@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../screen/auth/login_screen.dart';
 import '../screen/auth/login_with_password_screen.dart';
 import '../screen/auth/otp_verify_screen.dart';
-import '../screen/auth/email_verification_screen.dart';   // ← import it
+import '../screen/auth/email_verification_screen.dart';
 import '../screen/auth/registration_screen.dart';
 import '../screen/base/main_screen.dart';
 import '../screen/calcutator/calcutator.dart';
@@ -55,13 +55,12 @@ final router = GoRouter(
       builder: (context, state) => HorseRidingScreen(),
     ),
 
-
     GoRoute(
       path: '/otp_verify',
       name: 'otp_verify',
       builder: (context, state) {
         final contact = state.extra as String?;
-        return OTPScreen(contact: contact ?? '', type: '',);
+        return OTPScreen(contact: contact ?? '', type: '');
       },
     ),
 
@@ -78,19 +77,16 @@ final router = GoRouter(
       },
     ),
 
-
     GoRoute(
       path: '/mobile_verify',
       name: 'mobile_verify',
       builder: (context, state) {
-        // state.extra is whatever you passed in extra: …
         final phone = state.extra as String?;
         return MobileVerificationScreen(
           initialPhone: phone,
         );
       },
     ),
-
 
     GoRoute(
       path: '/main',
@@ -100,6 +96,5 @@ final router = GoRouter(
         return MainScreen(initialIndex: initialIndex);
       },
     ),
-
   ],
 );

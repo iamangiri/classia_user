@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:classia_amc/utills/constent/app_constant.dart';
 import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:http/http.dart' as http;
-
 import '../../models/mutual_fund_models.dart';
+import '../WithoutLogin/auth_login_check_service.dart';
 
 
 class ApiService {
@@ -19,7 +19,7 @@ class ApiService {
           'Authorization': '${UserConstants.TOKEN}',
         },
       );
-
+      await checkValidUserWithRouter(response.statusCode);
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         return MutualFundResponse.fromJson(jsonData);

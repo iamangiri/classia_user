@@ -3,6 +3,8 @@ import 'package:classia_amc/utills/constent/app_constant.dart';
 import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:http/http.dart' as http;
 
+import '../WithoutLogin/auth_login_check_service.dart';
+
 class WalletService {
 
   final String token;
@@ -18,6 +20,7 @@ class WalletService {
     );
 
     final data = jsonDecode(response.body);
+    await checkValidUserWithRouter(response.statusCode);
     if (response.statusCode == 200 && data['status'] == true) {
       // Filter transactions by transactionType if provided
       final transactions = List<Map<String, dynamic>>.from(data['data']['transactions'])
@@ -46,6 +49,7 @@ class WalletService {
     );
      print(response.body);
      print(response.statusCode);
+    await checkValidUserWithRouter(response.statusCode);
     final data = jsonDecode(response.body);
     if (response.statusCode == 200 && data['status'] == true) {
       return;
@@ -68,6 +72,7 @@ class WalletService {
     );
     print(response.body);
     print(response.statusCode);
+    await checkValidUserWithRouter(response.statusCode);
     final data = jsonDecode(response.body);
     if (response.statusCode == 200 && data['status'] == true) {
       return;
@@ -75,5 +80,4 @@ class WalletService {
       throw Exception(data['message'] ?? 'Failed to withdraw');
     }
   }
-
 }

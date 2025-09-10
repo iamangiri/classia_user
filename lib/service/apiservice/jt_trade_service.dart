@@ -3,22 +3,27 @@ import 'package:classia_amc/utills/constent/app_constant.dart';
 import 'package:http/http.dart' as http;
 import 'package:classia_amc/utills/constent/user_constant.dart';
 
+import '../WithoutLogin/auth_login_check_service.dart';
+
 class JtTradeService  {
 
   Future<List<dynamic>> fetchAmcList() async {
     try {
       final response = await http.get(
-        Uri.parse('${AppConstant.NODE_API_URL}/mutual-fund/list?page=1&sizePerPage=1000'),
+        Uri.parse('${AppConstant.NODE_API_URL}/mutual-fund/list?page=1&sizePerPage=10&isProd=true'),
         headers: {
-          'Authorization': 'Bearer ${UserConstants.TOKEN}',
+          'Authorization': 'Bearer ${UserConstants.TOKEN}',  // Note: Added space after 'Bearer' (common issue if token is missing)
           'Content-Type': 'application/json',
         },
       );
-
+      print(response.body);
+      print(response.statusCode);
+      await checkValidUserWithRouter(response.statusCode);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['status'] == true) {
-          return data['data']['usersList'];
+          // Changed from 'usersList' to 'mfList' to match the API response
+          return data['data']['mfList'] ?? [];  // Fallback to empty list if null
         } else {
           throw Exception('API returned error: ${data['message']}');
         }
@@ -51,41 +56,7 @@ class JtTradeService  {
 
   List<Map<String, dynamic>> getDefaultAmcData() {
     return [
-      {
-        "id": 1,
-        "logo": "https://www.quantmutual.com/images/logo.png",
-        "name": "Quant",
-        "fundName": "Small Cap Fund",
-        "value": 12.0,
-      },
-      {
-        "id": 2,
-        "logo": "https://www.nipponindiamf.com/assets/images/niam-logo.png",
-        "name": "Nippon India",
-        "fundName": "Small Cap Fund",
-        "value": 12.0,
-      },
-      {
-        "id": 3,
-        "logo": "https://www.sbimf.com/images/default-source/default-album/sbi-mutual-fund-logo.png",
-        "name": "SBI",
-        "fundName": "Small Cap Fund",
-        "value": 12.0,
-      },
-      {
-        "id": 4,
-        "logo": "https://www.icicipruamc.com/docs/default-source/default-document-library/icici-pru-logo.jpg",
-        "name": "ICICI Prudential",
-        "fundName": "Technology Fund",
-        "value": 12.0,
-      },
-      {
-        "id": 5,
-        "logo": "https://upload.wikimedia.org/wikipedia/commons/7/70/HDFC_Bank_Logo.svg",
-        "name": "HDFC",
-        "fundName": "Mid-Cap Opportunities Fund",
-        "value": 12.0,
-      },
+
     ];
   }
 
@@ -131,6 +102,9 @@ class JtTradeService  {
   Future<List<Map<String, dynamic>>> loadAmcData({required String filter, required bool isBuy}) async {
     try {
       final amcListData = await fetchAmcList();
+      if (amcListData == null || amcListData.isEmpty) {
+        throw Exception('No AMC data received from API');
+      }
       final performanceField = _getPerformanceField(filter);
 
       List<Map<String, dynamic>> enrichedAmcList = amcListData.map((amc) {

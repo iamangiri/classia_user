@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:classia_amc/utills/constent/user_constant.dart';
 
+import '../WithoutLogin/auth_login_check_service.dart';
+
 class TradeService {
   static const String baseUrl = 'https://goapi.classiacapital.com';
   final Random _random = Random();
@@ -16,7 +18,7 @@ class TradeService {
           'Content-Type': 'application/json',
         },
       );
-
+      await checkValidUserWithRouter(response.statusCode);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['status'] == true) {
@@ -53,45 +55,6 @@ class TradeService {
 
   List<Map<String, dynamic>> getDefaultAmcData() {
     return [
-      {
-        "id": 1,
-        "logo": "https://www.quantmutual.com/images/logo.png",
-        "name": "Quant",
-        "fundName": "Small Cap Fund",
-        "value": _generateRandomPerformance(),
-        "projection": _generateRandomProjection(),
-        "projection": _generateRandomProjection(),
-        "projection": _generateRandomProjection(),
-        "projection": _generateRandomProjection(),
-      },
-      {
-        "id": 2,
-        "logo": "https://www.nipponindiamf.com/assets/images/niam-logo.png",
-        "name": "Nippon India",
-        "fundName": "Small Cap Fund",
-        "value": _generateRandomPerformance(),
-      },
-      {
-        "id": 3,
-        "logo": "https://www.sbimf.com/images/default-source/default-album/sbi-mutual-fund-logo.png",
-        "name": "SBI",
-        "fundName": "Small Cap Fund",
-        "value": _generateRandomPerformance(),
-      },
-      {
-        "id": 4,
-        "logo": "https://www.icicipruamc.com/docs/default-source/default-document-library/icici-pru-logo.jpg",
-        "name": "ICICI Prudential",
-        "fundName": "Technology Fund",
-        "value": _generateRandomPerformance(),
-      },
-      {
-        "id": 5,
-        "logo": "https://upload.wikimedia.org/wikipedia/commons/7/70/HDFC_Bank_Logo.svg",
-        "name": "HDFC",
-        "fundName": "Mid-Cap Opportunities Fund",
-        "value": _generateRandomPerformance(),
-      },
     ];
   }
 
