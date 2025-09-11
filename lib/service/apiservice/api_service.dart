@@ -19,6 +19,8 @@ class ApiService {
           'Authorization': '${UserConstants.TOKEN}',
         },
       );
+      print(response.statusCode);
+      print(response.body);
       await checkValidUserWithRouter(response.statusCode);
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);

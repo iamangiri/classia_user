@@ -42,6 +42,8 @@ class SupportService {
           'Authorization': 'Bearer ${UserConstants.TOKEN}',
         },
       );
+      print(response.statusCode);
+      print(response.body);
       await checkValidUserWithRouter(response.statusCode);
       if (response.statusCode == 200) {
         return jsonDecode(response.body);

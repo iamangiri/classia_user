@@ -26,7 +26,18 @@ class MutualFundService {
     }
   }
 
-  // New method for Lumpsum purchase
+  // Mock method to fetch fund name based on rtaAmcCode and rtaSchCode
+  static Future<String> getFundName(String rtaAmcCode, String rtaSchCode) async {
+    // Simulate API call with a mock mapping
+    // In a real implementation, this would be an HTTP request to fetch fund details
+    final mockFundNames = {
+      'FTI_010': 'Franklin India Equity Fund',
+      // Add more mappings as needed
+    };
+    final cacheKey = '${rtaAmcCode}_${rtaSchCode}';
+    return mockFundNames[cacheKey] ?? 'Unknown Fund';
+  }
+
   static Future<Map<String, dynamic>> purchaseLumpsum({
     required double totAmt,
     required String rtaAmcCode,
@@ -41,7 +52,7 @@ class MutualFundService {
         {
           'rtaAmcCode': rtaAmcCode,
           'rtaSchCode': rtaSchCode,
-          'folio': 'new',
+          'folio': 'NEW',
           'divOpt': divOpt,
           'vol': totAmt,
         }
@@ -50,7 +61,7 @@ class MutualFundService {
         'payMode': 'UP', // Fixed to UPI as per requirement
       },
     });
-
+    print(body);
     try {
       final response = await http.post(
         url,
@@ -74,7 +85,6 @@ class MutualFundService {
     }
   }
 
-  // New method for SIP registration
   static Future<Map<String, dynamic>> registerSip({
     required double totAmt,
     required String rtaAmcCode,
@@ -95,7 +105,7 @@ class MutualFundService {
         {
           'rtaAmcCode': rtaAmcCode,
           'rtaSchCode': rtaSchCode,
-          'folio': folio,
+          'folio': 'NEW',
           'divOpt': divOpt,
           'vol': totAmt,
           'frequency': frequency, // 'M' for Monthly or 'D' for Daily

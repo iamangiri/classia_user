@@ -1,3 +1,4 @@
+import 'package:classia_amc/widget/common_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../../themes/app_colors.dart';
@@ -12,6 +13,7 @@ class TransactionScreen extends StatefulWidget {
 class _TransactionScreenState extends State<TransactionScreen> with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  Map<String, String> _fundNameCache = {}; // Cache fund names for performance
 
   @override
   void initState() {
@@ -25,6 +27,32 @@ class _TransactionScreenState extends State<TransactionScreen> with TickerProvid
       curve: Curves.easeOutCubic,
     );
     _animationController.forward();
+    _loadFundNames(); // Load fund names on initialization
+  }
+
+  // Fetch and cache fund names
+  Future<void> _loadFundNames() async {
+    final transactions = await MutualFundService.getTransactionList();
+    if (transactions['status'] && transactions['data'] != null) {
+      final List<dynamic>? transactionList = transactions['data']['transactionList'];
+      if (transactionList != null) {
+        for (var transaction in transactionList) {
+          final transactionData = transaction['transactionData'] ?? {};
+          final schList = transactionData['schList'] ?? transactionData['sysSchList'] ?? [];
+          if (schList.isNotEmpty) {
+            final String rtaAmcCode = schList[0]['rtaAmcCode']?.toString() ?? 'N/A';
+            final String rtaSchCode = schList[0]['rtaSchCode']?.toString() ?? 'N/A';
+            final cacheKey = '${rtaAmcCode}_${rtaSchCode}';
+            if (!_fundNameCache.containsKey(cacheKey)) {
+              final fundName = await MutualFundService.getFundName(rtaAmcCode, rtaSchCode);
+              setState(() {
+                _fundNameCache[cacheKey] = fundName;
+              });
+            }
+          }
+        }
+      }
+    }
   }
 
   @override
@@ -36,8 +64,7 @@ class _TransactionScreenState extends State<TransactionScreen> with TickerProvid
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(
-        title: 'Transactions',
+      appBar: CommonAppBar(title: 'Transactions',
       ),
       backgroundColor: AppColors.screenBackground ?? Colors.white,
       body: FadeTransition(
@@ -55,20 +82,19 @@ class _TransactionScreenState extends State<TransactionScreen> with TickerProvid
                     return _buildLoadingState();
                   } else if (snapshot.hasError || !snapshot.hasData || !snapshot.data!['status']) {
                     print('Error or invalid data: ${snapshot.error ?? 'No data or status false'}');
-                    return _buildEmptyState(message: 'No transactions found. Please try again later.');
+                    return _buildEmptyState(message: 'Failed to load transactions. Please try again.');
                   }
 
                   final apiData = snapshot.data!;
-                  final String mfuGorn = apiData['data']?['mfuGorn'] ?? 'N/A';
-                  final List<dynamic>? orderHistList = apiData['data']?['orderHistList'];
+                  final List<dynamic>? transactions = apiData['data']?['transactionList'];
 
-                  if (orderHistList == null || orderHistList.isEmpty) {
-                    return _buildEmptyState(message: 'No transaction history available.');
+                  if (transactions == null || transactions.isEmpty) {
+                    return _buildEmptyState(message: 'No transactions found.');
                   }
 
-                  print('Processing ${orderHistList.length} transactions from API');
+                  print('Processing ${transactions.length} transactions from API');
 
-                  return _buildTransactionList(mfuGorn, orderHistList);
+                  return _buildTransactionList(transactions);
                 },
               ),
             ),
@@ -159,80 +185,57 @@ class _TransactionScreenState extends State<TransactionScreen> with TickerProvid
     );
   }
 
-  Widget _buildTransactionList(String mfuGorn, List<dynamic> transactions) {
+  Widget _buildTransactionList(List<dynamic> transactions) {
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.cardBackground?.withOpacity(0.8) ?? Colors.grey[100]!.withOpacity(0.8),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.primaryGold?.withOpacity(0.3) ?? Color(0xFFDAA520).withOpacity(0.3),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'MFU GORN',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primaryText ?? Colors.black87,
+      child: ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        itemCount: transactions.length,
+        itemBuilder: (context, index) {
+          final transaction = transactions[index] as Map<String, dynamic>;
+          return TweenAnimationBuilder(
+            tween: Tween<double>(begin: 0.0, end: 1.0),
+            duration: Duration(milliseconds: 600 + (index * 100)),
+            builder: (context, double animValue, child) {
+              return Transform.translate(
+                offset: Offset(0, 20 * (1 - animValue)),
+                child: Opacity(
+                  opacity: animValue,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _buildTransactionCard(transaction),
                   ),
                 ),
-                Text(
-                  mfuGorn,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primaryGold ?? Color(0xFFDAA520),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            itemCount: transactions.length,
-            itemBuilder: (context, index) {
-              final transaction = transactions[index] as Map<String, dynamic>;
-              return TweenAnimationBuilder(
-                tween: Tween<double>(begin: 0.0, end: 1.0),
-                duration: Duration(milliseconds: 600 + (index * 100)),
-                builder: (context, double animValue, child) {
-                  return Transform.translate(
-                    offset: Offset(0, 20 * (1 - animValue)),
-                    child: Opacity(
-                      opacity: animValue,
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _buildTransactionCard(transaction),
-                      ),
-                    ),
-                  );
-                },
               );
             },
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 
   Widget _buildTransactionCard(Map<String, dynamic> transaction) {
-    final String event = transaction['event']?.toString() ?? 'N/A';
-    final String eventTs = transaction['eventTs']?.toString() ?? 'N/A';
-    final String eventEntityName = transaction['eventEntityName']?.toString() ?? 'N/A';
-    final String orderNo = transaction['orderNo']?.toString() ?? 'N/A';
-    final String rtaRemarks = transaction['rtaRemarks']?.toString() ?? 'None';
+    final String uniqueRefNo = transaction['uniqueRefNo']?.toString() ?? 'N/A';
+    final String orderStatus = transaction['orderStatus']?.toString() ?? 'N/A';
+    final String totalAmount = transaction['totalAmount']?.toString() ?? '0.00';
+    final String transactionType = transaction['transactionType']?.toString() ?? 'N/A';
+    final String createdAt = transaction['createdAt']?.toString() ?? 'N/A';
+    final String mfuGorn = transaction['mfuGorn']?.toString() ?? 'N/A';
+    final transactionData = transaction['transactionData'] ?? {};
+    final schList = transactionData['schList'] ?? transactionData['sysSchList'] ?? [];
+    final String rtaAmcCode = schList.isNotEmpty ? schList[0]['rtaAmcCode']?.toString() ?? 'N/A' : 'N/A';
+    final String rtaSchCode = schList.isNotEmpty ? schList[0]['rtaSchCode']?.toString() ?? 'N/A' : 'N/A';
+    final String fundName = _fundNameCache['${rtaAmcCode}_${rtaSchCode}'] ?? 'Loading Fund Name...';
+
+    // Map orderStatus to user-friendly text
+    final String statusText = {
+      'RQ': 'Pending',
+      'CO': 'Confirmed',
+      'FA': 'Failed',
+      'SU': 'Successful',
+    }[orderStatus] ?? 'Unknown';
 
     return Container(
       padding: EdgeInsets.all(16),
@@ -293,7 +296,7 @@ class _TransactionScreenState extends State<TransactionScreen> with TickerProvid
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Order #$orderNo',
+                      fundName,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -303,7 +306,7 @@ class _TransactionScreenState extends State<TransactionScreen> with TickerProvid
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      event,
+                      '$transactionType • $statusText',
                       style: TextStyle(
                         fontSize: 12,
                         color: AppColors.secondaryText ?? Colors.grey[600],
@@ -323,7 +326,7 @@ class _TransactionScreenState extends State<TransactionScreen> with TickerProvid
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Entity',
+                    'Amount',
                     style: TextStyle(
                       fontSize: 10,
                       color: AppColors.secondaryText ?? Colors.grey[600],
@@ -331,7 +334,7 @@ class _TransactionScreenState extends State<TransactionScreen> with TickerProvid
                     ),
                   ),
                   Text(
-                    eventEntityName,
+                    '₹$totalAmount',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -352,7 +355,7 @@ class _TransactionScreenState extends State<TransactionScreen> with TickerProvid
                     ),
                   ),
                   Text(
-                    eventTs,
+                    _formatDate(createdAt),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -364,32 +367,68 @@ class _TransactionScreenState extends State<TransactionScreen> with TickerProvid
             ],
           ),
           SizedBox(height: 8),
-          if (rtaRemarks.isNotEmpty)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Remarks',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: AppColors.secondaryText ?? Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Reference No',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: AppColors.secondaryText ?? Colors.grey[600],
+                  fontWeight: FontWeight.w500,
                 ),
-                Text(
-                  rtaRemarks,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.primaryText ?? Colors.black87,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                uniqueRefNo,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.primaryText ?? Colors.black87,
                 ),
-              ],
-            ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'MFU GORN',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: AppColors.secondaryText ?? Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                mfuGorn,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.primaryText ?? Colors.black87,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ],
       ),
     );
+  }
+
+  // Format ISO date to readable format (e.g., "11 Sep 2025")
+  String _formatDate(String isoDate) {
+    try {
+      final dateTime = DateTime.parse(isoDate);
+      final months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
+      return '${dateTime.day} ${months[dateTime.month - 1]} ${dateTime.year}';
+    } catch (e) {
+      return 'N/A';
+    }
   }
 
   Widget _buildLoadingState() {

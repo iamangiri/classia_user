@@ -5,6 +5,7 @@ import 'package:classia_amc/utills/constent/user_constant.dart';
 import '../WithoutLogin/auth_login_check_service.dart';
 
 class JtTradeService {
+  // Fetches the mutual fund list from the API
   Future<List<dynamic>> fetchAmcList() async {
     try {
       final response = await http.get(
@@ -14,8 +15,8 @@ class JtTradeService {
           'Content-Type': 'application/json',
         },
       );
-      print(response.body);
-      print(response.statusCode);
+      print('fetchAmcList response: ${response.statusCode}');
+      print('fetchAmcList body: ${response.body}');
       await checkValidUserWithRouter(response.statusCode);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -28,10 +29,12 @@ class JtTradeService {
         throw Exception('Failed to load mutual fund list: ${response.statusCode}');
       }
     } catch (e) {
+      print('Error in fetchAmcList: $e');
       throw Exception('Network error: $e');
     }
   }
 
+  // Processes a lumpsum purchase request
   Future<Map<String, dynamic>> purchaseLumpsum({
     required double totAmt,
     required String rtaAmcCode,
@@ -57,6 +60,7 @@ class JtTradeService {
     });
 
     try {
+      print('purchaseLumpsum request: $body');
       final response = await http.post(
         url,
         headers: {
@@ -65,22 +69,25 @@ class JtTradeService {
         },
         body: body,
       );
-
+      print('purchaseLumpsum response: ${response.statusCode}');
+      print('purchaseLumpsum body: ${response.body}');
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
         throw Exception('Failed to process lumpsum purchase: ${response.statusCode}');
       }
     } catch (e) {
+      print('Error in purchaseLumpsum: $e');
       throw Exception('Error processing lumpsum purchase: $e');
     }
   }
 
+  // Maps AMC name to logo URL
   String getAmcLogo(String amcName) {
     final logoMap = {
       'HDFC Asset Management Company': 'https://assets-netstorage.groww.in/mf-assets/logos/hdfc_groww.png',
       'ICICI Prudential AMC Ltd': 'https://assets-netstorage.groww.in/mf-assets/logos/icici_groww.png',
-      'Quant Mutual Fund': 'https://assets-netstorage.groww.in/mf-assets/logos/quant_groww.png', // Updated
+      'quant Mutual Fund': 'https://assets-netstorage.groww.in/mf-assets/logos/quant_groww.png',
       'Aditya Birla Sun Life Mutual Fund': 'https://assets-netstorage.groww.in/mf-assets/logos/birla_groww.png',
       'Axis Mutual Fund': 'https://assets-netstorage.groww.in/mf-assets/logos/axis_groww.png',
       'Bandhan Mutual Fund': 'https://assets-netstorage.groww.in/mf-assets/logos/idfc_groww.png',
@@ -91,15 +98,15 @@ class JtTradeService {
       'UTI Mutual Fund': 'https://assets-netstorage.groww.in/mf-assets/logos/uti_groww.png',
       'Groww Mutual Fund': 'https://assets-netstorage.groww.in/mf-assets/logos/groww_groww.png',
     };
-
-    // Use a valid placeholder image URL or local asset
-    return logoMap[amcName] ?? 'https://via.placeholder.com/150'; // Fallback to placeholder
+    return logoMap[amcName] ?? 'https://via.placeholder.com/150';
   }
 
+  // Returns default AMC data if API fails
   List<Map<String, dynamic>> getDefaultAmcData() {
     return [];
   }
 
+  // Maps filter to the corresponding performance field
   String _getPerformanceField(String filter) {
     switch (filter) {
       case 'Live':
@@ -125,6 +132,7 @@ class JtTradeService {
     }
   }
 
+  // Parses performance value, handling null or invalid cases
   double _parsePerformanceValue(String? value) {
     if (value == null || value.isEmpty) {
       return 0.0;
@@ -138,44 +146,78 @@ class JtTradeService {
     }
   }
 
+  // Maps catgId to category name
+  String _getCategoryName(int? catgId) {
+    switch (catgId) {
+      case 1:
+        return 'Equity';
+      case 2:
+        return 'Gold';
+      case 3:
+        return 'Liquid';
+      case 4:
+        return 'Hybrid';
+      default:
+        return 'Other';
+    }
+  }
+
+  // Loads and enriches AMC data for display
   Future<List<Map<String, dynamic>>> loadAmcData({required String filter, required bool isBuy}) async {
     try {
       final amcListData = await fetchAmcList();
-      if (amcListData == null || amcListData.isEmpty) {
+      if (amcListData.isEmpty) {
         throw Exception('No AMC data received from API');
       }
       final performanceField = _getPerformanceField(filter);
 
       List<Map<String, dynamic>> enrichedAmcList = amcListData.map((amc) {
+        final prodMfData = amc['prodMfData'] ?? {};
         return {
           'id': amc['id'],
-          'logo': getAmcLogo(amc['amc']),
-          'name': amc['amc'],
-          'fundName': amc['scheamName'], // Note: 'scheamName' seems to be a typo in API, should be 'schemeName'
+          'logo': getAmcLogo(amc['amc'] ?? 'Unknown'),
+          'name': amc['amc'] ?? 'Unknown AMC',
+          'fundName': amc['scheamName'] ?? 'Unknown Fund', // API typo: 'scheamName'
           'value': _parsePerformanceValue(amc[performanceField]),
-          'scheamCode': amc['scheamCode'],
-          'isDeleted': amc['isDeleted'],
+          'scheamCode': amc['scheamCode'], // Keep for reference
+          'isDeleted': amc['isDeleted'] ?? false,
           'createdAt': amc['createdAt'],
           'updatedAt': amc['updatedAt'],
           'deletedAt': amc['deletedAt'],
-          // Use direct fields from API response, avoid prodMfData if not present
-          'rtaAmcCode': amc['fundCode'] ?? 'AXF', // Fallback
-          'rtaSchCode': amc['scheamCode'] ?? 'SCGPG', // Fallback, note typo in 'scheamCode'
-          'nav': amc['nav']?.toString() ?? '25.50',
-          'expenseRatio': amc['expenseRatio']?.toString() ?? '1.5%',
-          'exitLoad': amc['exitLoad']?.toString() ?? 'Not Available',
-          'planType': amc['planType'] ?? 'Regular',
-          'category': amc['catgId'] == 1 ? 'Equity' : 'Other', // Fallback category
+          // Fields for JtTradeDeatilsScreen
+          'fundCode': prodMfData['fundCode'] ?? null, // rtaAmcCode
+          'schemeCode': prodMfData['schemeCode'] ?? null, // rtaSchCode
+          'nav': amc['nav']?.toString() ?? prodMfData['nav']?.toString() ?? '0.00',
+          'expenseRatio': prodMfData['expenseRatio']?.toString() ?? '1.5%',
+          'exitLoad': prodMfData['exitLoad']?.toString() ?? 'Not Available',
+          'planType': prodMfData['planType'] ?? 'Regular',
+          'category': _getCategoryName(prodMfData['catgId']),
+          // Performance metrics
+          'dayChange': amc['dayChange'] ?? '0.0%',
+          'weekChange': amc['weekChange'] ?? '0.0%',
+          'monthChange': amc['monthChange'] ?? '0.0%',
+          'sixMonthChange': amc['sixMonthChange'] ?? '0.0%',
+          'oneYearChange': amc['oneYearChange'] ?? '0.0%',
+          'threeYearsChange': amc['threeYearsChange'] ?? '0.0%',
+          'fiveYearsChange': amc['fiveYearsChange'] ?? '0.0%',
+          'allTime': amc['allTime'] ?? '0.0%',
         };
       }).toList();
 
+      // Filter out entries with missing fundCode or schemeCode for buy scenarios
+      if (isBuy) {
+        enrichedAmcList = enrichedAmcList
+            .where((amc) => amc['fundCode'] != null && amc['schemeCode'] != null)
+            .toList();
+      }
+
+      // Sort by performance value in descending order
       enrichedAmcList.sort((a, b) => b['value'].compareTo(a['value']));
+      print('Processed ${enrichedAmcList.length} funds');
       return enrichedAmcList;
     } catch (e) {
-      print('Error in TradeService.loadAmcData: $e');
-      final defaultData = getDefaultAmcData();
-      defaultData.sort((a, b) => b["value"].compareTo(a["value"]));
-      return defaultData;
+      print('Error in loadAmcData: $e');
+      throw Exception('Failed to load AMC data: $e');
     }
   }
 }
