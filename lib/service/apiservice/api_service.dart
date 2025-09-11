@@ -9,7 +9,7 @@ import '../WithoutLogin/auth_login_check_service.dart';
 class ApiService {
 
   static const String _mutualFundEndpoint =
-      '/mutual-fund/list?page=1&sizePerPage=100';
+      '/mutual-fund/list?page=1&sizePerPage=10';
 
   Future<MutualFundResponse> fetchMutualFunds() async {
     try {
