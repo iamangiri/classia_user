@@ -211,7 +211,7 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
                   children: [
                     _buildStatCard('Current NAV', '₹${widget.fundData['nav'] ?? '25.50'}', Icons.account_balance_wallet, AppColors.primaryGold),
                     _buildStatCard('1Y Return', widget.fundData['oneYearChange'] ?? '12.5%', Icons.trending_up, AppColors.success),
-                    _buildStatCard('Jockey Point', '${widget.value}%', FontAwesomeIcons.star, AppColors.accent),
+                    // _buildStatCard('Jockey Point', '${widget.value}%', FontAwesomeIcons.star, AppColors.accent),
                   ],
                 ),
               ],

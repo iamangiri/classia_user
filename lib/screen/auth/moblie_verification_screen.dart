@@ -74,7 +74,7 @@ class _MobileVerificationScreenState extends State<MobileVerificationScreen> {
       });
       if (success) {
         if (success) {
-          context.go('/main'); // <-- If using GoRouter
+           context.go('/login'); // <-- If using GoRouter
         }
 
       }

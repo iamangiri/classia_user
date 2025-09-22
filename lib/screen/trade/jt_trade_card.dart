@@ -271,8 +271,6 @@
 //     );
 //   }
 // }
-
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:classia_amc/themes/app_colors.dart';
@@ -298,34 +296,75 @@ class JtTradeCard extends StatefulWidget {
   _TradingCardState createState() => _TradingCardState();
 }
 
-class _TradingCardState extends State<JtTradeCard> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+class _TradingCardState extends State<JtTradeCard> with TickerProviderStateMixin {
+  late AnimationController _scaleController;
+  late AnimationController _horseController;
   late Animation<double> _scaleAnimation;
+  late Animation<double> _horseAnimation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+
+    // Scale animation for tap effect
+    _scaleController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
     );
+
+    // Horse race animation
+    _horseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 5),
+    );
+    _updateHorseAnimation();
+  }
+
+  @override
+  void didUpdateWidget(covariant JtTradeCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value != oldWidget.value) {
+      _updateHorseAnimation();
+    }
+  }
+
+  void _updateHorseAnimation() {
+    // Normalize value for animation (map percentage to 0.0-1.0 range)
+    // Using 20 as the divisor for better visibility like in TradingCard
+    double normalizedValue = (widget.value.abs() / 20).clamp(0.0, 1.0);
+    _horseAnimation = Tween<double>(
+      begin: 0,
+      end: normalizedValue,
+    ).animate(CurvedAnimation(parent: _horseController, curve: Curves.easeInOut));
+    _horseController.forward(from: 0);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _scaleController.dispose();
+    _horseController.dispose();
     super.dispose();
+  }
+
+  String _truncateText(String text, {int maxWords = 4}) {
+    final normalized = text.replaceAll(RegExp(r'[\u00A0\u202F]'), ' ').trim();
+    final words = normalized.split(RegExp(r'\s+'));
+    if (words.length <= maxWords) return normalized;
+    return '${words.sublist(0, maxWords).join(' ')}...';
   }
 
   @override
   Widget build(BuildContext context) {
+    final bool isPositive = widget.value >= 0;
+    final double cardWidth = MediaQuery.of(context).size.width * 0.85;
+
     return InkWell(
-      onTapDown: (_) => _controller.forward(),
-      onTapUp: (_) => _controller.reverse(),
-      onTapCancel: () => _controller.reverse(),
+      onTapDown: (_) => _scaleController.forward(),
+      onTapUp: (_) => _scaleController.reverse(),
+      onTapCancel: () => _scaleController.reverse(),
       onTap: () {
         Navigator.push(
           context,
@@ -343,6 +382,7 @@ class _TradingCardState extends State<JtTradeCard> with SingleTickerProviderStat
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: Container(
+          margin: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
           padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
             color: AppColors.cardBackground?.withOpacity(0.8),
@@ -356,73 +396,155 @@ class _TradingCardState extends State<JtTradeCard> with SingleTickerProviderStat
               ),
             ],
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 48.r,
-                height: 48.r,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12.r),
-                  color: AppColors.primaryGold!.withOpacity(0.1),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12.r),
-                  child: Image.network(
-                    widget.logo,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Icon(
-                      Icons.image_not_supported,
-                      color: AppColors.primaryGold,
-                      size: 24.sp,
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.fundName,
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primaryText,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      widget.name,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: AppColors.secondaryText,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+              // Header Row
+              Row(
                 children: [
-                  Text(
-                    '${widget.value.toStringAsFixed(2)}%',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      color: widget.value >= 0 ? AppColors.success : AppColors.error,
+                  Container(
+                    width: 48.r,
+                    height: 48.r,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12.r),
+                      color: AppColors.primaryGold!.withOpacity(0.1),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12.r),
+                      child: Image.network(
+                        widget.logo,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Icon(
+                          Icons.image_not_supported,
+                          color: AppColors.primaryGold,
+                          size: 24.sp,
+                        ),
+                      ),
                     ),
                   ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    widget.value >= 0 ? 'Gain' : 'Loss',
-                    style: TextStyle(
-                      fontSize: 11.sp,
-                      color: AppColors.secondaryText,
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _truncateText(widget.fundName, maxWords: 3),
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primaryText,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 2.h),
+                        Text(
+                          _truncateText(widget.name, maxWords: 4),
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: AppColors.secondaryText,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.trending_up,
+                            color: isPositive ? AppColors.success : AppColors.error,
+                            size: 16.sp,
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            '${widget.value.toStringAsFixed(2)}%',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                              color: isPositive ? AppColors.success : AppColors.error,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        isPositive ? 'Gain' : 'Loss',
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          color: AppColors.secondaryText,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              SizedBox(height: 16.h),
+
+              // Progress Bar + Horse Animation
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // Background progress bar
+                  Container(
+                    width: cardWidth,
+                    height: 6.h,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(3.r),
+                      color: AppColors.primaryGold!.withOpacity(0.2),
+                    ),
+                  ),
+
+                  // Animated progress bar
+                  AnimatedBuilder(
+                    animation: _horseAnimation,
+                    builder: (context, child) {
+                      return Container(
+                        width: _horseAnimation.value * cardWidth,
+                        height: 6.h,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(3.r),
+                          gradient: LinearGradient(
+                            colors: isPositive
+                                ? [
+                              AppColors.primaryGold ?? Colors.amber[700]!,
+                              (AppColors.primaryGold ?? Colors.amber[700]!)
+                                  .withOpacity(0.8),
+                            ]
+                                : [
+                              AppColors.error ?? Colors.red[400]!,
+                              (AppColors.error ?? Colors.red[400]!)
+                                  .withOpacity(0.8),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
+                  // Animated horse
+                  AnimatedBuilder(
+                    animation: _horseAnimation,
+                    builder: (context, child) {
+                      double horsePosition = _horseAnimation.value * cardWidth;
+                      return Positioned(
+                        left: (horsePosition - 20.w).clamp(0.0, cardWidth - 40.w),
+                        top: -30.h,
+                        child: SizedBox(
+                          height: 60.h,
+                          width: 70.w,
+                          child: Image.asset(
+                            'assets/images/jt1.gif',
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

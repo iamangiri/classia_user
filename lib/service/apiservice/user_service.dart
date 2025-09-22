@@ -22,7 +22,11 @@ class UserService {
   Future<AadhaarOtpResponse> sendAadhaarOtp(String aadhaarNumber) async {
     final response = await http.post(
       Uri.parse('${AppConstant.API_URL}/user/send/adhar/otp'),
-      headers: _getHeaders(),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+
       body: jsonEncode({'aadharNumber': aadhaarNumber}),
     );
 
