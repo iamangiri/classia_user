@@ -4,7 +4,6 @@ import 'package:classia_amc/themes/app_colors.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:ui';
 import 'package:url_launcher/url_launcher.dart';
-
 import '../../service/apiservice/mutual_fund_service.dart';
 import '../../widget/common_app_bar.dart';
 
@@ -1148,10 +1147,9 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
       final amount = double.parse(_amountController.text);
       final response = await MutualFundService.purchaseLumpsum(
         totAmt: amount,
-        // rtaAmcCode: widget.fundData['rtaAmcCode'] ?? 'AXF',
-        // rtaSchCode: widget.fundData['rtaSchCode'] ?? 'SCGPG',
-          rtaAmcCode: "FTI",
-           rtaSchCode: "010",
+        rtaAmcCode: widget.fundData['fundCode'],
+        rtaSchCode: widget.fundData['schemeCode'],
+
         folio: 'new',
       );
 
