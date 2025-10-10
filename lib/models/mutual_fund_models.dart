@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class MutualFundResponse {
   final bool status;
   final String message;
@@ -24,7 +22,7 @@ class MutualFundData {
   final int totalRecords;
   final int totalPages;
   final String currentPage;
-  final List<MutualFund> mfList; // Changed from usersList to mfList
+  final List<MutualFund> mfList;
 
   MutualFundData({
     required this.totalRecords,
@@ -38,15 +36,65 @@ class MutualFundData {
       totalRecords: json['totalRecords'] ?? 0,
       totalPages: json['totalPages'] ?? 0,
       currentPage: json['currentPage'] ?? '0',
-      mfList: (json['mfList'] as List<dynamic>?) // Changed from usersList to mfList
+      mfList: (json['mfList'] as List<dynamic>?)
           ?.map((item) => MutualFund.fromJson(item))
           .toList() ??
           [],
     );
   }
 
-  // Getter for backward compatibility if needed
   List<MutualFund> get usersList => mfList;
+}
+
+// NEW: Create a proper model for ProdMfData
+class ProdMfData {
+  final int id;
+  final String schemeCode;
+  final String fundCode;
+  final String planName;
+  final String schemeType;
+  final String planType;
+  final String planOpt;
+  final String divOpt;
+  final String amfiId;
+  final String priIsin;
+  final String? secIsin;
+  final String amc;
+  final bool isDeleted;
+
+  ProdMfData({
+    required this.id,
+    required this.schemeCode,
+    required this.fundCode,
+    required this.planName,
+    required this.schemeType,
+    required this.planType,
+    required this.planOpt,
+    required this.divOpt,
+    required this.amfiId,
+    required this.priIsin,
+    this.secIsin,
+    required this.amc,
+    required this.isDeleted,
+  });
+
+  factory ProdMfData.fromJson(Map<String, dynamic> json) {
+    return ProdMfData(
+      id: json['id'] ?? 0,
+      schemeCode: json['schemeCode'] ?? '',
+      fundCode: json['fundCode'] ?? '',
+      planName: json['planName'] ?? '',
+      schemeType: json['schemeType'] ?? '',
+      planType: json['planType'] ?? '',
+      planOpt: json['planOpt'] ?? '',
+      divOpt: json['divOpt'] ?? '',
+      amfiId: json['amfiId'] ?? '',
+      priIsin: json['priIsin'] ?? '',
+      secIsin: json['secIsin'],
+      amc: json['amc'] ?? '',
+      isDeleted: json['isDeleted'] ?? false,
+    );
+  }
 }
 
 class MutualFund {
@@ -62,12 +110,12 @@ class MutualFund {
   final String? threeYearsChange;
   final String? fiveYearsChange;
   final String? allTime;
-  final dynamic mfData; // Added missing field
+  final dynamic mfData;
   final bool isDeleted;
   final String createdAt;
   final String updatedAt;
   final String? deletedAt;
-  final dynamic prodMfData; // Added missing field
+  final ProdMfData prodMfData; // Changed from dynamic to ProdMfData
 
   MutualFund({
     required this.id,
@@ -87,7 +135,7 @@ class MutualFund {
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
-    this.prodMfData,
+    required this.prodMfData,
   });
 
   factory MutualFund.fromJson(Map<String, dynamic> json) {
@@ -109,11 +157,10 @@ class MutualFund {
       createdAt: json['createdAt'] ?? '',
       updatedAt: json['updatedAt'] ?? '',
       deletedAt: json['deletedAt'],
-      prodMfData: json['prodMfData'],
+      prodMfData: ProdMfData.fromJson(json['prodMfData'] ?? {}), // Parse properly
     );
   }
 
-  // Helper methods for better data access
   String get displayReturn => oneYearChange ?? 'N/A';
 
   bool get hasPositiveReturn {
@@ -127,61 +174,4 @@ class MutualFund {
     if (scheamName.length <= 50) return scheamName;
     return '${scheamName.substring(0, 47)}...';
   }
-}
-
-// Keep existing classes for UI compatibility
-class AMC {
-  final String name;
-  final List<Scheme> schemes;
-
-  AMC({
-    required this.name,
-    required this.schemes,
-  });
-}
-
-class Scheme {
-  final String name;
-  final String rank;
-  final String returnRate;
-  final String risk;
-
-  Scheme({
-    required this.name,
-    required this.rank,
-    required this.returnRate,
-    required this.risk,
-  });
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is Scheme && other.name == name;
-  }
-
-  @override
-  int get hashCode => name.hashCode;
-}
-
-class Fund {
-  final String name;
-  final String returnRate;
-  final String risk;
-  final Color color;
-
-  Fund({
-    required this.name,
-    required this.returnRate,
-    required this.risk,
-    required this.color,
-  });
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is Fund && other.name == name;
-  }
-
-  @override
-  int get hashCode => name.hashCode;
 }

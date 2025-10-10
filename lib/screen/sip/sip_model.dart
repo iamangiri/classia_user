@@ -83,25 +83,34 @@ class Fund {
   final String returnRate;
   final String risk;
   final Color color;
+  final String fundCode; // Add fundCode
+  final String schemeCode; // Add schemeCode
 
-  Fund(
-      {required this.name,
-        required this.returnRate,
-        required this.risk,
-        required this.color});
+  Fund({
+    required this.name,
+    required this.returnRate,
+    required this.risk,
+    required this.color,
+    required this.fundCode,
+    required this.schemeCode,
+  });
 
   Map<String, dynamic> toJson() => {
     'name': name,
     'returnRate': returnRate,
     'risk': risk,
     'color': color.value,
+    'fundCode': fundCode,
+    'schemeCode': schemeCode,
   };
 
-  factory Fund.fromJson(Map<String, dynamic> json) => Fund(
+  static Fund fromJson(Map<String, dynamic> json) => Fund(
     name: json['name'],
     returnRate: json['returnRate'],
     risk: json['risk'],
     color: Color(json['color']),
+    fundCode: json['fundCode'],
+    schemeCode: json['schemeCode'],
   );
 }
 
@@ -212,18 +221,25 @@ class Scheme {
   final String rank;
   final String returnRate;
   final String risk;
+  final String fundCode;
+  final String schemeCode;
 
-  Scheme(
-      {required this.name,
-        required this.rank,
-        required this.returnRate,
-        required this.risk});
+  Scheme({
+    required this.name,
+    required this.rank,
+    required this.returnRate,
+    required this.risk,
+    required this.fundCode,
+    required this.schemeCode,
+  });
 
   Fund toFund() => Fund(
     name: name,
     returnRate: returnRate,
     risk: risk,
-    color: Colors.blueGrey,
+    color: Colors.blue, // Default color, modify as needed
+    fundCode: fundCode,
+    schemeCode: schemeCode,
   );
 }
 
