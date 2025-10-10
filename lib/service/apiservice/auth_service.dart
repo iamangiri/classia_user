@@ -1,5 +1,3 @@
-
-
 import 'dart:convert';
 import 'package:classia_amc/utills/constent/app_constant.dart';
 import 'package:http/http.dart' as http;
@@ -7,9 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../utills/constent/user_constant.dart';
 
 class AuthService {
-
-
-
   static Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final url = Uri.parse('${AppConstant.API_URL}/auth/login');
@@ -28,23 +23,20 @@ class AuthService {
       print('Response Status: ${response.statusCode}');
       print('Response Body: ${response.body}');
 
-
       final data = jsonDecode(response.body);
-      final prefs = await SharedPreferences.getInstance();
-      if (data['status'] == true) {
-        await prefs.setString('auth_token', data['data']['token'] ?? '');
-        await prefs.setString('user_data', jsonEncode(data['data']['user'] ?? {}));
-      }
 
+      if (data['status'] == true && data['data'] != null) {
+        // Store using the data structure from API
+        await UserConstants.storeUserData(data['data']);
+      }
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
 
-        // Check if the API response indicates success
         if (responseData['status'] == true) {
           return {
             'success': true,
-            'data': responseData, // This contains the full response with data, message, status
+            'data': responseData,
           };
         } else {
           return {
@@ -53,7 +45,6 @@ class AuthService {
           };
         }
       } else {
-        // Handle HTTP error codes
         final responseData = jsonDecode(response.body);
         return {
           'success': false,
@@ -90,26 +81,24 @@ class AuthService {
       },
     );
 
-    // Decode whatever the server returns (200, 201, 422, 409, etc.)
     final Map<String, dynamic> json = jsonDecode(response.body);
     print(response.body);
     print(response.statusCode);
     return {
       'statusCode': response.statusCode,
-      'status':    json['status'] ?? false,
-      'message':   json['message'] ?? 'Unknown error',
-      'data':      json['data'],
+      'status': json['status'] ?? false,
+      'message': json['message'] ?? 'Unknown error',
+      'data': json['data'],
     };
   }
-
 
   static Future<Map<String, dynamic>> loginUser({
     String? email,
     String? mobile,
     required String password,
   }) async {
-    final url  = Uri.parse('${AppConstant.API_URL}/auth/login');
-    final body = <String, String>{ 'password': password };
+    final url = Uri.parse('${AppConstant.API_URL}/auth/login');
+    final body = <String, String>{'password': password};
     if (email?.isNotEmpty == true) {
       body['email'] = email!;
     } else if (mobile?.isNotEmpty == true) {
@@ -118,15 +107,16 @@ class AuthService {
 
     final response = await http.post(
       url,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: body,
     );
 
     final jsonResp = jsonDecode(response.body) as Map<String, dynamic>;
-    final data     = jsonResp['data'] as Map<String, dynamic>?;
+    final data = jsonResp['data'] as Map<String, dynamic>?;
 
     print(response.body);
     print(response.statusCode);
+
     // Persist only if login successful
     if ((jsonResp['status'] as bool? ?? false) && data != null) {
       await UserConstants.storeUserData(data);
@@ -134,13 +124,11 @@ class AuthService {
 
     return {
       'statusCode': response.statusCode,
-      'status':     jsonResp['status']  ?? false,
-      'message':    jsonResp['message'] ?? 'Unknown error',
-      'data':       data,
+      'status': jsonResp['status'] ?? false,
+      'message': jsonResp['message'] ?? 'Unknown error',
+      'data': data,
     };
   }
-
-
 
   static Future<Map<String, dynamic>> sendOtp({
     String? mobile,
@@ -149,26 +137,23 @@ class AuthService {
     final uri = Uri.parse('${AppConstant.API_URL}/auth/send/otp');
     final response = await http.post(
       uri,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: {
         if (mobile != null) 'mobile': mobile,
-        if (email  != null) 'email':  email,
+        if (email != null) 'email': email,
       },
     );
     print(response.statusCode);
     print(response.body);
     final jsonBody = json.decode(response.body) as Map<String, dynamic>;
 
-    // Always return the decoded JSON, regardless of status code.
-    // jsonBody['status'] is your boolean, jsonBody['message'] is your server message.
     return {
       'statusCode': response.statusCode,
-      'status':     jsonBody['status']  ?? false,
-      'message':    jsonBody['message'] ?? 'Unknown error',
-      'data':       jsonBody['data'],
+      'status': jsonBody['status'] ?? false,
+      'message': jsonBody['message'] ?? 'Unknown error',
+      'data': jsonBody['data'],
     };
   }
-
 
   static Future<Map<String, dynamic>> verifyOtp({
     String? mobile,
@@ -183,23 +168,22 @@ class AuthService {
       },
       body: {
         if (mobile != null) 'mobile': mobile,
-        if (email  != null) 'email':  email,
+        if (email != null) 'email': email,
         'code': code,
       },
     );
 
     print(response.statusCode);
     print(response.body);
-    // Decode the body regardless of status code
+
     final jsonBody = json.decode(response.body) as Map<String, dynamic>;
     return {
       'statusCode': response.statusCode,
-      'status':     jsonBody['status']  ?? false,
-      'message':    jsonBody['message'] ?? 'Unknown error',
-      'data':       jsonBody['data'],
+      'status': jsonBody['status'] ?? false,
+      'message': jsonBody['message'] ?? 'Unknown error',
+      'data': jsonBody['data'],
     };
   }
-
 
   static Future<Map<String, dynamic>> forgotPasswordSendOtp(String mobile) async {
     final response = await http.post(
@@ -237,10 +221,6 @@ class AuthService {
     return jsonDecode(response.body);
   }
 
-
-
-
-
   static Future<Map<String, dynamic>> loginOTPUser({
     String? email,
     String? mobile,
@@ -256,16 +236,17 @@ class AuthService {
       );
 
       final data = jsonDecode(response.body);
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('login_response', jsonEncode(data));
-      print(response.body);
-      print(response.statusCode);
+      print('Login OTP Send Response:');
+      print('Status Code: ${response.statusCode}');
+      print('Body: ${response.body}');
+
       return {
         'status': data['status'] ?? false,
         'message': data['message'] ?? 'Unknown error',
         'statusCode': response.statusCode,
       };
     } catch (e) {
+      print('Login OTP Error: $e');
       return {
         'status': false,
         'message': 'Network error: $e',
@@ -273,8 +254,6 @@ class AuthService {
       };
     }
   }
-
-
 
   static Future<Map<String, dynamic>> verifyLoginOtp({
     String? email,
@@ -292,32 +271,33 @@ class AuthService {
         },
       );
 
-      final data = jsonDecode(response.body);
-      final prefs = await SharedPreferences.getInstance();
-      if (data['status'] == true) {
-        await prefs.setString('auth_token', data['data']['token'] ?? '');
-        await prefs.setString('user_data', jsonEncode(data['data']['user'] ?? {}));
+      print('Verify Login OTP Response:');
+      print('Status Code: ${response.statusCode}');
+      print('Body: ${response.body}');
+
+      final responseData = jsonDecode(response.body);
+
+      // FIXED: Store data correctly from API response structure
+      if (responseData['status'] == true && responseData['data'] != null) {
+        // API returns: { "data": { "token": "...", "user": {...} } }
+        // UserConstants.storeUserData expects: { "token": "...", "user": {...} }
+        await UserConstants.storeUserData(responseData['data']);
       }
 
       return {
-        'status': data['status'] ?? false,
-        'message': data['message'] ?? 'Unknown error',
+        'status': responseData['status'] ?? false,
+        'message': responseData['message'] ?? 'Unknown error',
         'statusCode': response.statusCode,
-        'data': data['data'], // Include the data field
+        'data': responseData['data'],
       };
     } catch (e) {
+      print('Verify Login OTP Error: $e');
       return {
         'status': false,
         'message': 'Network error: $e',
         'statusCode': 500,
-        'data': null, // Ensure data is null in case of error
+        'data': null,
       };
     }
   }
-  }
-
-
-
-
-
-
+}

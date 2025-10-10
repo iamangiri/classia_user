@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import '../../service/apiservice/auth_service.dart';
-import '../../utills/constent/user_constant.dart'; // Corrected import path
+import '../../utills/constent/user_constant.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -35,6 +36,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final ok = result['status'] as bool;
     final msg = result['message'] as String;
 
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
@@ -50,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _verifyOtp() async {
     if (_otpController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Please enter OTP'),
           backgroundColor: Colors.red,
         ),
@@ -74,6 +77,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final ok = result['status'] as bool;
     final msg = result['message'] as String;
 
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
@@ -82,24 +87,25 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (ok) {
-      // Store user data using UserConstants
-      await UserConstants.storeUserData({
-        'token': result['data']['token'],
-        'user': result['data']['user'],
-      });
-
-
+      // Data is already stored in AuthService.verifyLoginOtp
+      // Just navigate to main screen
+      print('User logged in successfully!');
+      print('Token: ${UserConstants.TOKEN}');
+      print('User ID: ${UserConstants.USER_ID}');
+      print('Email: ${UserConstants.EMAIL}');
+      print('Phone: ${UserConstants.PHONE}');
+      print('Main Balance: ${UserConstants.MAIN_BALANCE}');
+      print('KYC Status - Aadhaar: ${UserConstants.IS_AADHAAR_VERIFIED}, PAN: ${UserConstants.IS_PAN_VERIFIED}');
 
       context.goNamed('main');
-      // Navigate based on verification status
-      // if (UserConstants.IS_EMAIL_VERIFIED == false) {
-      //   context.goNamed('email_verify');
-      // } else if (UserConstants.IS_MOBILE_VERIFIED == false) {
-      //   context.goNamed('mobile_verify');
-      // } else {
-      //   context.goNamed('main');
-      // }
     }
+  }
+
+  @override
+  void dispose() {
+    _identifierController.dispose();
+    _otpController.dispose();
+    super.dispose();
   }
 
   @override
@@ -113,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             children: [
               Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
                     begin: Alignment.topLeft,
@@ -134,32 +140,32 @@ class _LoginScreenState extends State<LoginScreen> {
                   key: _formKey,
                   child: Column(
                     children: [
-                      SizedBox(height: 60),
+                      const SizedBox(height: 60),
                       // Identifier Field
                       TextFormField(
                         controller: _identifierController,
-                        style: TextStyle(color: Colors.black),
+                        style: const TextStyle(color: Colors.black),
                         decoration: InputDecoration(
                           labelText: 'Email or Phone',
                           hintText: 'you@example.com or 0123456789',
-                          prefixIcon: Icon(Icons.person, color: Colors.grey),
-                          labelStyle: TextStyle(color: Colors.grey),
-                          hintStyle: TextStyle(color: Colors.black45),
+                          prefixIcon: const Icon(Icons.person, color: Colors.grey),
+                          labelStyle: const TextStyle(color: Colors.grey),
+                          hintStyle: const TextStyle(color: Colors.black45),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide(color: Colors.amber, width: 2),
+                            borderSide: const BorderSide(color: Colors.amber, width: 2),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide(color: Colors.amber, width: 2),
+                            borderSide: const BorderSide(color: Colors.amber, width: 2),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide(color: Colors.red, width: 2),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
                           ),
                           focusedErrorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide(color: Colors.redAccent, width: 2),
+                            borderSide: const BorderSide(color: Colors.redAccent, width: 2),
                           ),
                         ),
                         keyboardType: TextInputType.emailAddress,
@@ -169,70 +175,63 @@ class _LoginScreenState extends State<LoginScreen> {
                           }
                           final t = val.trim();
                           if (t.contains('@')) {
-                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(t))
+                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(t)) {
                               return 'Enter a valid email';
+                            }
                           } else if (!RegExp(r'^[0-9]{10}$').hasMatch(t)) {
                             return 'Enter a valid 10-digit phone';
                           }
                           return null;
                         },
-                        enabled: !_isOtpSent, // Disable after OTP sent
+                        enabled: !_isOtpSent,
                       ),
-                      SizedBox(height: 16),
-                      // OTP Field (shown after OTP is sent)
+                      const SizedBox(height: 16),
+                      // OTP Field
                       if (_isOtpSent)
                         TextFormField(
                           controller: _otpController,
-                          style: TextStyle(color: Colors.black),
+                          style: const TextStyle(color: Colors.black),
                           decoration: InputDecoration(
                             labelText: 'Enter OTP',
-                            prefixIcon: Icon(Icons.lock, color: Colors.grey),
-                            labelStyle: TextStyle(color: Colors.grey),
+                            prefixIcon: const Icon(Icons.lock, color: Colors.grey),
+                            labelStyle: const TextStyle(color: Colors.grey),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
-                              borderSide: BorderSide(color: Colors.amber, width: 2),
+                              borderSide: const BorderSide(color: Colors.amber, width: 2),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
-                              borderSide: BorderSide(color: Colors.amber, width: 2),
-                            ),
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              borderSide: BorderSide(color: Colors.red, width: 2),
-                            ),
-                            focusedErrorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              borderSide: BorderSide(color: Colors.redAccent, width: 2),
+                              borderSide: const BorderSide(color: Colors.amber, width: 2),
                             ),
                           ),
                           keyboardType: TextInputType.number,
                         ),
-                      SizedBox(height: 24),
-                      // Send OTP or Verify OTP Button
+                      const SizedBox(height: 24),
+                      // Button
                       SizedBox(
                         width: double.infinity,
                         height: 56,
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : (_isOtpSent ? _verifyOtp : _sendOtp),
                           style: ElevatedButton.styleFrom(
-                            shape: StadiumBorder(),
+                            shape: const StadiumBorder(),
                             padding: EdgeInsets.zero,
                             backgroundColor: Colors.transparent,
                             shadowColor: Colors.transparent,
                           ),
                           child: Ink(
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
+                              gradient: const LinearGradient(
                                 colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
                               ),
                               borderRadius: BorderRadius.circular(30),
                             ),
                             child: Center(
                               child: _isLoading
-                                  ? CircularProgressIndicator(color: Colors.white)
+                                  ? const CircularProgressIndicator(color: Colors.white)
                                   : Text(
                                 _isOtpSent ? 'Verify OTP' : 'Send OTP',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
@@ -242,20 +241,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(height: 16),
-                   //   Signup link
+                      const SizedBox(height: 16),
+                      // Login with Password link
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
+                          const Text(
                             "Login with Id/Password ",
                             style: TextStyle(color: Colors.black54),
                           ),
                           GestureDetector(
-                            onTap: () {
-                              context.goNamed('loginwithpassword');
-                            },
-                            child: Text(
+                            onTap: () => context.goNamed('loginwithpassword'),
+                            child: const Text(
                               "Click here",
                               style: TextStyle(
                                 color: Color(0xFFFFA500),
@@ -265,7 +262,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),

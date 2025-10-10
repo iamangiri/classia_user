@@ -46,6 +46,11 @@ class _MainScreenState extends State<MainScreen> {
     UserConstants.loadUserData();
     _authenticateUser();
     print(UserConstants.TOKEN);
+    print(UserConstants.NAME);
+    print(UserConstants.KYC_STATUS);
+    print(UserConstants.IS_AADHAAR_VERIFIED);
+    print(UserConstants.IS_PAN_VERIFIED);
+
   }
 
   Future<void> _authenticateUser() async {
