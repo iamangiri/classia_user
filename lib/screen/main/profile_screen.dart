@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:classia_amc/themes/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../screenutills/mutual_fund_transation.dart';
 import '../can/can_create_screen.dart';
 import '../can/payezz_registration_screen.dart';
 import '../profile/about_us_screen.dart';
@@ -16,10 +17,10 @@ import '../profile/edit_profile_screen.dart';
 import '../profile/kyc_screen.dart';
 import '../profile/learn_screen.dart';
 import '../profile/manage_folio_screen.dart';
+import '../profile/my_wallet_screen.dart';
 import '../profile/privicy_policy.dart';
 import '../profile/security_setting _screen.dart';
 import '../profile/demat_account_screen.dart';
-import 'wallet_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -41,6 +42,9 @@ class ProfileScreen extends StatelessWidget {
             _buildSectionTitle('Account'),
             _buildAccountOptionsList(context),
             SizedBox(height: 20.h),
+            _buildSectionTitle('Transactions'),
+            _buildTransactionsOptionsList(context),
+            SizedBox(height: 20.h),
             _buildSectionTitle('Preferences'),
             _buildPreferencesList(context),
             SizedBox(height: 20.h),
@@ -52,11 +56,9 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildProfileSection(BuildContext context) {
-    // Safe handling of user data with null checks and fallbacks
     String userName = UserConstants.NAME?.toString() ?? "User";
     String userEmail = UserConstants.EMAIL?.toString() ?? "user@example.com";
 
-    // Ensure userName is not empty for avatar
     if (userName.trim().isEmpty) {
       userName = "User";
     }
@@ -64,12 +66,11 @@ class ProfileScreen extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Profile Avatar
         CircleAvatar(
           radius: 40,
           backgroundColor: AppColors.border,
           child: Text(
-            userName.trim()[0].toUpperCase(), // Safe access with trim and uppercase
+            userName.trim()[0].toUpperCase(),
             style: TextStyle(
               fontSize: 30,
               fontWeight: FontWeight.bold,
@@ -78,7 +79,6 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
         SizedBox(width: 16),
-        // User Name and Email
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,7 +90,7 @@ class ProfileScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   color: AppColors.primaryText,
                 ),
-                overflow: TextOverflow.ellipsis, // Handle long names
+                overflow: TextOverflow.ellipsis,
               ),
               SizedBox(height: 4),
               Text(
@@ -99,12 +99,11 @@ class ProfileScreen extends StatelessWidget {
                   fontSize: 14,
                   color: AppColors.secondaryText,
                 ),
-                overflow: TextOverflow.ellipsis, // Handle long emails
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
         ),
-        // Edit Icon
         IconButton(
           icon: Icon(Icons.edit, color: AppColors.accent),
           onPressed: () {
@@ -138,7 +137,6 @@ class ProfileScreen extends StatelessWidget {
       {'title': 'CAN', 'icon': 'account_circle'},
       {'title': 'PayZee Registration', 'icon': 'payment'},
       {'title': 'Demat Account', 'icon': 'account_balance_wallet'},
-      {'title': 'My Wallet', 'icon': 'account_balance_wallet'}, // Added My Wallet option
       {'title': 'Bank Info', 'icon': 'account_balance'},
     ];
 
@@ -148,6 +146,24 @@ class ProfileScreen extends StatelessWidget {
       itemCount: accountOptions.length,
       itemBuilder: (context, index) {
         return _buildOptionItem(context, accountOptions[index]);
+      },
+    );
+  }
+
+  Widget _buildTransactionsOptionsList(BuildContext context) {
+    final List<Map<String, String>> transactionOptions = [
+      {'title': 'My Wallet', 'icon': 'account_balance_wallet'},
+      {'title': 'Jockey Investment', 'icon': 'trending_up'}, // Renamed from Investment
+      {'title': 'Jockey Withdraw', 'icon': 'money_off'}, // Renamed from Withdraw
+      {'title': 'Mutual Fund Transaction', 'icon': 'history'},
+    ];
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: transactionOptions.length,
+      itemBuilder: (context, index) {
+        return _buildOptionItem(context, transactionOptions[index]);
       },
     );
   }
@@ -206,6 +222,15 @@ class ProfileScreen extends StatelessWidget {
       case 'account_balance_wallet':
         iconData = Icons.account_balance_wallet;
         break;
+      case 'trending_up':
+        iconData = Icons.trending_up;
+        break;
+      case 'money_off':
+        iconData = Icons.money_off;
+        break;
+      case 'history':
+        iconData = Icons.history;
+        break;
       default:
         iconData = Icons.help;
     }
@@ -262,17 +287,20 @@ class ProfileScreen extends StatelessWidget {
       case 'Demat Account':
         destination = const DematAccountScreen();
         break;
-      case 'My Wallet': // Added navigation for My Wallet
-        destination = const WalletScreen();
+      case 'My Wallet':
+        destination = const MyWalletScreen();
+        break;
+      case 'Jockey Investment':
+        destination = const InvestmentHistoryScreen();
+        break;
+      case 'Jockey Withdraw':
+        destination = const WithdrawScreen();
+        break;
+      case 'Mutual Fund Transaction':
+        destination =  TransactionScreen();
         break;
       case 'Manage Folio':
         destination = const ManageFolioScreen();
-        break;
-      case 'Investment History':
-        destination = InvestmentHistoryScreen();
-        break;
-      case 'Withdrawals':
-        destination = WithdrawScreen();
         break;
       case 'Security Settings':
         destination = const SecuritySettingsScreen();
