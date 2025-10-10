@@ -17,20 +17,20 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = JavaVersion.VERSION_11
     }
 
     defaultConfig {
         applicationId = "com.classia.capital"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode 17
-        versionName "1.2.7"
+        versionCode 18
+        versionName "1.2.8"
     }
 
     signingConfigs {
@@ -45,9 +45,8 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.release
-            minifyEnabled true
-            shrinkResources true
-            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+            minifyEnabled false
+            shrinkResources false
         }
     }
 }
@@ -55,57 +54,3 @@ android {
 flutter {
     source = "../.."
 }
-//plugins {
-//    id "com.android.application"
-//    id "kotlin-android"
-//    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
-//    id "dev.flutter.flutter-gradle-plugin"
-//}
-//
-////def keystorePropertiesFile = rootProject.file("key.properties")
-////def keystoreProperties = new Properties()
-//
-////if (keystorePropertiesFile.exists()) {
-////    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-////}
-//
-//android {
-//    namespace = "com.classia.capital"
-//    compileSdk = flutter.compileSdkVersion
-//    ndkVersion = flutter.ndkVersion
-//
-//    compileOptions {
-//        sourceCompatibility = JavaVersion.VERSION_1_8
-//        targetCompatibility = JavaVersion.VERSION_1_8
-//    }
-//
-//    kotlinOptions {
-//        jvmTarget = JavaVersion.VERSION_1_8
-//    }
-//
-//    defaultConfig {
-//        applicationId = "com.classia.capital"
-//        minSdk = flutter.minSdkVersion
-//        targetSdk = flutter.targetSdkVersion
-//        versionCode 6
-//        versionName "1.0.6"
-//    }
-//
-//    buildTypes {
-//        release {
-//            // No signing config for unsigned APK
-//            minifyEnabled true
-//            shrinkResources true
-//            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
-//        }
-//
-//        debug {
-//            minifyEnabled false
-//            shrinkResources false
-//        }
-//    }
-//}
-//
-//flutter {
-//    source = "../.."
-//}
