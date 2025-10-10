@@ -4,7 +4,9 @@ import '../../themes/app_colors.dart';
 import '../screenutills/trade_details_screen.dart';
 
 
+
 class TradingCard extends StatefulWidget {
+  final int id;
   final String logo;
   final String name;
   final String fundName;
@@ -13,6 +15,7 @@ class TradingCard extends StatefulWidget {
 
   const TradingCard({
     Key? key,
+    required this.id,
     required this.logo,
     required this.name,
     required this.fundName,
@@ -83,6 +86,7 @@ class _TradingCardState extends State<TradingCard> with SingleTickerProviderStat
           context,
           MaterialPageRoute(
             builder: (context) => TradingDetailsScreen(
+              id: widget.id,
               logo: widget.logo,
               name: widget.name,
               fundName: widget.fundName,

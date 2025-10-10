@@ -343,6 +343,7 @@ class _InvestmentHistoryScreenState extends State<InvestmentHistoryScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => TradingDetailsScreen(
+              id: 0,
               logo: mockLogo,
               name: mockName, value: 0, fundName: "", projection: 0,
             ),

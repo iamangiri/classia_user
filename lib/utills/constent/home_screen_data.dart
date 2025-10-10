@@ -49,11 +49,11 @@ class HomeScreenData {
       'icon': FontAwesomeIcons.rocket,
       'color': Color(0xFFE91E63), // pink
     },
-    {
-      'title': 'Learn',
-      'icon': FontAwesomeIcons.graduationCap,
-      'color': Color(0xFF9C27B0), // purple
-    },
+    // {
+    //   'title': 'Learn',
+    //   'icon': FontAwesomeIcons.graduationCap,
+    //   'color': Color(0xFF9C27B0), // purple
+    // },
     {
       'title': 'Market News',
       'icon': FontAwesomeIcons.newspaper,
@@ -65,11 +65,6 @@ class HomeScreenData {
       'color': Color(0xFF2196F3), // blue
     },
     {
-      'title': 'My Reports',
-      'icon': FontAwesomeIcons.fileDownload,
-      'color': Color(0xFFFF9800), // orange
-    },
-    {
       'title': 'Deposit',
       'icon': FontAwesomeIcons.moneyBillWave,
       'color': Color(0xFF4CAF50), // green
@@ -78,6 +73,11 @@ class HomeScreenData {
       'title': 'Withdraw',
       'icon': FontAwesomeIcons.wallet,
       'color': Color(0xFFE91E63), // pink (reused for consistency)
+    },
+    {
+      'title': 'My Reports',
+      'icon': FontAwesomeIcons.fileDownload,
+      'color': Color(0xFFFF9800), // orange
     },
 
   ];

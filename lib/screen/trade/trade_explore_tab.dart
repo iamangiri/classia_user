@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../themes/app_colors.dart';
 import '../../widget/trading_card.dart';
 
+
 class TradeExploreTab extends StatelessWidget {
   final List<Map<String, dynamic>> amcList;
   final Function(Map<String, dynamic>) onBuy;
@@ -72,6 +73,7 @@ class TradeExploreTab extends StatelessWidget {
             child: Stack(
               children: [
                 TradingCard(
+                  id :amc['id'],
                   logo: amc['logo'],
                   name: amc['name'],
                   fundName: amc['fundName'],

@@ -35,7 +35,7 @@ class WalletService {
     }
   }
 
-  Future<void> deposit(int amount) async {
+  Future<void> deposit(int amount,int amcId) async {
     final response = await http.post(
       Uri.parse('${AppConstant.API_URL}/user/deposit/amount'),
       headers: {
@@ -44,7 +44,7 @@ class WalletService {
       },
       body: {
         'amount': amount.toString(),
-        'amcId' : '2'
+        'amcId' : amcId.toString()
       },
     );
      print(response.body);
@@ -58,7 +58,7 @@ class WalletService {
     }
   }
 
-  Future<void> withdraw(int amount) async {
+  Future<void> withdraw(int amount ,int amcId) async {
     final response = await http.post(
       Uri.parse('${AppConstant.API_URL}/user/withdraw/amount'),
       headers: {
@@ -67,7 +67,7 @@ class WalletService {
       },
       body: {
         'amount': amount.toString(),
-        'amcId' : '2'
+        'amcId' : amcId.toString(),
       },
     );
     print(response.body);

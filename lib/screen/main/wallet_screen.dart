@@ -461,6 +461,7 @@ class _WalletScreenState extends State<WalletScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => TradingDetailsScreen(
+              id: 0,
               logo: mockLogo,
               name: mockName,
               value: 0,

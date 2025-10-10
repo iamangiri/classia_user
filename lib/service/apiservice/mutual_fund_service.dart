@@ -26,10 +26,9 @@ class MutualFundService {
     }
   }
 
-  // Mock method to fetch fund name based on rtaAmcCode and rtaSchCode
-  // Mock implementation of getFundName (replace with actual API call if available)
+
   static Future<String> getFundName(String rtaAmcCode, String rtaSchCode) async {
-    // Simulate API call or lookup (replace with actual implementation)
+
     final mockFundNames = {
       'AXF_SCGPG': 'Axis Small Cap Fund',
       'AXF_GOGPG': 'Axis Gold Fund',

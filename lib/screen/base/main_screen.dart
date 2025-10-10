@@ -35,7 +35,7 @@ class _MainScreenState extends State<MainScreen> {
     TradingScreen(),        // 2
     JockeySipScreen(),
     JtMutualFundScreen()// 3
-    //WalletScreen(),         // 4
+           // 4
   ];
 
 

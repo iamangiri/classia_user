@@ -18,7 +18,8 @@ import '../profile/learn_screen.dart';
 import '../profile/manage_folio_screen.dart';
 import '../profile/privicy_policy.dart';
 import '../profile/security_setting _screen.dart';
-import '../profile/demat_account_screen.dart'; // Add this import
+import '../profile/demat_account_screen.dart';
+import 'wallet_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -136,11 +137,9 @@ class ProfileScreen extends StatelessWidget {
       {'title': 'KYC', 'icon': 'verified_user'},
       {'title': 'CAN', 'icon': 'account_circle'},
       {'title': 'PayZee Registration', 'icon': 'payment'},
-      {'title': 'Demat Account', 'icon': 'account_balance_wallet'}, // Added Demat Account option
-      {'title': 'Manage Folio', 'icon': 'folio'},
-      {'title': 'Security Settings', 'icon': 'security'},
+      {'title': 'Demat Account', 'icon': 'account_balance_wallet'},
+      {'title': 'My Wallet', 'icon': 'account_balance_wallet'}, // Added My Wallet option
       {'title': 'Bank Info', 'icon': 'account_balance'},
-      {'title': 'Learn', 'icon': 'school'},
     ];
 
     return ListView.builder(
@@ -155,6 +154,7 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildPreferencesList(BuildContext context) {
     final List<Map<String, String>> preferenceOptions = [
+      {'title': 'Security Settings', 'icon': 'security'},
       {'title': 'About Us', 'icon': 'info'},
       {'title': 'Help Center', 'icon': 'help'},
       {'title': 'Privacy Policy', 'icon': 'privacy'},
@@ -203,7 +203,7 @@ class ProfileScreen extends StatelessWidget {
       case 'payment':
         iconData = Icons.payment;
         break;
-      case 'account_balance_wallet': // Added case for Demat Account
+      case 'account_balance_wallet':
         iconData = Icons.account_balance_wallet;
         break;
       default:
@@ -259,8 +259,11 @@ class ProfileScreen extends StatelessWidget {
       case 'PayZee Registration':
         destination = const PayZeeRegistrationScreen();
         break;
-      case 'Demat Account': // Added case for Demat Account
+      case 'Demat Account':
         destination = const DematAccountScreen();
+        break;
+      case 'My Wallet': // Added navigation for My Wallet
+        destination = const WalletScreen();
         break;
       case 'Manage Folio':
         destination = const ManageFolioScreen();

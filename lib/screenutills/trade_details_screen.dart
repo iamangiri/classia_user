@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:classia_amc/themes/app_colors.dart';
 import 'package:classia_amc/service/apiservice/wallet_service.dart';
-import 'package:classia_amc/service/apiservice/user_service.dart';
 import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:ui';
 
 class TradingDetailsScreen extends StatefulWidget {
+  final int id ;
   final String logo;
   final String name;
   final String fundName;
@@ -17,6 +17,7 @@ class TradingDetailsScreen extends StatefulWidget {
 
   const TradingDetailsScreen({
     Key? key,
+    required this.id,
     required this.logo,
     required this.name,
     required this.fundName,
@@ -37,7 +38,6 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
   String _defaultFolio = "FOLIO123456";
 
   late WalletService _walletService;
-  late UserService _userService;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -58,7 +58,6 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
   Future<void> _initializeServices() async {
     setState(() {
       _walletService = WalletService(token: '${UserConstants.TOKEN}');
-      _userService = UserService(token: '${UserConstants.TOKEN}');
     });
   }
 
@@ -1046,9 +1045,9 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
     try {
       final amount = int.parse(_amountController.text);
       if (action == 'Invest') {
-        await _walletService.deposit(amount);
+        await _walletService.deposit(amount ,widget.id);
       } else {
-        await _walletService.withdraw(amount);
+        await _walletService.withdraw(amount,widget.id);
       }
       setState(() => _isLoading = false);
       await _showSuccessDialog(action);
