@@ -1,13 +1,14 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:classia_amc/themes/app_colors.dart';
 import 'package:classia_amc/service/apiservice/wallet_service.dart';
+import 'package:classia_amc/service/apiservice/amc_review_service.dart';
 import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'dart:ui';
 
 class TradingDetailsScreen extends StatefulWidget {
-  final int id ;
+  final int id;
   final String logo;
   final String name;
   final String fundName;
@@ -33,13 +34,21 @@ class TradingDetailsScreen extends StatefulWidget {
 class _TradingDetailsScreenState extends State<TradingDetailsScreen>
     with SingleTickerProviderStateMixin {
   final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _reviewController = TextEditingController();
   bool _isLoading = false;
+  bool _isReviewLoading = false;
   final _formKey = GlobalKey<FormState>();
+  final _reviewFormKey = GlobalKey<FormState>();
   String _defaultFolio = "FOLIO123456";
 
   late WalletService _walletService;
+  late AmcReviewService _reviewService;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+
+  Map<String, dynamic>? _reviewData;
+  int _userRating = 0;
+  int _selectedTab = 0;
 
   @override
   void initState() {
@@ -58,12 +67,30 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
   Future<void> _initializeServices() async {
     setState(() {
       _walletService = WalletService(token: '${UserConstants.TOKEN}');
+      _reviewService = AmcReviewService();
     });
+    await _fetchReviews();
+  }
+
+  Future<void> _fetchReviews() async {
+    setState(() => _isReviewLoading = true);
+    try {
+      final data = await _reviewService.getReviews(widget.id, page: 1, limit: 10);
+      print('Fetched review data: $data'); // Debug print
+      setState(() {
+        _reviewData = data['data']; // Store only the 'data' part
+        _isReviewLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isReviewLoading = false);
+      print('Error fetching reviews: $e');
+    }
   }
 
   @override
   void dispose() {
     _amountController.dispose();
+    _reviewController.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -82,7 +109,7 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
                 children: [
                   _buildTabSection(),
                   _buildTabContent(),
-                  SizedBox(height: 120.h), // Extra space for bottom sheet
+                  SizedBox(height: 120.h),
                 ],
               ),
             ),
@@ -101,9 +128,7 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
       backgroundColor: AppColors.primaryColor,
       leading: IconButton(
         icon: Icon(Icons.arrow_back, color: Colors.white, size: 22.sp),
-        onPressed: () {
-          Navigator.pop(context);
-        },
+        onPressed: () => Navigator.pop(context),
       ),
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
@@ -174,7 +199,10 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: ['Performance', 'Holdings', 'RIA Profile', 'Reviews'].asMap().entries.map((entry) {
+          children: ['Performance', 'Holdings', 'RIA Profile', 'Reviews']
+              .asMap()
+              .entries
+              .map((entry) {
             int index = entry.key;
             String tab = entry.value;
             bool isSelected = _selectedTab == index;
@@ -191,7 +219,9 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
                   padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
                   constraints: BoxConstraints(minWidth: 80.w),
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primaryGold!.withOpacity(0.9) : Colors.transparent,
+                    color: isSelected
+                        ? AppColors.primaryGold!.withOpacity(0.9)
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(10.r),
                   ),
                   child: Text(
@@ -211,8 +241,6 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
       ),
     );
   }
-
-  int _selectedTab = 0;
 
   Widget _buildTabContent() {
     return FadeTransition(
@@ -273,12 +301,8 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
                   ),
                 ],
               ),
-
               SizedBox(height: 16.h),
-
-              // New performance table
               _buildPerformanceTable([
-              //  {'range': 'Today', 'predicted': '${widget.value}', 'achieved': '${widget.projection}'},
                 {'range': '1 Day', 'predicted': '3.4%', 'achieved': '3%'},
                 {'range': '7 Days', 'predicted': '7%', 'achieved': '7.2%'},
                 {'range': '15 Days', 'predicted': '6%', 'achieved': '6.7%'},
@@ -296,10 +320,25 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [
-            Expanded(child: Text('Time Range', style: TextStyle(fontWeight: FontWeight.bold))),
-            Expanded(child: Text('Predicted', style: TextStyle(fontWeight: FontWeight.bold))),
-            Expanded(child: Text('Achieved', style: TextStyle(fontWeight: FontWeight.bold))),
+          children: [
+            Expanded(
+                child: Text('Time Range',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryText,
+                        fontSize: 12.sp))),
+            Expanded(
+                child: Text('Predicted',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryText,
+                        fontSize: 12.sp))),
+            Expanded(
+                child: Text('Achieved',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryText,
+                        fontSize: 12.sp))),
           ],
         ),
         SizedBox(height: 8.h),
@@ -308,16 +347,24 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(child: Text(item['range']!)),
-              Expanded(child: Text(item['predicted']!)),
-              Expanded(child: Text(item['achieved']!)),
+              Expanded(
+                  child: Text(item['range']!,
+                      style: TextStyle(color: AppColors.primaryText, fontSize: 11.sp))),
+              Expanded(
+                  child: Text(item['predicted']!,
+                      style: TextStyle(color: AppColors.primaryText, fontSize: 11.sp))),
+              Expanded(
+                  child: Text(item['achieved']!,
+                      style: TextStyle(
+                          color: AppColors.success,
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w600))),
             ],
           ),
         )),
       ],
     );
   }
-
 
   Widget _buildHoldingsTab() {
     return Column(
@@ -436,79 +483,586 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
   }
 
   Widget _buildReviewsTab() {
+    if (_isReviewLoading) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.all(32.w),
+          child: CircularProgressIndicator(color: AppColors.primaryGold),
+        ),
+      );
+    }
+
+    // Safely access reviews with null checks
+    final reviews = _reviewData != null && _reviewData!['reviews'] is List
+        ? _reviewData!['reviews'] as List<dynamic>
+        : [];
+    final averageRating = (_reviewData != null && _reviewData!['average_rating'] is num
+        ? _reviewData!['average_rating'] as num
+        : 0.0).toDouble();
+    final totalReviews = _reviewData != null && _reviewData!['pagination'] is Map
+        ? _reviewData!['pagination']['total'] as int? ?? 0
+        : 0;
+
+    print('Reviews in UI: $reviews'); // Debug print
+    print('Average Rating: $averageRating, Total Reviews: $totalReviews'); // Debug print
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Reviews & Ratings'),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildSectionTitle('Reviews & Ratings'),
+            GestureDetector(
+              onTap: _showWriteReviewDialog,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primaryGold!,
+                      AppColors.primaryGold!.withOpacity(0.8),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(8.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primaryGold!.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.edit_rounded, color: AppColors.buttonText, size: 14.sp),
+                    SizedBox(width: 4.w),
+                    Text(
+                      'Write Review',
+                      style: TextStyle(
+                        color: AppColors.buttonText,
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
         SizedBox(height: 8.h),
         _buildSectionContainer(
           child: Column(
             children: [
               Row(
                 children: [
-                  Text(
-                    '4.2',
-                    style: TextStyle(
-                      fontSize: 32.sp,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryText,
+                  Container(
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primaryGold!.withOpacity(0.2),
+                          AppColors.primaryGold!.withOpacity(0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          averageRating.toStringAsFixed(1),
+                          style: TextStyle(
+                            fontSize: 36.sp,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primaryGold,
+                          ),
+                        ),
+                        Row(
+                          children: List.generate(5, (index) {
+                            return Icon(
+                              index < averageRating.floor()
+                                  ? Icons.star_rounded
+                                  : Icons.star_border_rounded,
+                              color: AppColors.primaryGold,
+                              size: 16.sp,
+                            );
+                          }),
+                        ),
+                      ],
                     ),
                   ),
-                  SizedBox(width: 8.w),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: List.generate(5, (index) {
-                          return Icon(
-                            index < 4 ? Icons.star : Icons.star_border,
-                            color: AppColors.primaryGold,
-                            size: 16.sp,
-                          );
-                        }),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        'Based on 284 reviews',
-                        style: TextStyle(
-                          fontSize: 11.sp,
-                          color: AppColors.secondaryText,
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '$totalReviews Reviews',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primaryText,
+                          ),
                         ),
-                      ),
-                    ],
+                        SizedBox(height: 4.h),
+                        Text(
+                          'Based on user feedback',
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: AppColors.secondaryText,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-              SizedBox(height: 16.h),
-              ...[
-                {'rating': 5, 'count': 120, 'percentage': 42},
-                {'rating': 4, 'count': 85, 'percentage': 30},
-                {'rating': 3, 'count': 45, 'percentage': 16},
-                {'rating': 2, 'count': 20, 'percentage': 7},
-                {'rating': 1, 'count': 14, 'percentage': 5},
-              ].map((review) => _buildRatingBar(
-                review['rating'] as int,
-                review['count'] as int,
-                review['percentage'] as int,
-              )),
             ],
           ),
         ),
         SizedBox(height: 16.h),
         _buildSectionTitle('Recent Reviews'),
         SizedBox(height: 8.h),
-        _buildSectionContainer(
+        reviews.isEmpty
+            ? _buildSectionContainer(
           child: Column(
             children: [
-              _buildReviewItem('Amit S.', 5, 'Great performance and consistent returns.', '2 days ago'),
-              _buildReviewItem('Priya M.', 4, 'Good fund with solid management.', '1 week ago'),
-              _buildReviewItem('Rohit R.', 4, 'Satisfied with the returns so far.', '2 weeks ago'),
+              Icon(
+                Icons.rate_review_outlined,
+                size: 48.sp,
+                color: AppColors.secondaryText?.withOpacity(0.5),
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                'No reviews yet',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: AppColors.secondaryText,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                'Be the first to review this fund',
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: AppColors.secondaryText?.withOpacity(0.7),
+                ),
+              ),
             ],
-
           ),
+        )
+            : Column(
+          children: reviews.map((review) {
+            return _buildReviewItemFromApi(
+              review['id'].toString(), // Convert id to string
+              review['rating'] as int? ?? 0,
+              review['comment'] as String? ?? 'No comment',
+              review['created_at'] as String? ?? DateTime.now().toIso8601String(),
+            );
+          }).toList(),
         ),
       ],
     );
+  }
+
+  Widget _buildReviewItemFromApi(String id, int rating, String comment, String createdAt) {
+    final DateTime dateTime = DateTime.tryParse(createdAt) ?? DateTime.now();
+    final Duration difference = DateTime.now().difference(dateTime);
+    String timeAgo;
+
+    if (difference.inDays > 30) {
+      timeAgo = '${(difference.inDays / 30).floor()} month${(difference.inDays / 30).floor() > 1 ? 's' : ''} ago';
+    } else if (difference.inDays > 0) {
+      timeAgo = '${difference.inDays} day${difference.inDays > 1 ? 's' : ''} ago';
+    } else if (difference.inHours > 0) {
+      timeAgo = '${difference.inHours} hour${difference.inHours > 1 ? 's' : ''} ago';
+    } else {
+      timeAgo = 'Just now';
+    }
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.cardBackground!.withOpacity(0.95),
+            AppColors.cardBackground!.withOpacity(0.85),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppColors.primaryGold!.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryGold!.withOpacity(0.05),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(8.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryGold!.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.person_rounded,
+                      color: AppColors.primaryGold,
+                      size: 16.sp,
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    'User #$id',
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primaryText,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryGold!.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(6.r),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.star_rounded, color: AppColors.primaryGold, size: 12.sp),
+                    SizedBox(width: 2.w),
+                    Text(
+                      rating.toString(),
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryGold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Container(
+            padding: EdgeInsets.all(12.w),
+            decoration: BoxDecoration(
+              color: AppColors.screenBackground?.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Text(
+              comment,
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: AppColors.primaryText,
+                height: 1.5,
+              ),
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            children: [
+              Icon(Icons.access_time_rounded, color: AppColors.secondaryText, size: 12.sp),
+              SizedBox(width: 4.w),
+              Text(
+                timeAgo,
+                style: TextStyle(
+                  fontSize: 11.sp,
+                  color: AppColors.secondaryText,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showWriteReviewDialog() {
+    _userRating = 0;
+    _reviewController.clear();
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.cardBackground,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+          contentPadding: EdgeInsets.all(24.w),
+          content: Form(
+            key: _reviewFormKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primaryGold!.withOpacity(0.2),
+                          AppColors.primaryGold!.withOpacity(0.1),
+                        ],
+                      ),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.rate_review_rounded,
+                      color: AppColors.primaryGold,
+                      size: 32.sp,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  Text(
+                    'Write a Review',
+                    style: TextStyle(
+                      color: AppColors.primaryText,
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    'Share your experience with ${widget.fundName}',
+                    style: TextStyle(
+                      color: AppColors.secondaryText,
+                      fontSize: 12.sp,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 20.h),
+                  Text(
+                    'Your Rating',
+                    style: TextStyle(
+                      color: AppColors.primaryText,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      return GestureDetector(
+                        onTap: () {
+                          setDialogState(() => _userRating = index + 1);
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 4.w),
+                          child: Icon(
+                            index < _userRating
+                                ? Icons.star_rounded
+                                : Icons.star_border_rounded,
+                            color: AppColors.primaryGold,
+                            size: 36.sp,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  if (_userRating > 0)
+                    Padding(
+                      padding: EdgeInsets.only(top: 8.h),
+                      child: Text(
+                        _getRatingText(_userRating),
+                        style: TextStyle(
+                          color: AppColors.primaryGold,
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  SizedBox(height: 20.h),
+                  TextFormField(
+                    controller: _reviewController,
+                    maxLines: 4,
+                    style: TextStyle(
+                      color: AppColors.primaryText,
+                      fontSize: 13.sp,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Your Review',
+                      hintText: 'Tell us about your experience...',
+                      labelStyle: TextStyle(color: AppColors.secondaryText, fontSize: 13.sp),
+                      hintStyle: TextStyle(
+                          color: AppColors.secondaryText?.withOpacity(0.5), fontSize: 12.sp),
+                      filled: true,
+                      fillColor: AppColors.screenBackground,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide(color: AppColors.border, width: 1),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide(color: AppColors.primaryGold!, width: 1.5),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide(color: AppColors.error, width: 1),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide(color: AppColors.error, width: 1.5),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter your review';
+                      }
+                      if (value.trim().length < 10) {
+                        return 'Review must be at least 10 characters';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 24.h),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: AppColors.secondaryText!, width: 1),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.r)),
+                            padding: EdgeInsets.symmetric(vertical: 12.h),
+                          ),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: AppColors.secondaryText,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _userRating == 0 ? null : () => _submitReview(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                            _userRating == 0 ? AppColors.border : AppColors.primaryGold,
+                            elevation: 0,
+                            padding: EdgeInsets.symmetric(vertical: 12.h),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.r)),
+                          ),
+                          child: Text(
+                            'Submit',
+                            style: TextStyle(
+                              color: AppColors.buttonText,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getRatingText(int rating) {
+    switch (rating) {
+      case 1:
+        return 'Poor';
+      case 2:
+        return 'Fair';
+      case 3:
+        return 'Good';
+      case 4:
+        return 'Very Good';
+      case 5:
+        return 'Excellent';
+      default:
+        return '';
+    }
+  }
+
+  Future<void> _submitReview(BuildContext dialogContext) async {
+    if (!_reviewFormKey.currentState!.validate()) return;
+    if (_userRating == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please select a rating'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+        ),
+      );
+      return;
+    }
+
+    Navigator.pop(dialogContext);
+    setState(() => _isReviewLoading = true);
+
+    try {
+      await _reviewService.createReview(
+        amcId: widget.id,
+        rating: _userRating,
+        comment: _reviewController.text.trim(),
+      );
+
+      await _fetchReviews();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle_rounded, color: Colors.white, size: 20.sp),
+              SizedBox(width: 8.w),
+              Text('Review submitted successfully!'),
+            ],
+          ),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.error_outline_rounded, color: Colors.white, size: 20.sp),
+              SizedBox(width: 8.w),
+              Expanded(child: Text('Failed to submit review: ${e.toString()}')),
+            ],
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+          duration: Duration(seconds: 4),
+        ),
+      );
+    } finally {
+      setState(() => _isReviewLoading = false);
+    }
   }
 
   Widget _buildSectionTitle(String title) {
@@ -532,51 +1086,6 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
         border: Border.all(color: AppColors.primaryGold!.withOpacity(0.3)),
       ),
       child: child,
-    );
-  }
-
-  Widget _buildPerformanceChart() {
-    return Container(
-      height: 100.h,
-      decoration: BoxDecoration(
-        color: AppColors.screenBackground,
-        borderRadius: BorderRadius.circular(10.r),
-      ),
-      child: Center(
-        child: Text(
-          'Performance Chart\n(Interactive chart)',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: AppColors.secondaryText, fontSize: 13.sp),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPerformanceCard(String period, String returns, bool isPositive) {
-    return Container(
-      padding: EdgeInsets.all(10.w),
-      decoration: BoxDecoration(
-        color: AppColors.screenBackground,
-        borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: AppColors.primaryGold!.withOpacity(0.2)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            period,
-            style: TextStyle(color: AppColors.secondaryText, fontSize: 11.sp),
-          ),
-          SizedBox(height: 6.h),
-          Text(
-            returns,
-            style: TextStyle(
-              color: isPositive ? AppColors.success : AppColors.error,
-              fontSize: 14.sp,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -733,110 +1242,6 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
     );
   }
 
-  Widget _buildRatingBar(int rating, int count, int percentage) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4.h),
-      child: Row(
-        children: [
-          Text(
-            '$rating',
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: AppColors.primaryText,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          SizedBox(width: 4.w),
-          Icon(Icons.star, color: AppColors.primaryGold, size: 12.sp),
-          SizedBox(width: 8.w),
-          Expanded(
-            child: Container(
-              height: 6.h,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(3.r),
-                color: AppColors.border.withOpacity(0.2),
-              ),
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: percentage / 100,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryGold,
-                    borderRadius: BorderRadius.circular(3.r),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: 8.w),
-          Text(
-            '$count',
-            style: TextStyle(
-              fontSize: 11.sp,
-              color: AppColors.secondaryText,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildReviewItem(String name, int rating, String review, String time) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(
-        color: AppColors.screenBackground,
-        borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: AppColors.primaryGold!.withOpacity(0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                name,
-                style: TextStyle(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primaryText,
-                ),
-              ),
-              Row(
-                children: List.generate(5, (index) {
-                  return Icon(
-                    index < rating ? Icons.star : Icons.star_border,
-                    color: AppColors.primaryGold,
-                    size: 12.sp,
-                  );
-                }),
-              ),
-            ],
-          ),
-          SizedBox(height: 6.h),
-          Text(
-            review,
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: AppColors.primaryText,
-              height: 1.4,
-            ),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            time,
-            style: TextStyle(
-              fontSize: 10.sp,
-              color: AppColors.secondaryText,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildBottomSheet() {
     return Container(
       padding: EdgeInsets.all(16.w),
@@ -881,7 +1286,9 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
                     ),
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: widget.isInvestMode ? 'Investment Amount' : 'Withdrawal Amount',
+                      labelText: widget.isInvestMode
+                          ? 'Investment Amount'
+                          : 'Withdrawal Amount',
                       hintText: '₹1,000',
                       labelStyle: TextStyle(color: AppColors.secondaryText, fontSize: 13.sp),
                       hintStyle: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp),
@@ -903,14 +1310,16 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
                         borderRadius: BorderRadius.circular(12.r),
                         borderSide: BorderSide(color: AppColors.error, width: 1.5),
                       ),
-                      prefixIcon: Icon(Icons.currency_rupee_rounded, color: AppColors.primaryGold, size: 22.sp),
+                      prefixIcon: Icon(Icons.currency_rupee_rounded,
+                          color: AppColors.primaryGold, size: 22.sp),
                       suffixIcon: _amountController.text.isNotEmpty
                           ? IconButton(
                         onPressed: () {
                           _amountController.clear();
                           setState(() {});
                         },
-                        icon: Icon(Icons.clear_rounded, color: AppColors.secondaryText, size: 18.sp),
+                        icon: Icon(Icons.clear_rounded,
+                            color: AppColors.secondaryText, size: 18.sp),
                       )
                           : null,
                     ),
@@ -938,7 +1347,6 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
               ],
             ),
             SizedBox(height: 16.h),
-            // Single button based on isInvestMode
             SizedBox(
               width: double.infinity,
               child: widget.isInvestMode
@@ -946,7 +1354,8 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
                 onPressed: _isLoading ? null : () => _handleInvestOrWithdraw('Invest'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryGold!.withOpacity(0.9),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r)),
                   padding: EdgeInsets.symmetric(vertical: 14.h),
                   elevation: 2,
                 ),
@@ -962,7 +1371,8 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
                     : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.trending_up, color: AppColors.buttonText, size: 18.sp),
+                    Icon(Icons.trending_up,
+                        color: AppColors.buttonText, size: 18.sp),
                     SizedBox(width: 8.w),
                     Text(
                       'Invest Now',
@@ -979,13 +1389,15 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
                 onPressed: _isLoading ? null : () => _handleInvestOrWithdraw('Withdraw'),
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(color: AppColors.error, width: 1.5),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r)),
                   padding: EdgeInsets.symmetric(vertical: 14.h),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.trending_down, color: AppColors.error, size: 18.sp),
+                    Icon(Icons.trending_down,
+                        color: AppColors.error, size: 18.sp),
                     SizedBox(width: 8.w),
                     Text(
                       'Withdraw',
@@ -1016,7 +1428,9 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primaryGold!.withOpacity(0.1) : AppColors.screenBackground,
+            color: isSelected
+                ? AppColors.primaryGold!.withOpacity(0.1)
+                : AppColors.screenBackground,
             borderRadius: BorderRadius.circular(8.r),
             border: Border.all(
               color: isSelected ? AppColors.primaryGold : AppColors.border,
@@ -1045,9 +1459,9 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
     try {
       final amount = int.parse(_amountController.text);
       if (action == 'Invest') {
-        await _walletService.deposit(amount ,widget.id);
+        await _walletService.deposit(amount, widget.id);
       } else {
-        await _walletService.withdraw(amount,widget.id);
+        await _walletService.withdraw(amount, widget.id);
       }
       setState(() => _isLoading = false);
       await _showSuccessDialog(action);
@@ -1095,14 +1509,17 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
             RichText(
               textAlign: TextAlign.center,
               text: TextSpan(
-                style: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp, height: 1.4),
+                style: TextStyle(
+                    color: AppColors.secondaryText, fontSize: 14.sp, height: 1.4),
                 children: [
                   TextSpan(text: 'You are about to $action '),
                   TextSpan(
                     text: '₹${_amountController.text}',
-                    style: TextStyle(color: AppColors.primaryText, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: AppColors.primaryText, fontWeight: FontWeight.bold),
                   ),
-                  TextSpan(text: ' in\n${widget.fundName} using folio $_defaultFolio'),
+                  TextSpan(
+                      text: ' in\n${widget.fundName} using folio $_defaultFolio'),
                 ],
               ),
             ),
@@ -1114,7 +1531,8 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
                     onPressed: () => Navigator.pop(context, false),
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 10.h),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.r)),
                     ),
                     child: Text(
                       'Cancel',
@@ -1131,10 +1549,12 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
                   child: ElevatedButton(
                     onPressed: () => Navigator.pop(context, true),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: action == 'Invest' ? AppColors.primaryGold : AppColors.error,
+                      backgroundColor:
+                      action == 'Invest' ? AppColors.primaryGold : AppColors.error,
                       elevation: 0,
                       padding: EdgeInsets.symmetric(vertical: 10.h),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.r)),
                     ),
                     child: Text(
                       'Confirm',
@@ -1170,7 +1590,8 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
                 color: AppColors.success.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: FaIcon(FontAwesomeIcons.checkCircle, color: AppColors.success, size: 28.sp),
+              child: FaIcon(FontAwesomeIcons.checkCircle,
+                  color: AppColors.success, size: 28.sp),
             ),
             SizedBox(height: 12.h),
             Text(
@@ -1184,7 +1605,8 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
             SizedBox(height: 8.h),
             Text(
               'Your $action of ₹${_amountController.text} has been processed.',
-              style: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp, height: 1.4),
+              style: TextStyle(
+                  color: AppColors.secondaryText, fontSize: 14.sp, height: 1.4),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 16.h),
@@ -1196,7 +1618,8 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
                   backgroundColor: AppColors.primaryGold,
                   elevation: 0,
                   padding: EdgeInsets.symmetric(vertical: 10.h),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.r)),
                 ),
                 child: Text(
                   'Done',
@@ -1230,7 +1653,8 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
                 color: AppColors.error.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: FaIcon(FontAwesomeIcons.exclamationCircle, color: AppColors.error, size: 28.sp),
+              child: FaIcon(FontAwesomeIcons.exclamationCircle,
+                  color: AppColors.error, size: 28.sp),
             ),
             SizedBox(height: 12.h),
             Text(
@@ -1244,7 +1668,8 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
             SizedBox(height: 8.h),
             Text(
               message,
-              style: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp, height: 1.4),
+              style: TextStyle(
+                  color: AppColors.secondaryText, fontSize: 14.sp, height: 1.4),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 16.h),
@@ -1256,7 +1681,8 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
                   backgroundColor: AppColors.error,
                   elevation: 0,
                   padding: EdgeInsets.symmetric(vertical: 10.h),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.r)),
                 ),
                 child: Text(
                   'Try Again',
@@ -1274,17 +1700,14 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
     );
   }
 
-
-  Widget _buildStatCard(String label, double value, IconData icon, Color color, {bool isMainStat = false}) {
+  Widget _buildStatCard(String label, double value, IconData icon, Color color,
+      {bool isMainStat = false}) {
     return Container(
       padding: EdgeInsets.all(8.w),
       decoration: BoxDecoration(
         color: color.withOpacity(0.08),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: color.withOpacity(0.2),
-          width: 1,
-        ),
+        border: Border.all(color: color.withOpacity(0.2), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1307,11 +1730,7 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
                   color: color.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
-                child: FaIcon(
-                  icon,
-                  color: color,
-                  size: 14.sp,
-                ),
+                child: FaIcon(icon, color: color, size: 14.sp),
               ),
             ],
           ),
@@ -1320,7 +1739,7 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
             text: TextSpan(
               children: [
                 TextSpan(
-                  text: '${value.toStringAsFixed(3)}', // Show 3 digits after decimal
+                  text: '${value.toStringAsFixed(3)}',
                   style: TextStyle(
                     color: color,
                     fontSize: isMainStat ? 20.sp : 18.sp,
@@ -1344,5 +1763,3 @@ class _TradingDetailsScreenState extends State<TradingDetailsScreen>
     );
   }
 }
-
-
