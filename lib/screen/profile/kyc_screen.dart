@@ -41,6 +41,7 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
   @override
   void initState() {
     super.initState();
+    print('user kyc status ${UserConstants.KYC_STATUS_KEY}');
 // Initialize UserService with JWT token (replace with actual token retrieval)
     _userService = UserService(token: '${UserConstants.TOKEN}');
   }

@@ -27,15 +27,23 @@ class MutualFundService {
   }
 
   // Mock method to fetch fund name based on rtaAmcCode and rtaSchCode
+  // Mock implementation of getFundName (replace with actual API call if available)
   static Future<String> getFundName(String rtaAmcCode, String rtaSchCode) async {
-    // Simulate API call with a mock mapping
-    // In a real implementation, this would be an HTTP request to fetch fund details
+    // Simulate API call or lookup (replace with actual implementation)
     final mockFundNames = {
-      'FTI_010': 'Franklin India Equity Fund',
-      // Add more mappings as needed
+      'AXF_SCGPG': 'Axis Small Cap Fund',
+      'AXF_GOGPG': 'Axis Gold Fund',
+      'AXF_MCGPG': 'Axis Midcap Fund',
+      'AXF_TPGPG': 'Axis Multi Asset Allocation Fund',
+      'AXF_EFGPG': 'Axis Large Cap Fund',
+      'AXF_CFGPG': 'Axis Liquid Fund',
+      'B_295G': 'Aditya Birla Sun Life Small Cap Fund',
+      'B_251G': 'Aditya Birla Sun Life Midcap Fund',
+      '166_IBGPG': 'quant Small Cap Fund',
+      'FTI_010': 'Franklin India Bluechip Fund', // Retained from original map
     };
     final cacheKey = '${rtaAmcCode}_${rtaSchCode}';
-    return mockFundNames[cacheKey] ?? 'Unknown Fund';
+    return mockFundNames[cacheKey] ?? 'Unknown Fund ($rtaAmcCode $rtaSchCode)';
   }
 
   static Future<Map<String, dynamic>> purchaseLumpsum({

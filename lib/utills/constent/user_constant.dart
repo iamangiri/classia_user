@@ -60,8 +60,6 @@ class UserConstants {
     await prefs.setString(EMAIL_KEY,          user['Email'] as String);
     await prefs.setString(PHONE_KEY,          user['Mobile'] as String);
     await prefs.setString(PROFILE_IMAGE_KEY,  user['ProfileImage'] as String);
-
-    // non‐String fields
     await prefs.setInt   (BANK_DETAILS_KEY,   user['BankDetails'] as int);
     await prefs.setInt   (KYC_STATUS_KEY,     user['UserKYC']     as int);
     await prefs.setBool  (MOBILE_VERIFIED_KEY,user['IsMobileVerified'] as bool);

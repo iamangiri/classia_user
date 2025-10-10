@@ -1,8 +1,8 @@
 import 'package:classia_amc/widget/common_app_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:ui';
 import '../../themes/app_colors.dart';
-import '../../widget/custom_app_bar.dart';
 import '../../service/apiservice/mutual_fund_service.dart';
 
 class TransactionScreen extends StatefulWidget {
@@ -13,7 +13,7 @@ class TransactionScreen extends StatefulWidget {
 class _TransactionScreenState extends State<TransactionScreen> with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  Map<String, String> _fundNameCache = {}; // Cache fund names for performance
+  Map<String, String> _fundNameCache = {};
 
   @override
   void initState() {
@@ -27,32 +27,6 @@ class _TransactionScreenState extends State<TransactionScreen> with TickerProvid
       curve: Curves.easeOutCubic,
     );
     _animationController.forward();
-    _loadFundNames(); // Load fund names on initialization
-  }
-
-  // Fetch and cache fund names
-  Future<void> _loadFundNames() async {
-    final transactions = await MutualFundService.getTransactionList();
-    if (transactions['status'] && transactions['data'] != null) {
-      final List<dynamic>? transactionList = transactions['data']['transactionList'];
-      if (transactionList != null) {
-        for (var transaction in transactionList) {
-          final transactionData = transaction['transactionData'] ?? {};
-          final schList = transactionData['schList'] ?? transactionData['sysSchList'] ?? [];
-          if (schList.isNotEmpty) {
-            final String rtaAmcCode = schList[0]['rtaAmcCode']?.toString() ?? 'N/A';
-            final String rtaSchCode = schList[0]['rtaSchCode']?.toString() ?? 'N/A';
-            final cacheKey = '${rtaAmcCode}_${rtaSchCode}';
-            if (!_fundNameCache.containsKey(cacheKey)) {
-              final fundName = await MutualFundService.getFundName(rtaAmcCode, rtaSchCode);
-              setState(() {
-                _fundNameCache[cacheKey] = fundName;
-              });
-            }
-          }
-        }
-      }
-    }
   }
 
   @override
@@ -61,11 +35,74 @@ class _TransactionScreenState extends State<TransactionScreen> with TickerProvid
     super.dispose();
   }
 
+  // Launch URL in browser
+  Future<void> _launchURL(String url) async {
+    if (url.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No approval link available'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final Uri uri = Uri.parse(url);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        throw 'Could not launch $url';
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not open link: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // Get fund name with caching
+  Future<String> _getFundName(String rtaAmcCode, String rtaSchCode) async {
+    final cacheKey = '${rtaAmcCode}_${rtaSchCode}';
+
+    if (_fundNameCache.containsKey(cacheKey)) {
+      return _fundNameCache[cacheKey]!;
+    }
+
+    try {
+      final fundName = await MutualFundService.getFundName(rtaAmcCode, rtaSchCode);
+      _fundNameCache[cacheKey] = fundName;
+      return fundName;
+    } catch (e) {
+      print('Error fetching fund name: $e');
+      return 'Fund Information';
+    }
+  }
+
+  // Get all fund names for a transaction
+  Future<List<String>> _getAllFundNames(List<dynamic> schList) async {
+    List<String> fundNames = [];
+
+    for (var scheme in schList) {
+      final String rtaAmcCode = scheme['rtaAmcCode']?.toString() ?? 'N/A';
+      final String rtaSchCode = scheme['rtaSchCode']?.toString() ?? 'N/A';
+
+      if (rtaAmcCode != 'N/A' && rtaSchCode != 'N/A') {
+        final fundName = await _getFundName(rtaAmcCode, rtaSchCode);
+        fundNames.add(fundName);
+      }
+    }
+
+    return fundNames;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(title: 'Transactions',
-      ),
+      appBar: CommonAppBar(title: 'Transactions'),
       backgroundColor: AppColors.screenBackground ?? Colors.white,
       body: FadeTransition(
         opacity: _fadeAnimation,
@@ -223,11 +260,10 @@ class _TransactionScreenState extends State<TransactionScreen> with TickerProvid
     final String transactionType = transaction['transactionType']?.toString() ?? 'N/A';
     final String createdAt = transaction['createdAt']?.toString() ?? 'N/A';
     final String mfuGorn = transaction['mfuGorn']?.toString() ?? 'N/A';
+    final String approvalLink = transaction['approvalLink']?.toString() ?? '';
+
     final transactionData = transaction['transactionData'] ?? {};
-    final schList = transactionData['schList'] ?? transactionData['sysSchList'] ?? [];
-    final String rtaAmcCode = schList.isNotEmpty ? schList[0]['rtaAmcCode']?.toString() ?? 'N/A' : 'N/A';
-    final String rtaSchCode = schList.isNotEmpty ? schList[0]['rtaSchCode']?.toString() ?? 'N/A' : 'N/A';
-    final String fundName = _fundNameCache['${rtaAmcCode}_${rtaSchCode}'] ?? 'Loading Fund Name...';
+    final List<dynamic> schList = (transactionData['schList'] ?? transactionData['sysSchList'] ?? []) as List<dynamic>;
 
     // Map orderStatus to user-friendly text
     final String statusText = {
@@ -295,16 +331,105 @@ class _TransactionScreenState extends State<TransactionScreen> with TickerProvid
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      fundName,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primaryText ?? Colors.black87,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    // Display all fund names
+                    FutureBuilder<List<String>>(
+                      future: _getAllFundNames(schList),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return Text(
+                            'Loading funds...',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primaryText ?? Colors.black87,
+                            ),
+                          );
+                        }
+
+                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return Text(
+                            'Fund Information',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primaryText ?? Colors.black87,
+                            ),
+                          );
+                        }
+
+                        final fundNames = snapshot.data!;
+
+                        // If single fund, show normally
+                        if (fundNames.length == 1) {
+                          return Text(
+                            fundNames[0],
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primaryText ?? Colors.black87,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          );
+                        }
+
+                        // If multiple funds, show with count badge
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    fundNames[0],
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.primaryText ?? Colors.black87,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryGold ?? Color(0xFFDAA520),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    '+${fundNames.length - 1}',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (fundNames.length > 1) ...[
+                              SizedBox(height: 4),
+                              ...fundNames.skip(1).map((name) => Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  '• $name',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.secondaryText ?? Colors.grey[600],
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              )).toList(),
+                            ],
+                          ],
+                        );
+                      },
                     ),
+                    SizedBox(height: 4),
                     Text(
                       '$transactionType • $statusText',
                       style: TextStyle(
@@ -336,8 +461,8 @@ class _TransactionScreenState extends State<TransactionScreen> with TickerProvid
                   Text(
                     '₹$totalAmount',
                     style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
                       color: AppColors.primaryText ?? Colors.black87,
                     ),
                   ),
@@ -381,7 +506,7 @@ class _TransactionScreenState extends State<TransactionScreen> with TickerProvid
               Text(
                 uniqueRefNo,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   color: AppColors.primaryText ?? Colors.black87,
                 ),
                 maxLines: 1,
@@ -404,13 +529,38 @@ class _TransactionScreenState extends State<TransactionScreen> with TickerProvid
               Text(
                 mfuGorn,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   color: AppColors.primaryText ?? Colors.black87,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ],
+          ),
+          SizedBox(height: 12),
+          // Approve Button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => _launchURL(approvalLink),
+              icon: Icon(Icons.check_circle_outline, size: 18),
+              label: Text(
+                'Approve Transaction',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryGold ?? Color(0xFFDAA520),
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 2,
+              ),
+            ),
           ),
         ],
       ),
