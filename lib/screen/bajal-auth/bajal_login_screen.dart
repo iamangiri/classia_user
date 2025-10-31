@@ -115,6 +115,12 @@ class _BajalLoginScreenState extends State<BajalLoginScreen> {
     }
   }
 
+  void _skipLogin() {
+    if (mounted) {
+      context.go('/main?index=0');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -126,226 +132,303 @@ class _BajalLoginScreenState extends State<BajalLoginScreen> {
         ),
       )
           : SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Logo Section
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryColor.withOpacity(0.05),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.primaryGold.withOpacity(0.3),
-                      width: 2,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.account_balance_wallet_rounded,
-                    size: 80,
-                    color: AppColors.primaryColor,
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // Title
-                const Text(
-                  'Classia Capital',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.headingText,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Subtitle
-                const Text(
-                  'Your Trusted Investment Partner',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: AppColors.secondaryText,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                const SizedBox(height: 60),
-
-                // Partner Info Card
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: AppColors.cardBackground,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: AppColors.border,
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.verified_rounded,
-                        color: AppColors.primaryGold,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            'Continue with our partner',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.secondaryText,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Bajaj Broking',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: AppColors.primaryColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // Login Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _startLogin,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.buttonBackground,
-                      foregroundColor: AppColors.buttonText,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 2,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Text(
-                          'Continue with Bajaj',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Icon(Icons.arrow_forward_rounded, size: 20),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-// 👇 Add this below the button
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const OpenDematWebView()),
-                    );
-                  },
-                  child: const Text.rich(
-                    TextSpan(
-                      text: "Don’t have an account? ",
-                      style: TextStyle(
-                        color: AppColors.secondaryText,
-                        fontSize: 14,
-                      ),
-                      children: [
-                        TextSpan(
-                          text: "Open Demat Account",
-                          style: TextStyle(
-                            color: AppColors.primaryColor,
-                            fontWeight: FontWeight.bold,
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-
-                // Error Message
-                if (_errorMessage != null) ...[
-                  const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.error.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.error.withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.error_outline_rounded,
-                          color: AppColors.error,
-                          size: 24,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            _errorMessage!,
-                            style: const TextStyle(
-                              color: AppColors.error,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-
-                const SizedBox(height: 40),
-
-                // Security Info
-                Row(
+        child: Stack(
+          children: [
+            // Main Content
+            Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(
-                      Icons.lock_outline_rounded,
-                      size: 16,
-                      color: AppColors.secondaryText,
+                  children: [
+                    // Logo Section
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryColor.withOpacity(0.05),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.primaryGold.withOpacity(0.3),
+                          width: 2,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.account_balance_wallet_rounded,
+                        size: 80,
+                        color: AppColors.primaryColor,
+                      ),
                     ),
-                    SizedBox(width: 6),
-                    Text(
-                      'Secure and encrypted login',
+                    const SizedBox(height: 40),
+
+                    // Title
+                    const Text(
+                      'Classia Capital',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.headingText,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Subtitle
+                    const Text(
+                      'Your Trusted Investment Partner',
+                      style: TextStyle(
+                        fontSize: 16,
                         color: AppColors.secondaryText,
                         fontWeight: FontWeight.w400,
                       ),
                     ),
+                    const SizedBox(height: 60),
+
+                    // Partner Info Card
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.cardBackground,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.border,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.verified_rounded,
+                            color: AppColors.primaryGold,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text(
+                                'Continue with our partner',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.secondaryText,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Bajaj Broking',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: AppColors.primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+
+                    // Login Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _startLogin,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.buttonBackground,
+                          foregroundColor: AppColors.buttonText,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Text(
+                              'Continue with Bajaj',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(Icons.arrow_forward_rounded, size: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Skip Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: _skipLogin,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.secondaryText,
+                          side: BorderSide(
+                            color: AppColors.border,
+                            width: 1.5,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Text(
+                              'Skip for Now',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(Icons.arrow_forward_outlined, size: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Open Demat Account Link
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const OpenDematWebView()),
+                        );
+                      },
+                      child: const Text.rich(
+                        TextSpan(
+                          text: "Don't have an account? ",
+                          style: TextStyle(
+                            color: AppColors.secondaryText,
+                            fontSize: 14,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: "Open Demat Account",
+                              style: TextStyle(
+                                color: AppColors.primaryColor,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Error Message
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 24),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.error.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline_rounded,
+                              color: AppColors.error,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _errorMessage!,
+                                style: const TextStyle(
+                                  color: AppColors.error,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 40),
+
+                    // Security Info
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(
+                          Icons.lock_outline_rounded,
+                          size: 16,
+                          color: AppColors.secondaryText,
+                        ),
+                        SizedBox(width: 6),
+                        Text(
+                          'Secure and encrypted login',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.secondaryText,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-              ],
+              ),
             ),
-          ),
+
+            // Top Right Skip Button (Alternative Position)
+            Positioned(
+              top: 16,
+              right: 16,
+              child: TextButton.icon(
+                onPressed: _skipLogin,
+                icon: const Icon(
+                  Icons.close_rounded,
+                  size: 20,
+                  color: AppColors.secondaryText,
+                ),
+                label: const Text(
+                  'Skip',
+                  style: TextStyle(
+                    color: AppColors.secondaryText,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  backgroundColor: AppColors.cardBackground,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(
+                      color: AppColors.border,
+                      width: 1,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
