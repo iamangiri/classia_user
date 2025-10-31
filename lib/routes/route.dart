@@ -7,6 +7,7 @@ import '../screen/auth/login_with_password_screen.dart';
 import '../screen/auth/otp_verify_screen.dart';
 import '../screen/auth/email_verification_screen.dart';
 import '../screen/auth/registration_screen.dart';
+import '../screen/bajal-auth/bajal_login_screen.dart';
 import '../screen/base/main_screen.dart';
 import '../screen/calcutator/calcutator.dart';
 import '../screen/onBoarding/onBoarding_screen.dart';
@@ -22,13 +23,20 @@ final router = GoRouter(
     GoRoute(
       path: '/',
       name: 'splash',
-      builder: (context, state) => SplashScreen(),
+      builder: (context, state) => const SplashScreen(),
     ),
 
     GoRoute(
       path: OnBoardingScreen.routeName,
       name: 'onboarding',
       builder: (context, state) => OnBoardingScreen(onDone: () {}),
+    ),
+
+    // Bajaj Login Route - Updated
+    GoRoute(
+      path: BajalLoginScreen.routeName,
+      name: 'bajallogin',
+      builder: (context, state) => const BajalLoginScreen(),
     ),
 
     GoRoute(

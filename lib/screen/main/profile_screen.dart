@@ -372,6 +372,7 @@ class ProfileScreen extends StatelessWidget {
                   onPressed: () async {
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.clear();
+
                     Navigator.pop(context, true);
                   },
                   child: Text(

@@ -97,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
       print('Main Balance: ${UserConstants.MAIN_BALANCE}');
       print('KYC Status - Aadhaar: ${UserConstants.IS_AADHAAR_VERIFIED}, PAN: ${UserConstants.IS_PAN_VERIFIED}');
 
-      context.goNamed('main');
+      context.goNamed('bajallogin');
     }
   }
 
