@@ -29,8 +29,8 @@ android {
         applicationId = "com.classia.capital"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode 18
-        versionName "1.2.8"
+        versionCode 19
+        versionName "1.2.9"
     }
 
     signingConfigs {

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../service/localauth/auth_service.dart';
 import '../basket/basket_list_screen.dart';
+import '../basket/intra_basket_list_screen.dart';
 import '../calcutator/sip_calcutator.dart';
 import '../main/home_screen.dart';
 import '../main/jt_mutual_fund_screen.dart';
@@ -33,7 +34,9 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> screens = [
     HomeScreen(),           // 0
     BasketListScreen(),         // 1
-    TradingScreen(),        // 2
+    //TradingScreen(),        // 2
+
+    IntraBasketListScreen(),
     JockeySipScreen(),
     JtMutualFundScreen()// 3
            // 4
