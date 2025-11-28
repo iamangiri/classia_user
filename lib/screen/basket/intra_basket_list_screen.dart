@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import '../main/profile_screen.dart';
 import 'basket_api_service.dart';
 import 'basket_details_sheet.dart';
 import 'basket_model.dart';
@@ -168,13 +169,11 @@ class _IntraBasketListScreenState extends State<IntraBasketListScreen> {
                   children: [
                     // Back Button
                     IconButton(
-                      icon: Icon(
-                        Icons.arrow_back_ios_new,
-                        color: AppColors.onPrimaryColor,
-                        size: 20.sp,
+                      icon: Icon(Icons.person, color: AppColors.primaryGold,),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ProfileScreen()),
                       ),
-                      onPressed: () => Navigator.pop(context),
-                      tooltip: 'Back',
                     ),
 
                     // Toggle Switch (Intraday / Intrahour)

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import '../main/profile_screen.dart';
 import 'basket_api_service.dart';
 import 'basket_details_sheet.dart';
 import 'basket_model.dart';
@@ -155,6 +156,18 @@ class _BasketListScreenState extends State<BasketListScreen>
         title: const Text('Classia Baskets'),
         centerTitle: true,
         elevation: 0,
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: Icon(Icons.person, color: AppColors.primaryGold,),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ProfileScreen()),
+              ),
+            ),
+          ],
+        ),
         backgroundColor: AppColors.primaryColor,
         foregroundColor: AppColors.onPrimaryColor,
         bottom: PreferredSize(
