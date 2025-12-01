@@ -1,4 +1,3 @@
-
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -36,7 +35,7 @@ class _BasketRaceCardState extends State<BasketRaceCard>
   @override
   void initState() {
     super.initState();
-    _raceScore = (Random().nextDouble() * 9 + 1);
+    _raceScore = (Random().nextDouble() * 9 + 1); // Random 1.0 to 10.0
 
     _horseController = AnimationController(
       vsync: this,
@@ -44,18 +43,14 @@ class _BasketRaceCardState extends State<BasketRaceCard>
     );
 
     _updateHorseAnimation();
+    _horseController.forward();
   }
 
   void _updateHorseAnimation() {
     double normalizedValue = (_raceScore / 10).clamp(0.0, 1.0);
-    _horseAnimation = Tween<double>(
-      begin: 0,
-      end: normalizedValue,
-    ).animate(CurvedAnimation(
-      parent: _horseController,
-      curve: Curves.easeInOut,
-    ));
-    _horseController.forward();
+    _horseAnimation = Tween<double>(begin: 0, end: normalizedValue).animate(
+      CurvedAnimation(parent: _horseController, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -65,47 +60,54 @@ class _BasketRaceCardState extends State<BasketRaceCard>
   }
 
   Color _volatilityColor(String vol) {
-    switch (vol) {
-      case 'LOW':
-        return AppColors.success.withOpacity(0.2);
-      case 'MID':
-        return AppColors.warning.withOpacity(0.2);
-      case 'HIGH':
-        return AppColors.error.withOpacity(0.2);
-      default:
-        return AppColors.disabled.withOpacity(0.2);
-    }
+    return switch (vol.toUpperCase()) {
+      'LOW' => AppColors.success.withOpacity(0.2),
+      'MID' => AppColors.warning.withOpacity(0.2),
+      'HIGH' => AppColors.error.withOpacity(0.2),
+      _ => AppColors.disabled.withOpacity(0.2),
+    };
+  }
+
+  Color _volatilityTextColor(String vol) {
+    return switch (vol.toUpperCase()) {
+      'LOW' => AppColors.success,
+      'MID' => AppColors.warning,
+      'HIGH' => AppColors.error,
+      _ => AppColors.secondaryText,
+    };
   }
 
   @override
   Widget build(BuildContext context) {
-    final double performance = double.tryParse(widget.basket.expectedReturn) ?? 0;
+    // Safely parse expected return
+    final double performance = widget.basket.expectedReturnValue;
     final bool isPositive = performance >= 0;
     final double cardWidth = MediaQuery.of(context).size.width - 48.w;
 
     return Card(
-      elevation: widget.isSubscribed ? 4 : 2,
+      elevation: widget.isSubscribed ? 6 : 3,
       color: AppColors.cardBackground,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(18.r),
         side: BorderSide(
           color: widget.isSubscribed
               ? AppColors.primaryGold
-              : AppColors.primaryGold.withOpacity(0.3),
-          width: widget.isSubscribed ? 2 : 1,
+              : AppColors.primaryGold.withOpacity(0.25),
+          width: widget.isSubscribed ? 2.5 : 1.2,
         ),
       ),
-      margin: EdgeInsets.symmetric(vertical: 8.h),
+      margin: EdgeInsets.symmetric(vertical: 10.h, horizontal: 4.w),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(18.r),
         onTap: widget.onTap,
         child: Stack(
           children: [
             Padding(
-              padding: EdgeInsets.all(16.w),
+              padding: EdgeInsets.all(18.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Header: Name + RA + Expected Return
                   Row(
                     children: [
                       Expanded(
@@ -118,7 +120,7 @@ class _BasketRaceCardState extends State<BasketRaceCard>
                                   child: Text(
                                     widget.basket.basketName,
                                     style: TextStyle(
-                                      fontSize: 16.sp,
+                                      fontSize: 17.sp,
                                       fontWeight: FontWeight.bold,
                                       color: AppColors.headingText,
                                     ),
@@ -127,36 +129,29 @@ class _BasketRaceCardState extends State<BasketRaceCard>
                                   ),
                                 ),
                                 if (widget.isSubscribed) ...[
-                                  SizedBox(width: 6.w),
-                                  Icon(
-                                    Icons.verified,
-                                    color: AppColors.primaryGold,
-                                    size: 18.sp,
-                                  ),
+                                  SizedBox(width: 8.w),
+                                  Icon(Icons.verified, color: AppColors.primaryGold, size: 20.sp),
                                 ],
                               ],
                             ),
                             SizedBox(height: 4.h),
                             Text(
                               'RA: ${widget.basket.raName}',
-                              style: TextStyle(
-                                fontSize: 11.sp,
-                                color: AppColors.secondaryText,
-                              ),
+                              style: TextStyle(fontSize: 12.sp, color: AppColors.secondaryText),
                             ),
                           ],
                         ),
                       ),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
                         decoration: BoxDecoration(
                           color: isPositive
-                              ? AppColors.success.withOpacity(0.1)
-                              : AppColors.error.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8.r),
+                              ? AppColors.success.withOpacity(0.12)
+                              : AppColors.error.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(10.r),
                           border: Border.all(
                             color: isPositive ? AppColors.success : AppColors.error,
-                            width: 1,
+                            width: 1.2,
                           ),
                         ),
                         child: Column(
@@ -166,14 +161,14 @@ class _BasketRaceCardState extends State<BasketRaceCard>
                                 Icon(
                                   isPositive ? Icons.trending_up : Icons.trending_down,
                                   color: isPositive ? AppColors.success : AppColors.error,
-                                  size: 16.sp,
+                                  size: 18.sp,
                                 ),
-                                SizedBox(width: 4.w),
+                                SizedBox(width: 6.w),
                                 Text(
-                                  '${widget.basket.expectedReturn}%',
+                                  '${performance.toStringAsFixed(1)}%',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 14.sp,
+                                    fontSize: 15.sp,
                                     color: isPositive ? AppColors.success : AppColors.error,
                                   ),
                                 ),
@@ -181,10 +176,7 @@ class _BasketRaceCardState extends State<BasketRaceCard>
                             ),
                             Text(
                               'Expected',
-                              style: TextStyle(
-                                fontSize: 9.sp,
-                                color: AppColors.secondaryText,
-                              ),
+                              style: TextStyle(fontSize: 10.sp, color: AppColors.secondaryText),
                             ),
                           ],
                         ),
@@ -192,21 +184,19 @@ class _BasketRaceCardState extends State<BasketRaceCard>
                     ],
                   ),
 
-                  SizedBox(height: 16.h),
+                  SizedBox(height: 18.h),
 
+                  // Horse Race Animation
                   Stack(
                     clipBehavior: Clip.none,
                     children: [
                       Container(
                         width: cardWidth,
-                        height: 8.h,
+                        height: 10.h,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(4.r),
-                          color: AppColors.primaryGold.withOpacity(0.2),
-                          border: Border.all(
-                            color: AppColors.primaryGold.withOpacity(0.3),
-                            width: 1,
-                          ),
+                          borderRadius: BorderRadius.circular(6.r),
+                          color: AppColors.primaryGold.withOpacity(0.18),
+                          border: Border.all(color: AppColors.primaryGold.withOpacity(0.4), width: 1.5),
                         ),
                       ),
                       AnimatedBuilder(
@@ -214,14 +204,11 @@ class _BasketRaceCardState extends State<BasketRaceCard>
                         builder: (context, child) {
                           return Container(
                             width: _horseAnimation.value * cardWidth,
-                            height: 8.h,
+                            height: 10.h,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(4.r),
+                              borderRadius: BorderRadius.circular(6.r),
                               gradient: LinearGradient(
-                                colors: [
-                                  AppColors.primaryGold,
-                                  AppColors.primaryGold.withOpacity(0.6),
-                                ],
+                                colors: [AppColors.primaryGold, AppColors.primaryGold.withOpacity(0.7)],
                               ),
                             ),
                           );
@@ -230,17 +217,15 @@ class _BasketRaceCardState extends State<BasketRaceCard>
                       AnimatedBuilder(
                         animation: _horseAnimation,
                         builder: (context, child) {
-                          double horsePosition = _horseAnimation.value * cardWidth;
+                          final double horsePosition = _horseAnimation.value * cardWidth;
                           return Positioned(
-                            left: (horsePosition - 25.w).clamp(0.0, cardWidth - 50.w),
-                            top: -35.h,
-                            child: SizedBox(
-                              height: 50.h,
-                              width: 60.w,
-                              child: Image.asset(
-                                'assets/images/jt1.gif',
-                                fit: BoxFit.contain,
-                              ),
+                            left: (horsePosition - 30.w).clamp(0.0, cardWidth - 60.w),
+                            top: -38.h,
+                            child: Image.asset(
+                              'assets/images/jt1.gif',
+                              height: 60.h,
+                              width: 70.w,
+                              fit: BoxFit.contain,
                             ),
                           );
                         },
@@ -248,44 +233,32 @@ class _BasketRaceCardState extends State<BasketRaceCard>
                     ],
                   ),
 
-                  SizedBox(height: 20.h),
+                  SizedBox(height: 24.h),
 
+                  // Invested Amount (if any)
                   if (widget.isSubscribed && widget.investedAmount > 0) ...[
                     Container(
                       width: double.infinity,
-                      padding: EdgeInsets.all(10.w),
+                      padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            AppColors.primaryGold.withOpacity(0.1),
+                            AppColors.primaryGold.withOpacity(0.15),
                             AppColors.primaryGold.withOpacity(0.05),
                           ],
                         ),
-                        borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(
-                          color: AppColors.primaryGold.withOpacity(0.3),
-                          width: 1,
-                        ),
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(color: AppColors.primaryGold.withOpacity(0.4), width: 1.5),
                       ),
                       child: Row(
                         children: [
-                          Icon(
-                            Icons.account_balance_wallet,
-                            color: AppColors.primaryGold,
-                            size: 18.sp,
-                          ),
-                          SizedBox(width: 8.w),
-                          Text(
-                            'Invested: ',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: AppColors.secondaryText,
-                            ),
-                          ),
+                          Icon(Icons.account_balance_wallet, color: AppColors.primaryGold, size: 20.sp),
+                          SizedBox(width: 10.w),
+                          Text('Total Invested: ', style: TextStyle(fontSize: 13.sp, color: AppColors.secondaryText)),
                           Text(
                             '₹${widget.investedAmount.toStringAsFixed(0)}',
                             style: TextStyle(
-                              fontSize: 14.sp,
+                              fontSize: 16.sp,
                               fontWeight: FontWeight.bold,
                               color: AppColors.primaryGold,
                             ),
@@ -293,36 +266,29 @@ class _BasketRaceCardState extends State<BasketRaceCard>
                         ],
                       ),
                     ),
-                    SizedBox(height: 12.h),
+                    SizedBox(height: 16.h),
                   ],
 
+                  // Chips Row
                   Wrap(
-                    spacing: 8.w,
-                    runSpacing: 6.h,
+                    spacing: 10.w,
+                    runSpacing: 8.h,
                     children: [
-                      _miniChip(
-                        widget.basket.subscryptionType,
-                        AppColors.primaryColor.withOpacity(0.1),
-                        AppColors.primaryColor,
-                      ),
+                      _miniChip(widget.basket.subscryptionType, AppColors.primaryColor.withOpacity(0.12), AppColors.primaryColor),
                       _miniChip(
                         widget.basket.volatility,
                         _volatilityColor(widget.basket.volatility),
-                        widget.basket.volatility == 'LOW'
-                            ? AppColors.success
-                            : widget.basket.volatility == 'MID'
-                            ? AppColors.warning
-                            : AppColors.error,
+                        _volatilityTextColor(widget.basket.volatility),
                       ),
                       if (!widget.basket.isFree)
                         _miniChip(
-                          '₹${widget.basket.subscriptionAmount}',
-                          AppColors.primaryGold.withOpacity(0.1),
+                          '₹${widget.basket.subscriptionAmountValue.toString()}',
+                          AppColors.primaryGold.withOpacity(0.12),
                           AppColors.primaryGold,
                         ),
                       _miniChip(
-                        '${widget.basket.holdings.length} Holdings',
-                        AppColors.accent.withOpacity(0.1),
+                        '${widget.basket.holdingsCount} Holdings',
+                        AppColors.accent.withOpacity(0.12),
                         AppColors.accent,
                       ),
                     ],
@@ -331,35 +297,28 @@ class _BasketRaceCardState extends State<BasketRaceCard>
               ),
             ),
 
+            // Subscribed Badge
             if (widget.isSubscribed)
               Positioned(
-                top: 0,
-                right: 0,
+                top: 8.h,
+                right: 8.w,
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                   decoration: BoxDecoration(
                     color: AppColors.primaryGold,
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(14.r),
-                      bottomLeft: Radius.circular(14.r),
-                    ),
+                    borderRadius: BorderRadius.circular(20.r),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                    ],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.check_circle,
-                        color: AppColors.onPrimaryColor,
-                        size: 14.sp,
-                      ),
+                      Icon(Icons.check_circle, color: AppColors.onPrimaryColor, size: 16.sp),
                       SizedBox(width: 4.w),
                       Text(
                         'Subscribed',
-                        style: TextStyle(
-                          color: AppColors.onPrimaryColor,
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(color: AppColors.onPrimaryColor, fontSize: 11.sp, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -373,23 +332,16 @@ class _BasketRaceCardState extends State<BasketRaceCard>
 
   Widget _miniChip(String label, Color bgColor, Color textColor) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(20.r),
         border: Border.all(color: textColor.withOpacity(0.3), width: 1),
       ),
       child: Text(
         label,
-        style: TextStyle(
-          fontSize: 11.sp,
-          fontWeight: FontWeight.w600,
-          color: textColor,
-        ),
+        style: TextStyle(fontSize: 11.5.sp, fontWeight: FontWeight.w600, color: textColor),
       ),
     );
   }
 }
-
-
-

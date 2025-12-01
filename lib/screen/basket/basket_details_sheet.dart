@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../themes/app_colors.dart';
+import 'basket_invest_screen.dart';
 import 'basket_model.dart';
 
 class BasketDetailSheet extends StatefulWidget {
@@ -37,115 +38,15 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
     super.dispose();
   }
 
-  void _showInvestDialog() {
-    _amountController.clear();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.r),
+
+  void _navigateToInvestScreen() {
+    Navigator.pop(context); // Close the bottom sheet first
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BasketInvestScreen(
+          basketId: widget.basket.id, // Make sure your Basket model has an 'id' field
         ),
-        title: Row(
-          children: [
-            Icon(Icons.account_balance_wallet, color: AppColors.primaryGold),
-            SizedBox(width: 8.w),
-            Text(
-              'Invest Amount',
-              style: TextStyle(
-                color: AppColors.headingText,
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Enter amount to invest in ${widget.basket.basketName}',
-              style: TextStyle(
-                color: AppColors.secondaryText,
-                fontSize: 13.sp,
-              ),
-            ),
-            SizedBox(height: 16.h),
-            TextField(
-              controller: _amountController,
-              keyboardType: TextInputType.number,
-              style: TextStyle(color: AppColors.primaryText),
-              decoration: InputDecoration(
-                prefixIcon: Icon(Icons.currency_rupee, color: AppColors.primaryGold),
-                hintText: 'Enter amount',
-                hintStyle: TextStyle(color: AppColors.secondaryText),
-                filled: true,
-                fillColor: AppColors.screenBackground,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: AppColors.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: AppColors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: AppColors.primaryGold, width: 2),
-                ),
-              ),
-            ),
-            SizedBox(height: 12.h),
-            Wrap(
-              spacing: 8.w,
-              children: [5000, 10000, 25000, 50000].map((amount) {
-                return InkWell(
-                  onTap: () => _amountController.text = amount.toString(),
-                  child: Chip(
-                    label: Text('₹$amount'),
-                    backgroundColor: AppColors.primaryGold.withOpacity(0.1),
-                    labelStyle: TextStyle(
-                      color: AppColors.primaryGold,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: AppColors.secondaryText),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final amount = double.tryParse(_amountController.text);
-              if (amount != null && amount > 0) {
-                widget.onInvest(amount);
-                Navigator.pop(context);
-                Navigator.pop(context);
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryGold,
-              foregroundColor: AppColors.onPrimaryColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-            ),
-            child: Text(
-              'Invest Now',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -636,7 +537,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                     Expanded(
                       flex: 2,
                       child: ElevatedButton.icon(
-                        onPressed: _showInvestDialog,
+                        onPressed: _navigateToInvestScreen,
                         icon: Icon(Icons.add_circle_outline, size: 20.sp),
                         label: const Text('Invest'),
                         style: ElevatedButton.styleFrom(
