@@ -442,7 +442,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        h.name,
+                                        h.fullName,
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 14.sp,
@@ -493,8 +493,8 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                               children: [
                                 Expanded(
                                   child: _holdingDetailItem(
-                                    'Quantity',
-                                    h.qantity,
+                                    'Units',
+                                    h.units,
                                     Icons.inventory_2_outlined,
                                   ),
                                 ),
@@ -638,7 +638,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                       child: ElevatedButton.icon(
                         onPressed: _showInvestDialog,
                         icon: Icon(Icons.add_circle_outline, size: 20.sp),
-                        label: const Text('Invest More'),
+                        label: const Text('Invest'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primaryGold,
                           foregroundColor: AppColors.onPrimaryColor,

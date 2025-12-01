@@ -16,16 +16,17 @@ import '../profile/customer_support_screen.dart';
 import '../homefetures/investment_history_screen.dart';
 import '../profile/edit_profile_screen.dart';
 import '../profile/kyc_screen.dart';
-import '../profile/learn_screen.dart';
-import '../profile/manage_folio_screen.dart';
 import '../profile/my_wallet_screen.dart';
 import '../profile/privicy_policy.dart';
 import '../profile/security_setting _screen.dart';
 import '../profile/demat_account_screen.dart';
 
-// Import both stock screens
+// STOCK SCREENS
 import '../stock/stock_market_fund_screen.dart';
-import '../stock/stock_market_holding_screen.dart'; // or stock_holdings_screen.dart
+import '../stock/stock_market_holding_screen.dart';
+import '../stock/order_book_screen.dart';
+import '../stock/trade_book_screen.dart';
+
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -42,15 +43,19 @@ class ProfileScreen extends StatelessWidget {
           children: [
             _buildProfileSection(context),
             SizedBox(height: 20.h),
+
             _buildSectionTitle('Account'),
             _buildAccountOptionsList(context),
             SizedBox(height: 20.h),
+
             _buildSectionTitle('Transactions'),
-            _buildTransactionsOptionsList(context), // Now includes both Fund & Holdings
+            _buildTransactionsOptionsList(context),
             SizedBox(height: 20.h),
+
             _buildSectionTitle('Preferences'),
             _buildPreferencesList(context),
             SizedBox(height: 20.h),
+
             _buildLogoutButton(context),
           ],
         ),
@@ -58,9 +63,11 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  // ------------------ PROFILE HEADER ------------------
   Widget _buildProfileSection(BuildContext context) {
     String userName = UserConstants.NAME?.toString() ?? "User";
     String userEmail = UserConstants.EMAIL?.toString() ?? "user@example.com";
+
     if (userName.trim().isEmpty) userName = "User";
 
     return Row(
@@ -93,14 +100,18 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  // ------------------ SECTION TITLE ------------------
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8.h),
-      child: Text(title, style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColors.primaryText)),
+      child: Text(
+        title,
+        style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColors.primaryText),
+      ),
     );
   }
 
-  // Account Section
+  // ------------------ ACCOUNT OPTIONS ------------------
   Widget _buildAccountOptionsList(BuildContext context) {
     final options = [
       {'title': 'KYC', 'icon': 'verified_user'},
@@ -112,12 +123,16 @@ class ProfileScreen extends StatelessWidget {
     return _buildOptionsList(options, context);
   }
 
-  // Transactions Section — Now includes both Fund & Holdings
+  // ------------------ TRANSACTIONS OPTIONS ------------------
   Widget _buildTransactionsOptionsList(BuildContext context) {
     final options = [
-      {'title': 'My Wallet', 'icon': 'account_balance_wallet'},
-      {'title': 'Stock Market Fund', 'icon': 'account_balance_wallet'},     // Same icon style
-      {'title': 'Stock Market Holdings', 'icon': 'show_chart'},             // Same icon style
+      {'title': 'My Wallet', 'icon': 'wallet'},
+      {'title': 'Stock Market Fund', 'icon': 'account_balance_wallet'},
+      {'title': 'Stock Market Holdings', 'icon': 'show_chart'},
+
+      {'title': 'Order Book', 'icon': 'receipt_long'},
+      {'title': 'Trade Book', 'icon': 'swap_vert'},
+
       {'title': 'Jockey Investment', 'icon': 'trending_up'},
       {'title': 'Jockey Withdraw', 'icon': 'money_off'},
       {'title': 'Mutual Fund Transaction', 'icon': 'history'},
@@ -125,7 +140,7 @@ class ProfileScreen extends StatelessWidget {
     return _buildOptionsList(options, context);
   }
 
-  // Preferences Section
+  // ------------------ PREFERENCES OPTIONS ------------------
   Widget _buildPreferencesList(BuildContext context) {
     final options = [
       {'title': 'Security Settings', 'icon': 'security'},
@@ -136,7 +151,7 @@ class ProfileScreen extends StatelessWidget {
     return _buildOptionsList(options, context);
   }
 
-  // Reusable list builder — 100% same design for all items
+  // ------------------ REUSABLE LIST UI ------------------
   Widget _buildOptionsList(List<Map<String, String>> options, BuildContext context) {
     final iconMap = {
       'verified_user': Icons.verified_user,
@@ -144,6 +159,7 @@ class ProfileScreen extends StatelessWidget {
       'payment': Icons.payment,
       'account_balance_wallet': Icons.account_balance_wallet,
       'account_balance': Icons.account_balance,
+      'wallet': Icons.account_balance_wallet,
       'show_chart': Icons.show_chart,
       'trending_up': Icons.trending_up,
       'money_off': Icons.money_off,
@@ -152,11 +168,15 @@ class ProfileScreen extends StatelessWidget {
       'info': Icons.info,
       'help': Icons.help,
       'privacy': Icons.privacy_tip,
+
+      // NEW ICONS
+      'receipt_long': Icons.receipt_long,
+      'swap_vert': Icons.swap_vert,
     };
 
     return ListView.builder(
       shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+      physics: NeverScrollableScrollPhysics(),
       itemCount: options.length,
       itemBuilder: (context, index) {
         final opt = options[index];
@@ -165,14 +185,14 @@ class ProfileScreen extends StatelessWidget {
         return GestureDetector(
           onTap: () => _navigateToOption(context, opt['title']!),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: Duration(milliseconds: 200),
             margin: EdgeInsets.symmetric(vertical: 4.h),
             padding: EdgeInsets.all(12.w),
             decoration: BoxDecoration(
               color: AppColors.cardBackground,
               borderRadius: BorderRadius.circular(12.r),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6.r, offset: const Offset(0, 2)),
+                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6.r, offset: Offset(0, 2)),
               ],
             ),
             child: Row(
@@ -194,40 +214,45 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // Navigation logic — both screens added
+  // ------------------ NAVIGATION HANDLER ------------------
   void _navigateToOption(BuildContext context, String title) {
     late Widget screen;
 
     switch (title) {
-      case 'KYC': screen = const KYCVerificationScreen(); break;
-      case 'CAN': screen = const CamsCreationScreen(); break;
-      case 'PayZee Registration': screen = const PayZeeRegistrationScreen(); break;
-      case 'Demat Account': screen = const DematAccountScreen(); break;
+      case 'KYC': screen = KYCVerificationScreen(); break;
+      case 'CAN': screen = CamsCreationScreen(); break;
+      case 'PayZee Registration': screen = PayZeeRegistrationScreen(); break;
+      case 'Demat Account': screen = DematAccountScreen(); break;
       case 'Bank Info': screen = BankInfoScreen(); break;
-      case 'My Wallet': screen = const MyWalletScreen(); break;
-      case 'Jockey Investment': screen = const InvestmentHistoryScreen(); break;
-      case 'Jockey Withdraw': screen = const WithdrawScreen(); break;
+
+      case 'My Wallet': screen = MyWalletScreen(); break;
+
+      case 'Stock Market Fund': screen = StockMarketFundScreen(); break;
+      case 'Stock Market Holdings': screen = StockHoldingsScreen(); break;
+
+      case 'Order Book': screen = OrderBookScreen(); break; //
+      case 'Trade Book': screen = TradeBookScreen(); break; //
+
+      case 'Jockey Investment': screen = InvestmentHistoryScreen(); break;
+      case 'Jockey Withdraw': screen = WithdrawScreen(); break;
       case 'Mutual Fund Transaction': screen = TransactionScreen(); break;
-      case 'Security Settings': screen = const SecuritySettingsScreen(); break;
+
+      case 'Security Settings': screen = SecuritySettingsScreen(); break;
       case 'About Us': screen = AboutUsScreen(); break;
       case 'Help Center': screen = CustomerSupportScreen(); break;
       case 'Privacy Policy': screen = PrivacyPolicyScreen(); break;
 
-    // Both Stock Screens — Same navigation style
-      case 'Stock Market Fund':
-        screen = StockMarketFundScreen();
-        break;
-      case 'Stock Market Holdings':
-        screen = StockHoldingsScreen(); // or StockMarketHoldingScreen()
-        break;
-
       default:
-        screen = Scaffold(appBar: AppBar(title: Text(title)), body: Center(child: Text('Coming Soon')));
+        screen = Scaffold(
+          appBar: AppBar(title: Text(title)),
+          body: Center(child: Text("Coming Soon")),
+        );
     }
 
     Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
   }
 
+  // ------------------ LOGOUT BUTTON ------------------
   Widget _buildLogoutButton(BuildContext context) {
     return Center(
       child: OutlinedButton.icon(

@@ -25,6 +25,116 @@ class BajajApiService {
     }
   }
 
+  // Get OrderBook API
+  static Future<Map<String, dynamic>> getOrderBook() async {
+    try {
+      final token = await _getAuthToken();
+
+      if (token == null || token.isEmpty) {
+        return {
+          'statusCode': -1,
+          'message': 'Authentication token not found',
+          'data': null,
+        };
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/reports/orderbook'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      ).timeout(
+        Duration(seconds: 30),
+        onTimeout: () {
+          throw Exception('Request timeout');
+        },
+      );
+
+      print('Bajaj OrderBook API Response Status: ${response.statusCode}');
+      print('Bajaj OrderBook API Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonResponse = json.decode(response.body);
+        return jsonResponse;
+      } else if (response.statusCode == 401) {
+        return {
+          'statusCode': -1,
+          'message': 'Unauthorized - Please login again',
+          'data': null,
+        };
+      } else {
+        return {
+          'statusCode': -1,
+          'message': 'Failed to load orderbook data. Status: ${response.statusCode}',
+          'data': null,
+        };
+      }
+    } catch (e) {
+      print('Error in getOrderBook: $e');
+      return {
+        'statusCode': -1,
+        'message': 'Network error: ${e.toString()}',
+        'data': null,
+      };
+    }
+  }
+
+  // Get TradeBook API
+  static Future<Map<String, dynamic>> getTradeBook() async {
+    try {
+      final token = await _getAuthToken();
+
+      if (token == null || token.isEmpty) {
+        return {
+          'statusCode': -1,
+          'message': 'Authentication token not found',
+          'data': null,
+        };
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/reports/tradebook'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      ).timeout(
+        Duration(seconds: 30),
+        onTimeout: () {
+          throw Exception('Request timeout');
+        },
+      );
+
+      print('Bajaj TradeBook API Response Status: ${response.statusCode}');
+      print('Bajaj TradeBook API Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonResponse = json.decode(response.body);
+        return jsonResponse;
+      } else if (response.statusCode == 401) {
+        return {
+          'statusCode': -1,
+          'message': 'Unauthorized - Please login again',
+          'data': null,
+        };
+      } else {
+        return {
+          'statusCode': -1,
+          'message': 'Failed to load tradebook data. Status: ${response.statusCode}',
+          'data': null,
+        };
+      }
+    } catch (e) {
+      print('Error in getTradeBook: $e');
+      return {
+        'statusCode': -1,
+        'message': 'Network error: ${e.toString()}',
+        'data': null,
+      };
+    }
+  }
+
   // Get Funds API
   static Future<Map<String, dynamic>> getFunds() async {
     try {
@@ -134,9 +244,6 @@ class BajajApiService {
     }
   }
 
-
-
-
   // Get Holdings API (if available)
   static Future<Map<String, dynamic>> getHoldings() async {
     try {
@@ -239,6 +346,89 @@ class BajajApiService {
       }
     } catch (e) {
       print('Error in getPositions: $e');
+      return {
+        'statusCode': -1,
+        'message': 'Network error: ${e.toString()}',
+        'data': null,
+      };
+    }
+  }
+
+  // Place Order API
+  static Future<Map<String, dynamic>> placeOrder({
+    required String orderType,
+    required int qty,
+    required String exchange,
+    required String buySell,
+    required String orderTag,
+    required String orderTypeValue,
+    required String product,
+    required String validity,
+    required String symbol,
+    double slPrice = 0,
+    double limitPrice = 0,
+    String amo = 'NO',
+    int discQty = 0,
+  }) async {
+    try {
+      final token = await _getAuthToken();
+
+      if (token == null || token.isEmpty) {
+        return {
+          'statusCode': -1,
+          'message': 'Authentication token not found',
+          'data': null,
+        };
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/orders/$orderType'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'qty': qty,
+          'exchange': exchange,
+          'buy_sell': buySell,
+          'order_tag': orderTag,
+          'order_type': orderTypeValue,
+          'product': product,
+          'validity': validity,
+          'sl_price': slPrice,
+          'limit_price': limitPrice,
+          'amo': amo,
+          'disc_qty': discQty,
+          'symbol': symbol,
+        }),
+      ).timeout(
+        Duration(seconds: 30),
+        onTimeout: () {
+          throw Exception('Request timeout');
+        },
+      );
+
+      print('Bajaj Place Order API Response Status: ${response.statusCode}');
+      print('Bajaj Place Order API Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonResponse = json.decode(response.body);
+        return jsonResponse;
+      } else if (response.statusCode == 401) {
+        return {
+          'statusCode': -1,
+          'message': 'Unauthorized - Please login again',
+          'data': null,
+        };
+      } else {
+        return {
+          'statusCode': -1,
+          'message': 'Failed to place order. Status: ${response.statusCode}',
+          'data': null,
+        };
+      }
+    } catch (e) {
+      print('Error in placeOrder: $e');
       return {
         'statusCode': -1,
         'message': 'Network error: ${e.toString()}',
