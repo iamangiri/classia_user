@@ -165,18 +165,17 @@ class _OrderBottomSheet extends StatefulWidget {
   @override
   State<_OrderBottomSheet> createState() => _OrderBottomSheetState();
 }
-
 class _OrderBottomSheetState extends State<_OrderBottomSheet> {
   bool _isLoading = false;
   final TextEditingController _qtyController = TextEditingController(text: '1');
   final TextEditingController _priceController = TextEditingController();
-  String _selectedOrderType = 'MARKET';
-  String _selectedProduct = 'INTRADAY';
+  String _selectedOrderType = 'RL'; // Changed from 'MARKET' to 'RL'
+  String _selectedProduct = 'I'; // Changed from 'INTRADAY' to 'I'
 
   @override
   void initState() {
     super.initState();
-    _selectedOrderType = 'MARKET';
+    _selectedOrderType = 'RL'; // Regular Limit (Market Order)
   }
 
   Future<void> _placeOrder() async {
@@ -185,8 +184,8 @@ class _OrderBottomSheetState extends State<_OrderBottomSheet> {
       return;
     }
 
-    // Validate price for LIMIT orders
-    if (_selectedOrderType == 'LIMIT' || _selectedOrderType == 'SL') {
+    // Validate price for LIMIT orders (RL requires price, RL-M doesn't)
+    if (_selectedOrderType == 'RL' || _selectedOrderType == 'SL') {
       if (_priceController.text.isEmpty || double.tryParse(_priceController.text) == null) {
         _showSnackBar('Please enter valid price', isError: true);
         return;
@@ -199,10 +198,11 @@ class _OrderBottomSheetState extends State<_OrderBottomSheet> {
       double limitPrice = 0;
       double slPrice = 0;
 
-      if (_selectedOrderType == 'LIMIT') {
+      if (_selectedOrderType == 'RL') {
         limitPrice = double.parse(_priceController.text);
       } else if (_selectedOrderType == 'SL') {
         slPrice = double.parse(_priceController.text);
+        limitPrice = double.parse(_priceController.text);
       }
 
       final response = await BajajApiService.placeOrder(
@@ -245,7 +245,7 @@ class _OrderBottomSheetState extends State<_OrderBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final isBuy = widget.buySell == 'BUY';
-    final showPriceField = _selectedOrderType == 'LIMIT' || _selectedOrderType == 'SL';
+    final showPriceField = _selectedOrderType == 'RL' || _selectedOrderType == 'SL';
 
     return DraggableScrollableSheet(
       initialChildSize: 0.65,
@@ -361,7 +361,7 @@ class _OrderBottomSheetState extends State<_OrderBottomSheet> {
                       ),
                       SizedBox(height: 16.h),
 
-                      // Order Type Dropdown
+                      // Order Type Dropdown (FIXED - Using correct API values)
                       DropdownButtonFormField<String>(
                         value: _selectedOrderType,
                         decoration: InputDecoration(
@@ -370,30 +370,31 @@ class _OrderBottomSheetState extends State<_OrderBottomSheet> {
                             borderRadius: BorderRadius.circular(8.r),
                           ),
                         ),
-                        items: ['MARKET', 'LIMIT', 'SL', 'SL-M']
-                            .map((type) => DropdownMenuItem(
-                          value: type,
-                          child: Text(type),
-                        ))
-                            .toList(),
+                        items: [
+                          DropdownMenuItem(value: 'RL-M', child: Text('Market Order')),
+                          DropdownMenuItem(value: 'RL', child: Text('Limit Order')),
+                          DropdownMenuItem(value: 'SL', child: Text('Stop Loss')),
+                          DropdownMenuItem(value: 'SL-M', child: Text('Stop Loss Market')),
+                        ],
                         onChanged: (value) {
                           setState(() {
                             _selectedOrderType = value!;
-                            if (!showPriceField) {
+                            // Clear price field for market orders
+                            if (value == 'RL-M' || value == 'SL-M') {
                               _priceController.clear();
                             }
                           });
                         },
                       ),
 
-                      // Price field for LIMIT and SL orders
+                      // Price field for RL and SL orders
                       if (showPriceField) ...[
                         SizedBox(height: 16.h),
                         TextField(
                           controller: _priceController,
                           keyboardType: TextInputType.numberWithOptions(decimal: true),
                           decoration: InputDecoration(
-                            labelText: _selectedOrderType == 'LIMIT' ? 'Limit Price' : 'Stop Loss Price',
+                            labelText: _selectedOrderType == 'RL' ? 'Limit Price' : 'Stop Loss Price',
                             hintText: 'Enter price',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8.r),
@@ -407,7 +408,7 @@ class _OrderBottomSheetState extends State<_OrderBottomSheet> {
                       ],
                       SizedBox(height: 16.h),
 
-                      // Product Type Dropdown
+                      // Product Type Dropdown (FIXED - Using correct API values)
                       DropdownButtonFormField<String>(
                         value: _selectedProduct,
                         decoration: InputDecoration(
@@ -416,12 +417,11 @@ class _OrderBottomSheetState extends State<_OrderBottomSheet> {
                             borderRadius: BorderRadius.circular(8.r),
                           ),
                         ),
-                        items: ['INTRADAY', 'DELIVERY', 'MTF']
-                            .map((type) => DropdownMenuItem(
-                          value: type,
-                          child: Text(type),
-                        ))
-                            .toList(),
+                        items: [
+                          DropdownMenuItem(value: 'I', child: Text('Intraday')),
+                          DropdownMenuItem(value: 'D', child: Text('Delivery')),
+                          DropdownMenuItem(value: 'MTF', child: Text('Margin Trading')),
+                        ],
                         onChanged: (value) {
                           setState(() => _selectedProduct = value!);
                         },

@@ -6,7 +6,6 @@ import '../../themes/app_colors.dart';
 import 'basket_api_service.dart';
 import 'basket_model.dart';
 
-
 class BasketInvestScreen extends StatefulWidget {
   final int basketId;
 
@@ -86,6 +85,7 @@ class _BasketInvestScreenState extends State<BasketInvestScreen> {
     }
   }
 
+  // FIXED: Updated order placement logic with correct order types
   Future<void> _placeBasketOrders() async {
     if (_basket == null || _basket!.holdings.isEmpty) {
       _showSnackBar('No holdings to invest', isError: true);
@@ -149,8 +149,32 @@ class _BasketInvestScreenState extends State<BasketInvestScreen> {
 
     for (var holding in _basket!.holdings) {
       try {
-        final orderType = holding.orderType == 'MARKET' ? 'RL-M' : 'RL-L';
-        final product = _basket!.type == 'DELIVERY' ? 'D' : 'I';
+        // FIXED: Correct order type mapping
+        String orderType;
+        double limitPrice = 0;
+        double slPrice = 0;
+
+        final orderTypeUpper = holding.orderType.toUpperCase();
+
+        if (orderTypeUpper == 'MARKET') {
+          orderType = 'RL-M'; // Market order
+        } else if (orderTypeUpper == 'LIMIT') {
+          orderType = 'RL'; // Limit order (NOT RL-L!)
+          limitPrice = double.tryParse(holding.tgtPrice) ?? 0;
+        } else if (orderTypeUpper == 'SL' || orderTypeUpper == 'STOPLOSS') {
+          orderType = 'SL'; // Stop loss
+          slPrice = double.tryParse(holding.slPrice) ?? 0;
+          limitPrice = double.tryParse(holding.tgtPrice) ?? 0;
+        } else if (orderTypeUpper == 'SL-M') {
+          orderType = 'SL-M'; // Stop loss market
+          slPrice = double.tryParse(holding.slPrice) ?? 0;
+        } else {
+          // Default to market order if unknown type
+          orderType = 'RL-M';
+        }
+
+        // FIXED: Product type mapping
+        final product = _basket!.type.toUpperCase() == 'DELIVERY' ? 'D' : 'I';
 
         final response = await BajajApiService.placeOrder(
           orderType: 'place',
@@ -162,8 +186,8 @@ class _BasketInvestScreenState extends State<BasketInvestScreen> {
           product: product,
           validity: 'DAY',
           symbol: holding.symbol,
-          slPrice: double.tryParse(holding.slPrice) ?? 0,
-          limitPrice: double.tryParse(holding.tgtPrice) ?? 0,
+          slPrice: slPrice,
+          limitPrice: limitPrice,
         );
 
         if (response['statusCode'] == 0) {
