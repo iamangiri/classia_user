@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../../themes/app_colors.dart';
 import '../../service/apiservice/bajaj_api_service.dart';
+import '../bajal-auth/bajal_login_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class StockHoldingsScreen extends StatefulWidget {
   @override
@@ -60,14 +62,29 @@ class _StockHoldingsScreenState extends State<StockHoldingsScreen>
                     if (snapshot.connectionState == ConnectionState.waiting || _isRefreshing) {
                       return _buildLoadingState();
                     }
-                    if (snapshot.hasError || !snapshot.hasData || snapshot.data!['statusCode'] != 0) {
-                      return _buildErrorState();
+
+                    // Check for errors or no data (not logged in)
+                    if (snapshot.hasError || !snapshot.hasData) {
+                      return _buildErrorState(); // Shows "Login Required"
                     }
 
-                    final List<dynamic> holdings = snapshot.data!['data'] as List<dynamic>;
+                    final apiData = snapshot.data!;
 
+                    // Check if not logged in (error from API)
+                    if (apiData['statusCode'] != 0) {
+                      return _buildErrorState(); // Shows "Login Required"
+                    }
+
+                    // Check if data is null (logged in but no holdings)
+                    if (apiData['data'] == null) {
+                      return _buildEmptyState(); // Shows "No Holdings Yet"
+                    }
+
+                    final List<dynamic> holdings = apiData['data'] as List<dynamic>;
+
+                    // Check if holdings list is empty
                     if (holdings.isEmpty) {
-                      return _buildEmptyState();
+                      return _buildEmptyState(); // Shows "No Holdings Yet"
                     }
 
                     // Calculate totals
@@ -348,24 +365,74 @@ class _StockHoldingsScreenState extends State<StockHoldingsScreen>
     );
   }
 
+
   Widget _buildErrorState() {
     return Container(
       height: 500,
-      padding: EdgeInsets.all(32),
+      margin: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(32),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.signal_wifi_connected_no_internet_4, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('Unable to load holdings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-            Text('Pull down to retry', style: TextStyle(color: Colors.grey)),
-            SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    (AppColors.primaryGold ?? Color(0xFFDAA520)).withOpacity(0.1),
+                    (AppColors.primaryGold ?? Color(0xFFDAA520)).withOpacity(0.05),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(50),
+              ),
+              child: Icon(
+                Icons.account_circle_outlined,
+                size: 64,
+                color: AppColors.primaryGold ?? Color(0xFFDAA520),
+              ),
+            ),
+            SizedBox(height: 24),
+            Text(
+              'Login Required',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: AppColors.primaryText ?? Colors.black87,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Please login with your broker to view your stock holdings and portfolio.',
+              style: TextStyle(
+                fontSize: 15,
+                color: AppColors.secondaryText ?? Colors.grey,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () => setState(() {}),
-              icon: Icon(Icons.refresh),
-              label: Text('Retry'),
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryGold),
+              onPressed: () {
+                context.push(BajalLoginScreen.routeName);
+              },
+              icon: Icon(Icons.login, size: 20),
+              label: Text(
+                'Login with Broker',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryGold ?? Color(0xFFDAA520),
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 2,
+              ),
             ),
           ],
         ),

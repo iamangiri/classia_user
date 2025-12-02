@@ -1,8 +1,10 @@
 import 'package:classia_amc/widget/common_app_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:ui';
 import '../../themes/app_colors.dart';
 import '../../service/apiservice/bajaj_api_service.dart';
+import '../bajal-auth/bajal_login_screen.dart';
 
 class TradeBookScreen extends StatefulWidget {
   @override
@@ -67,19 +69,26 @@ class _TradeBookScreenState extends State<TradeBookScreen> with TickerProviderSt
                       return _buildLoadingState();
                     } else if (snapshot.hasError || !snapshot.hasData) {
                       print('Error loading tradebook: ${snapshot.error}');
-                      return _buildErrorState();
+                      return _buildErrorState(); // Shows "Login Required"
                     }
 
                     final apiData = snapshot.data!;
 
-                    if (apiData['statusCode'] != 0 || apiData['data'] == null) {
-                      return _buildErrorState();
+                    // Check if not logged in (error from API)
+                    if (apiData['statusCode'] != 0) {
+                      return _buildErrorState(); // Shows "Login Required"
+                    }
+
+                    // Check if data is null (logged in but no trades)
+                    if (apiData['data'] == null) {
+                      return _buildEmptyState(); // Shows "No Trades Yet"
                     }
 
                     final tradesList = apiData['data'] as List<dynamic>;
 
+                    // Check if trades list is empty
                     if (tradesList.isEmpty) {
-                      return _buildEmptyState();
+                      return _buildEmptyState(); // Shows "No Trades Yet"
                     }
 
                     return Column(
@@ -707,6 +716,7 @@ class _TradeBookScreenState extends State<TradeBookScreen> with TickerProviderSt
     );
   }
 
+
   Widget _buildErrorState() {
     return Container(
       height: 500,
@@ -721,21 +731,21 @@ class _TradeBookScreenState extends State<TradeBookScreen> with TickerProviderSt
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.red.withOpacity(0.1),
-                    Colors.red.withOpacity(0.05),
+                    (AppColors.primaryGold ?? Color(0xFFDAA520)).withOpacity(0.1),
+                    (AppColors.primaryGold ?? Color(0xFFDAA520)).withOpacity(0.05),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(50),
               ),
               child: Icon(
-                Icons.error_outline,
+                Icons.account_circle_outlined,
                 size: 64,
-                color: Colors.red[400],
+                color: AppColors.primaryGold ?? Color(0xFFDAA520),
               ),
             ),
             SizedBox(height: 24),
             Text(
-              'Unable to Load Trades',
+              'Login Required',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
@@ -744,7 +754,7 @@ class _TradeBookScreenState extends State<TradeBookScreen> with TickerProviderSt
             ),
             SizedBox(height: 8),
             Text(
-              'There was an error loading your trade book. Please check your connection and try again.',
+              'Please login with your broker to view your trade book and executed trades.',
               style: TextStyle(
                 fontSize: 15,
                 color: AppColors.secondaryText ?? Colors.grey,
@@ -754,10 +764,12 @@ class _TradeBookScreenState extends State<TradeBookScreen> with TickerProviderSt
             ),
             SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () => setState(() {}),
-              icon: Icon(Icons.refresh, size: 20),
+              onPressed: () {
+                context.push(BajalLoginScreen.routeName);
+              },
+              icon: Icon(Icons.login, size: 20),
               label: Text(
-                'Retry Loading',
+                'Login with Broker',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,

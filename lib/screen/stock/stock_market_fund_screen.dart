@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../../themes/app_colors.dart';
 import '../../service/apiservice/bajaj_api_service.dart';
+import 'package:go_router/go_router.dart';
+
+import '../bajal-auth/bajal_login_screen.dart';
 
 class StockMarketFundScreen extends StatefulWidget {
   @override
@@ -66,13 +69,19 @@ class _StockMarketFundScreenState extends State<StockMarketFundScreen> with Tick
                       return _buildLoadingState();
                     } else if (snapshot.hasError || !snapshot.hasData) {
                       print('Error loading funds: ${snapshot.error}');
-                      return _buildErrorState();
+                      return _buildErrorState(); // Shows "Login Required"
                     }
 
                     final apiData = snapshot.data!;
 
-                    if (apiData['statusCode'] != 0 || apiData['data'] == null) {
-                      return _buildErrorState();
+                    // Check if not logged in (error from API)
+                    if (apiData['statusCode'] != 0) {
+                      return _buildErrorState(); // Shows "Login Required"
+                    }
+
+                    // Check if data is null (logged in but no funds data)
+                    if (apiData['data'] == null) {
+                      return _buildErrorState(); // Shows "Login Required" - funds should always have data
                     }
 
                     final fundsData = apiData['data'] as Map<String, dynamic>;
@@ -476,6 +485,8 @@ class _StockMarketFundScreenState extends State<StockMarketFundScreen> with Tick
     );
   }
 
+
+
   Widget _buildErrorState() {
     return Container(
       height: 500,
@@ -490,21 +501,21 @@ class _StockMarketFundScreenState extends State<StockMarketFundScreen> with Tick
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.red.withOpacity(0.1),
-                    Colors.red.withOpacity(0.05),
+                    (AppColors.primaryGold ?? Color(0xFFDAA520)).withOpacity(0.1),
+                    (AppColors.primaryGold ?? Color(0xFFDAA520)).withOpacity(0.05),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(50),
               ),
               child: Icon(
-                Icons.error_outline,
+                Icons.account_circle_outlined,
                 size: 64,
-                color: Colors.red[400],
+                color: AppColors.primaryGold ?? Color(0xFFDAA520),
               ),
             ),
             SizedBox(height: 24),
             Text(
-              'Unable to Load Holdings',
+              'Login Required',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
@@ -513,7 +524,7 @@ class _StockMarketFundScreenState extends State<StockMarketFundScreen> with Tick
             ),
             SizedBox(height: 8),
             Text(
-              'There was an error loading your account information. Please check your connection and try again.',
+              'Please login with your broker to view your stock holdings and account information.',
               style: TextStyle(
                 fontSize: 15,
                 color: AppColors.secondaryText ?? Colors.grey,
@@ -523,10 +534,12 @@ class _StockMarketFundScreenState extends State<StockMarketFundScreen> with Tick
             ),
             SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () => setState(() {}),
-              icon: Icon(Icons.refresh, size: 20),
+              onPressed: () {
+                context.push(BajalLoginScreen.routeName);
+              },
+              icon: Icon(Icons.login, size: 20),
               label: Text(
-                'Retry Loading',
+                'Login with Broker',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
