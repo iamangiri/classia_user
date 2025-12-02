@@ -2,7 +2,6 @@ import 'package:classia_amc/screen/homefetures/investment_history_screen.dart';
 import 'package:classia_amc/screen/homefetures/market_news.dart';
 import 'package:classia_amc/screen/main/profile_heath_screen.dart';
 import 'package:classia_amc/screen/profile/learn_screen.dart';
-
 import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:classia_amc/widget/custom_heading.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +17,7 @@ import '../home/home_learn_section.dart';
 import '../home/home_pending_kyc_dialog_box.dart';
 import '../home/home_sip_goal_section.dart';
 import '../home/home_slider.dart';
+import '../home/home_stock_market_section.dart';
 import '../home/home_top_mutual_funds_section.dart';
 import '../home/home_trending_fund_widget.dart';
 import '../homefetures/lunchpad_screen.dart';
@@ -221,7 +221,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               SizedBox(height: 24.h),
 
-              HomeJockeyTradeSection(),
+              HomeStockMarketSection(),
+             // HomeJockeyTradeSection(),
+              SizedBox(height: 24.h),
               // New Section: Learn & Earn
               HomeLearnSection(),
               SizedBox(height: 24.h),

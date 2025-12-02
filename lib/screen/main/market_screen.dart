@@ -3,6 +3,7 @@ import 'dart:ui';
 import '../../screenutills/fund_card_items.dart';
 import '../../service/apiservice/market_service.dart';
 import '../../themes/app_colors.dart';
+import '../../widget/common_app_bar.dart';
 import '../../widget/custom_app_bar.dart';
 import '../market/market_stock_screen.dart';
 import '../sip/sip_animated_horse_widget.dart';
@@ -72,7 +73,7 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
     final isTablet = screenWidth > 600;
 
     return Scaffold(
-      appBar: CustomAppBar(
+      appBar: CommonAppBar(
         title: 'Market',
       ),
       backgroundColor: AppColors.screenBackground ?? Colors.white,
