@@ -48,8 +48,8 @@ class WalletService {
         'amcId' : amcId.toString()
       },
     );
-     print(response.body);
-     print(response.statusCode);
+    print(response.body);
+    print(response.statusCode);
     await checkValidUserWithRouter(response.statusCode);
     final data = jsonDecode(response.body);
     if (response.statusCode == 200 && data['status'] == true) {
@@ -117,14 +117,17 @@ class WalletService {
     }
   }
 
-  // Get wallet balance (if you have this endpoint)
+  // Get wallet balance from API
   Future<Map<String, dynamic>> getWalletBalance() async {
-    final uri = Uri.parse('$_baseUrl/wallet-balance');
+    final uri = Uri.parse('$_baseUrl/balance');
+
+    print('Fetching Wallet Balance from: $uri');
 
     final response = await http.get(
       uri,
       headers: {
         'Authorization': '${UserConstants.TOKEN}',
+        'Content-Type': 'application/json',
       },
     );
 
@@ -139,7 +142,7 @@ class WalletService {
     }
   }
 
-  // Get transaction history (if you have this endpoint)
+  // Get transaction history
   static Future<Map<String, dynamic>> TransactionList({int page = 1, int sizePerPage = 10}) async {
     final url = Uri.parse('${AppConstant.NODE_API_URL}/payez/transaction-list?page=$page&sizePerPage=$sizePerPage');
     try {
@@ -150,8 +153,9 @@ class WalletService {
           'Content-Type': 'application/json',
         },
       );
-      print(response.statusCode);
-      print(response.body);
+      print('Transaction List Status Code: ${response.statusCode}');
+      print('Transaction List Response: ${response.body}');
+
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
@@ -161,7 +165,4 @@ class WalletService {
       throw Exception('Error fetching transactions: $e');
     }
   }
-
-
-
 }

@@ -28,6 +28,7 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
   final TextEditingController _amountController = TextEditingController();
   bool _isProcessingPayment = false;
   bool _isLoadingTransactions = false;
+  bool _isLoadingBalance = false;
   int _currentPage = 1;
   final int _sizePerPage = 20;
 
@@ -36,7 +37,7 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
     super.initState();
     _walletService = WalletService(token: '');
     _initializeRazorpay();
-    _loadTransactions();
+    _loadWalletData();
   }
 
   void _initializeRazorpay() {
@@ -44,6 +45,59 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+  }
+
+  // Load both balance and transactions
+  Future<void> _loadWalletData() async {
+    await Future.wait([
+      _loadWalletBalance(),
+      _loadTransactions(),
+    ]);
+  }
+
+  // Fetch wallet balance from API
+  Future<void> _loadWalletBalance() async {
+    if (_isLoadingBalance) return;
+
+    setState(() {
+      _isLoadingBalance = true;
+    });
+
+    try {
+      final result = await _walletService.getWalletBalance();
+
+      if (result['status'] == true && result['data'] != null) {
+        final data = result['data'];
+        // Use mainBalance from the API response
+        final balance = data['mainBalance'];
+        setState(() {
+          walletBalance = double.tryParse(balance?.toString() ?? '0') ?? 0.0;
+          _isLoadingBalance = false;
+        });
+      } else {
+        setState(() {
+          _isLoadingBalance = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading wallet balance: $e');
+      setState(() {
+        _isLoadingBalance = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load wallet balance: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _loadTransactions() async {
@@ -73,7 +127,6 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
             'currentPage': data['currentPage'],
           };
           _applyFilter();
-          _calculateWalletBalance();
           _isLoadingTransactions = false;
         });
       }
@@ -98,30 +151,16 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
     }
   }
 
-  void _calculateWalletBalance() {
-    double balance = 0.0;
-    for (var txn in transactions) {
-      final amount = double.tryParse(txn['amount']?.toString() ?? '0') ?? 0.0;
-      final type = txn['transactionType']?.toString().toUpperCase() ?? '';
-
-      if (type == 'DEPOSIT') {
-        balance += amount;
-      } else if (type == 'WITHDRAW') {
-        balance -= amount;
-      }
-    }
-
-    setState(() {
-      walletBalance = balance;
-    });
-  }
-
   void _applyFilter() {
     if (selectedFilter == "All") {
       filteredTransactions = transactions;
     } else {
       filteredTransactions = transactions.where((txn) {
         final type = txn['transactionType']?.toString().toUpperCase() ?? '';
+        // Map "Withdraw" filter to "SUBSCRIPTION" type from API
+        if (selectedFilter.toUpperCase() == "WITHDRAW") {
+          return type == "SUBSCRIPTION";
+        }
         return type == selectedFilter.toUpperCase();
       }).toList();
     }
@@ -152,8 +191,8 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
 
       _amountController.clear();
 
-      // Reload transactions from API
-      await _loadTransactions();
+      // Reload wallet data (balance + transactions)
+      await _loadWalletData();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -195,7 +234,6 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
       _isProcessingPayment = false;
     });
 
-    // Log the error for debugging
     debugPrint('Payment Error Code: ${response.code}');
     debugPrint('Payment Error Message: ${response.message}');
 
@@ -350,7 +388,7 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
   }
 
   Future<void> _refresh() async {
-    await _loadTransactions();
+    await _loadWalletData();
   }
 
   @override
@@ -420,7 +458,17 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
             ],
           ),
           SizedBox(height: 12.h),
-          Text(
+          _isLoadingBalance
+              ? SizedBox(
+            height: 40.h,
+            child: Center(
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
+            ),
+          )
+              : Text(
             '₹${walletBalance.toStringAsFixed(2)}',
             style: TextStyle(
               fontSize: 32.sp,
@@ -434,7 +482,7 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
               Icon(Icons.trending_up, color: Colors.white.withOpacity(0.8), size: 16.sp),
               SizedBox(width: 4.w),
               Text(
-                '${transactions.where((t) => t['transactionType'] == 'DEPOSIT').length} Deposits',
+                '${transactions.where((t) => t['transactionType']?.toString().toUpperCase() == 'DEPOSIT').length} Deposits',
                 style: TextStyle(
                   fontSize: 12.sp,
                   color: Colors.white.withOpacity(0.8),
@@ -444,7 +492,7 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
               Icon(Icons.trending_down, color: Colors.white.withOpacity(0.8), size: 16.sp),
               SizedBox(width: 4.w),
               Text(
-                '${transactions.where((t) => t['transactionType'] == 'WITHDRAW').length} Withdrawals',
+                '${transactions.where((t) => t['transactionType']?.toString().toUpperCase() == 'SUBSCRIPTION').length} Withdrawals',
                 style: TextStyle(
                   fontSize: 12.sp,
                   color: Colors.white.withOpacity(0.8),
@@ -626,9 +674,25 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
         final type = txn['transactionType']?.toString().toUpperCase() ?? '';
         final isDeposit = type == 'DEPOSIT';
         final amount = double.tryParse(txn['amount']?.toString() ?? '0') ?? 0.0;
-        final transactionData = txn['transactionData'] as Map<String, dynamic>?;
-        final paymentId = transactionData?['paymentId'] ?? 'N/A';
-        final method = transactionData?['method'] ?? 'N/A';
+
+        // Handle transactionData - it can be a Map or contain nested data
+        final transactionData = txn['transactionData'];
+        String paymentId = 'N/A';
+        String method = 'WALLET';
+
+        if (transactionData != null && transactionData is Map<String, dynamic>) {
+          paymentId = transactionData['paymentId']?.toString() ?? 'N/A';
+          method = transactionData['method']?.toString() ?? 'WALLET';
+
+          // If amount is 0, try to get it from transactionData
+          if (amount == 0.0 && transactionData['amount'] != null) {
+            final dataAmount = double.tryParse(transactionData['amount']?.toString() ?? '0') ?? 0.0;
+            if (dataAmount > 0) {
+              // Update the amount variable for display
+              txn['amount'] = dataAmount.toString();
+            }
+          }
+        }
 
         final dateStr = txn['createdAt'];
         DateTime? date;
@@ -638,6 +702,9 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
         } catch (e) {
           date = DateTime.now();
         }
+
+        // Get the final amount for display
+        final displayAmount = double.tryParse(txn['amount']?.toString() ?? '0') ?? 0.0;
 
         return Container(
           margin: EdgeInsets.only(bottom: 12.h),
@@ -669,7 +736,7 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isDeposit ? 'Wallet Deposit' : 'Wallet Withdrawal',
+                      isDeposit ? 'Wallet Deposit' : 'Basket Subscription',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15.sp,
@@ -696,7 +763,7 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
                         ),
                       ],
                     ),
-                    if (paymentId != 'N/A') ...[
+                    if (paymentId != 'N/A' && paymentId != 'null') ...[
                       SizedBox(height: 2.h),
                       Text(
                         'Payment ID: $paymentId',
@@ -712,7 +779,7 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${isDeposit ? '+' : '-'}₹${amount.toStringAsFixed(2)}',
+                    '${isDeposit ? '+' : '-'}₹${displayAmount.toStringAsFixed(2)}',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16.sp,

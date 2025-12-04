@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import '../main/profile_screen.dart';
 import 'basket_api_service.dart';
 import 'basket_details_sheet.dart';
@@ -19,18 +17,19 @@ class IntraBasketListScreen extends StatefulWidget {
 class _IntraBasketListScreenState extends State<IntraBasketListScreen> {
   late final BasketApiService _service;
   late Future<List<Basket>> _futureBaskets;
+  Future<List<Basket>>? _futureMyBaskets;
   final bool _isMarketOpen = true;
 
   int _currentIndex = 0; // 0 for INTRADAY, 1 for INTRAHOUR
-  Set<String> _subscribedBasketIds = {};
-  Map<String, double> _investedAmounts = {};
+  Set<int> _subscribedBasketIds = <int>{}; // Explicitly typed as Set<int>
 
   @override
   void initState() {
     super.initState();
     _service = BasketApiService();
-    _loadSubscriptions();
+    _subscribedBasketIds = <int>{}; // Explicitly initialize as Set<int>
     _futureBaskets = _service.fetchBaskets();
+    _loadMyBaskets();
   }
 
   @override
@@ -38,28 +37,27 @@ class _IntraBasketListScreenState extends State<IntraBasketListScreen> {
     super.dispose();
   }
 
-  Future<void> _loadSubscriptions() async {
-    final prefs = await SharedPreferences.getInstance();
-    final subscribedList = prefs.getStringList('subscribed_baskets') ?? [];
-    final investmentsJson = prefs.getString('invested_amounts') ?? '{}';
-
-    setState(() {
-      _subscribedBasketIds = subscribedList.toSet();
-      _investedAmounts = Map<String, double>.from(
-          json.decode(investmentsJson).map((k, v) => MapEntry(k, v.toDouble()))
-      );
-    });
+  Future<void> _loadMyBaskets() async {
+    try {
+      final myBaskets = await _service.fetchMyBaskets();
+      setState(() {
+        _futureMyBaskets = Future.value(myBaskets);
+        // Ensure we convert to Set<int> properly
+        _subscribedBasketIds = myBaskets.map((b) => b.id).toSet();
+      });
+    } catch (e) {
+      print('Error loading my baskets: $e');
+      setState(() {
+        _futureMyBaskets = Future.error(e);
+        _subscribedBasketIds = {};
+      });
+    }
   }
 
   Future<void> _subscribeBasket(Basket basket) async {
-    final prefs = await SharedPreferences.getInstance();
-    _subscribedBasketIds.add(basket.id.toString());
-    await prefs.setStringList(
-      'subscribed_baskets',
-      _subscribedBasketIds.toList(),
-    );
-
-    setState(() {});
+    setState(() {
+      _subscribedBasketIds.add(basket.id);
+    });
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -71,53 +69,30 @@ class _IntraBasketListScreenState extends State<IntraBasketListScreen> {
         ),
       );
     }
+
+    // Refresh my baskets list
+    _loadMyBaskets();
   }
 
-  Future<void> _investInBasket(Basket basket, double amount) async {
-    final prefs = await SharedPreferences.getInstance();
-    final basketId = basket.id.toString();
+  Future<void> _unsubscribeBasket(int basketId) async {
+    setState(() {
+      _subscribedBasketIds.remove(basketId);
+    });
 
-    _investedAmounts[basketId] = (_investedAmounts[basketId] ?? 0) + amount;
-
-    await prefs.setString(
-      'invested_amounts',
-      json.encode(_investedAmounts),
-    );
-
-    setState(() {});
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('✓ Invested ₹${amount.toStringAsFixed(0)} in ${basket.basketName}'),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-        ),
-      );
-    }
-  }
-
-  Future<void> _unsubscribeBasket(String basketId) async {
-    final prefs = await SharedPreferences.getInstance();
-    _subscribedBasketIds.remove(basketId);
-    await prefs.setStringList(
-      'subscribed_baskets',
-      _subscribedBasketIds.toList(),
-    );
-    setState(() {});
+    // Refresh my baskets list
+    _loadMyBaskets();
   }
 
   Future<void> _refresh() async {
-    await _loadSubscriptions();
     setState(() {
       _futureBaskets = _service.fetchBaskets();
     });
+    await _loadMyBaskets();
   }
 
   void _showDetails(Basket basket) {
-    final bool isSubscribed = _subscribedBasketIds.contains(basket.id.toString());
-    final double investedAmount = _investedAmounts[basket.id.toString()] ?? 0;
+    final bool isSubscribed = _subscribedBasketIds.contains(basket.id);
+    final double investedAmount = 0; // You can add investment tracking if needed
 
     showModalBottomSheet(
       context: context,
@@ -128,8 +103,20 @@ class _IntraBasketListScreenState extends State<IntraBasketListScreen> {
         isSubscribed: isSubscribed,
         investedAmount: investedAmount,
         onSubscribe: () => _subscribeBasket(basket),
-        onInvest: (amount) => _investInBasket(basket, amount),
-        onUnsubscribe: () => _unsubscribeBasket(basket.id.toString()),
+        onInvest: (amount) {
+          // Handle investment if needed
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('✓ Invested ₹${amount.toStringAsFixed(0)} in ${basket.basketName}'),
+                backgroundColor: AppColors.success,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+              ),
+            );
+          }
+        },
+        onUnsubscribe: () => _unsubscribeBasket(basket.id),
       ),
     );
   }
@@ -167,7 +154,7 @@ class _IntraBasketListScreenState extends State<IntraBasketListScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Back Button
+                    // Profile Button
                     IconButton(
                       icon: Icon(Icons.person, color: AppColors.primaryGold,),
                       onPressed: () => Navigator.push(
@@ -514,8 +501,8 @@ class _IntraBasketListScreenState extends State<IntraBasketListScreen> {
             itemCount: baskets.length,
             itemBuilder: (context, index) {
               final basket = baskets[index];
-              final isSubscribed = _subscribedBasketIds.contains(basket.id.toString());
-              final investedAmount = _investedAmounts[basket.id.toString()] ?? 0;
+              final isSubscribed = _subscribedBasketIds.contains(basket.id);
+              final investedAmount = 0.0; // You can add investment tracking if needed
 
               return IntraBasketCard(
                 basket: basket,
@@ -697,13 +684,9 @@ class _IntraBasketCardState extends State<IntraBasketCard>
 
   @override
   Widget build(BuildContext context) {
-    final double performance = double.tryParse(widget.basket.expectedReturn) ??
-        0;
+    final double performance = double.tryParse(widget.basket.expectedReturn) ?? 0;
     final bool isPositive = performance >= 0;
-    final double cardWidth = MediaQuery
-        .of(context)
-        .size
-        .width - 48.w;
+    final double cardWidth = MediaQuery.of(context).size.width - 48.w;
 
     return Card(
       elevation: widget.isSubscribed ? 4 : 2,
@@ -785,16 +768,14 @@ class _IntraBasketCardState extends State<IntraBasketCard>
                         ),
                       ),
                       Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 12.w, vertical: 6.h),
+                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                         decoration: BoxDecoration(
                           color: isPositive
                               ? AppColors.success.withOpacity(0.1)
                               : AppColors.error.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8.r),
                           border: Border.all(
-                            color: isPositive ? AppColors.success : AppColors
-                                .error,
+                            color: isPositive ? AppColors.success : AppColors.error,
                             width: 1,
                           ),
                         ),
@@ -803,11 +784,8 @@ class _IntraBasketCardState extends State<IntraBasketCard>
                             Row(
                               children: [
                                 Icon(
-                                  isPositive ? Icons.trending_up : Icons
-                                      .trending_down,
-                                  color: isPositive
-                                      ? AppColors.success
-                                      : AppColors.error,
+                                  isPositive ? Icons.trending_up : Icons.trending_down,
+                                  color: isPositive ? AppColors.success : AppColors.error,
                                   size: 16.sp,
                                 ),
                                 SizedBox(width: 4.w),
@@ -816,9 +794,7 @@ class _IntraBasketCardState extends State<IntraBasketCard>
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14.sp,
-                                    color: isPositive
-                                        ? AppColors.success
-                                        : AppColors.error,
+                                    color: isPositive ? AppColors.success : AppColors.error,
                                   ),
                                 ),
                               ],
@@ -875,11 +851,9 @@ class _IntraBasketCardState extends State<IntraBasketCard>
                       AnimatedBuilder(
                         animation: _horseAnimation,
                         builder: (context, child) {
-                          double horsePosition = _horseAnimation.value *
-                              cardWidth;
+                          double horsePosition = _horseAnimation.value * cardWidth;
                           return Positioned(
-                            left: (horsePosition - 25.w).clamp(
-                                0.0, cardWidth - 50.w),
+                            left: (horsePosition - 25.w).clamp(0.0, cardWidth - 50.w),
                             top: -35.h,
                             child: SizedBox(
                               height: 50.h,
@@ -983,10 +957,9 @@ class _IntraBasketCardState extends State<IntraBasketCard>
                 top: 0,
                 right: 0,
                 child: Container(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: 10.w, vertical: 4.h),
+                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryGold,
+                    color: _getTypeColor(),
                     borderRadius: BorderRadius.only(
                       topRight: Radius.circular(14.r),
                       bottomLeft: Radius.circular(14.r),
@@ -1018,7 +991,6 @@ class _IntraBasketCardState extends State<IntraBasketCard>
       ),
     );
   }
-
 
   Color _volatilityColor(String vol) {
     switch (vol) {
@@ -1052,6 +1024,3 @@ class _IntraBasketCardState extends State<IntraBasketCard>
     );
   }
 }
-
-
-
