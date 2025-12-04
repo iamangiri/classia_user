@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import '../main/profile_screen.dart';
 import 'basket_api_service.dart';
 import 'basket_details_sheet.dart';
 import 'basket_model.dart';
 import 'package:classia_amc/themes/app_colors.dart';
-import 'dart:math';
-
 import 'basket_race_card.dart';
 
 class BasketListScreen extends StatefulWidget {
@@ -22,49 +18,55 @@ class _BasketListScreenState extends State<BasketListScreen>
     with SingleTickerProviderStateMixin {
   late final BasketApiService _service;
   late Future<List<Basket>> _futureBaskets;
+  Future<List<Basket>>? _futureMyBaskets;
   final bool _isMarketOpen = true;
 
   late TabController _tabController;
-  Set<String> _subscribedBasketIds = {};
-  Map<String, double> _investedAmounts = {};
+  Set<int> _subscribedBasketIds = {};
 
   @override
   void initState() {
     super.initState();
     _service = BasketApiService();
     _tabController = TabController(length: 2, vsync: this);
-    _loadSubscriptions();
+    _tabController.addListener(_onTabChanged);
     _futureBaskets = _service.fetchBaskets();
+    _loadMyBaskets();
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadSubscriptions() async {
-    final prefs = await SharedPreferences.getInstance();
-    final subscribedList = prefs.getStringList('subscribed_baskets') ?? [];
-    final investmentsJson = prefs.getString('invested_amounts') ?? '{}';
+  void _onTabChanged() {
+    if (_tabController.index == 1) {
+      _loadMyBaskets();
+    }
+  }
 
+  Future<void> _loadMyBaskets() async {
     setState(() {
-      _subscribedBasketIds = subscribedList.toSet();
-      _investedAmounts = Map<String, double>.from(
-          json.decode(investmentsJson).map((k, v) => MapEntry(k, v.toDouble()))
-      );
+      _futureMyBaskets = _service.fetchMyBaskets();
     });
+
+    // Update subscribed basket IDs for the "All Baskets" tab
+    try {
+      final myBaskets = await _futureMyBaskets!;
+      setState(() {
+        _subscribedBasketIds = myBaskets.map((b) => b.id).toSet();
+      });
+    } catch (e) {
+      print('Error loading my baskets: $e');
+    }
   }
 
   Future<void> _subscribeBasket(Basket basket) async {
-    final prefs = await SharedPreferences.getInstance();
-    _subscribedBasketIds.add(basket.id.toString());
-    await prefs.setStringList(
-      'subscribed_baskets',
-      _subscribedBasketIds.toList(),
-    );
-
-    setState(() {});
+    setState(() {
+      _subscribedBasketIds.add(basket.id);
+    });
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -76,53 +78,36 @@ class _BasketListScreenState extends State<BasketListScreen>
         ),
       );
     }
+
+    // Refresh my baskets list
+    _loadMyBaskets();
   }
 
-  Future<void> _investInBasket(Basket basket, double amount) async {
-    final prefs = await SharedPreferences.getInstance();
-    final basketId = basket.id.toString();
+  Future<void> _unsubscribeBasket(int basketId) async {
+    setState(() {
+      _subscribedBasketIds.remove(basketId);
+    });
 
-    _investedAmounts[basketId] = (_investedAmounts[basketId] ?? 0) + amount;
-
-    await prefs.setString(
-      'invested_amounts',
-      json.encode(_investedAmounts),
-    );
-
-    setState(() {});
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('✓ Invested ₹${amount.toStringAsFixed(0)} in ${basket.basketName}'),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-        ),
-      );
-    }
-  }
-
-  Future<void> _unsubscribeBasket(String basketId) async {
-    final prefs = await SharedPreferences.getInstance();
-    _subscribedBasketIds.remove(basketId);
-    await prefs.setStringList(
-      'subscribed_baskets',
-      _subscribedBasketIds.toList(),
-    );
-    setState(() {});
+    // Refresh my baskets list
+    _loadMyBaskets();
   }
 
   Future<void> _refresh() async {
-    await _loadSubscriptions();
     setState(() {
       _futureBaskets = _service.fetchBaskets();
     });
+
+    if (_tabController.index == 1) {
+      _loadMyBaskets();
+    } else {
+      // Still load my baskets in background to update subscription status
+      _loadMyBaskets();
+    }
   }
 
   void _showDetails(Basket basket) {
-    final bool isSubscribed = _subscribedBasketIds.contains(basket.id.toString());
-    final double investedAmount = _investedAmounts[basket.id.toString()] ?? 0;
+    final bool isSubscribed = _subscribedBasketIds.contains(basket.id);
+    final double investedAmount = 0; // You can add investment tracking if needed
 
     showModalBottomSheet(
       context: context,
@@ -133,21 +118,26 @@ class _BasketListScreenState extends State<BasketListScreen>
         isSubscribed: isSubscribed,
         investedAmount: investedAmount,
         onSubscribe: () => _subscribeBasket(basket),
-        onInvest: (amount) => _investInBasket(basket, amount),
-        onUnsubscribe: () => _unsubscribeBasket(basket.id.toString()),
+        onInvest: (amount) {
+          // Handle investment if needed
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('✓ Invested ₹${amount.toStringAsFixed(0)} in ${basket.basketName}'),
+                backgroundColor: AppColors.success,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+              ),
+            );
+          }
+        },
+        onUnsubscribe: () => _unsubscribeBasket(basket.id),
       ),
     );
   }
 
-  List<Basket> _filterBaskets(List<Basket> baskets, bool myBaskets) {
-    var filteredBaskets = baskets.where((b) => b.isDeliveryType).toList();
-
-    if (myBaskets) {
-      return filteredBaskets.where((b) =>
-          _subscribedBasketIds.contains(b.id.toString())
-      ).toList();
-    }
-    return filteredBaskets;
+  List<Basket> _filterBaskets(List<Basket> baskets) {
+    return baskets.where((b) => b.isDeliveryType).toList();
   }
 
   @override
@@ -162,7 +152,7 @@ class _BasketListScreenState extends State<BasketListScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: Icon(Icons.person, color: AppColors.primaryGold,),
+              icon: Icon(Icons.person, color: AppColors.primaryGold),
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ProfileScreen()),
@@ -278,8 +268,8 @@ class _BasketListScreenState extends State<BasketListScreen>
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildBasketList(false),
-                _buildBasketList(true),
+                _buildAllBasketsList(),
+                _buildMyBasketsList(),
               ],
             ),
           ),
@@ -288,7 +278,7 @@ class _BasketListScreenState extends State<BasketListScreen>
     );
   }
 
-  Widget _buildBasketList(bool myBaskets) {
+  Widget _buildAllBasketsList() {
     return RefreshIndicator(
       onRefresh: _refresh,
       color: AppColors.primaryGold,
@@ -330,7 +320,7 @@ class _BasketListScreenState extends State<BasketListScreen>
             );
           }
 
-          final baskets = _filterBaskets(snapshot.data!, myBaskets);
+          final baskets = _filterBaskets(snapshot.data!);
 
           if (baskets.isEmpty) {
             return Center(
@@ -338,33 +328,18 @@ class _BasketListScreenState extends State<BasketListScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    myBaskets ? Icons.shopping_basket_outlined : Icons.inbox_outlined,
+                    Icons.inbox_outlined,
                     size: 80.sp,
                     color: AppColors.disabled,
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    myBaskets
-                        ? 'No subscribed baskets yet'
-                        : 'No DELIVERY baskets found',
+                    'No DELIVERY baskets found',
                     style: TextStyle(
                       fontSize: 16.sp,
                       color: AppColors.secondaryText,
                     ),
                   ),
-                  if (myBaskets) ...[
-                    SizedBox(height: 8.h),
-                    TextButton(
-                      onPressed: () => _tabController.animateTo(0),
-                      child: Text(
-                        'Browse All Baskets',
-                        style: TextStyle(
-                          color: AppColors.primaryGold,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
                 ],
               ),
             );
@@ -375,15 +350,113 @@ class _BasketListScreenState extends State<BasketListScreen>
             itemCount: baskets.length,
             itemBuilder: (context, index) {
               final basket = baskets[index];
-              final isSubscribed = _subscribedBasketIds.contains(basket.id.toString());
-              final investedAmount = _investedAmounts[basket.id.toString()] ?? 0;
+              final isSubscribed = _subscribedBasketIds.contains(basket.id);
 
               return BasketRaceCard(
                 basket: basket,
                 onTap: () => _showDetails(basket),
                 isMarketOpen: _isMarketOpen,
                 isSubscribed: isSubscribed,
-                investedAmount: investedAmount,
+                investedAmount: 0,
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildMyBasketsList() {
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      color: AppColors.primaryGold,
+      child: FutureBuilder<List<Basket>>(
+        future: _futureMyBaskets,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+              child: CircularProgressIndicator(
+                color: AppColors.primaryGold,
+              ),
+            );
+          }
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64.sp,
+                    color: AppColors.error,
+                  ),
+                  SizedBox(height: 16.h),
+                  Text(
+                    'Error: ${snapshot.error}',
+                    style: TextStyle(color: AppColors.errorColor),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 16.h),
+                  ElevatedButton(
+                    onPressed: _refresh,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryGold,
+                    ),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final baskets = snapshot.data ?? [];
+
+          if (baskets.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.shopping_basket_outlined,
+                    size: 80.sp,
+                    color: AppColors.disabled,
+                  ),
+                  SizedBox(height: 16.h),
+                  Text(
+                    'No subscribed baskets yet',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      color: AppColors.secondaryText,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  TextButton(
+                    onPressed: () => _tabController.animateTo(0),
+                    child: Text(
+                      'Browse All Baskets',
+                      style: TextStyle(
+                        color: AppColors.primaryGold,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return ListView.builder(
+            padding: EdgeInsets.all(12.w),
+            itemCount: baskets.length,
+            itemBuilder: (context, index) {
+              final basket = baskets[index];
+
+              return BasketRaceCard(
+                basket: basket,
+                onTap: () => _showDetails(basket),
+                isMarketOpen: _isMarketOpen,
+                isSubscribed: true, // Always true for my baskets
+                investedAmount: 0, // You can add investment tracking if needed
               );
             },
           );
@@ -392,4 +465,3 @@ class _BasketListScreenState extends State<BasketListScreen>
     );
   }
 }
-

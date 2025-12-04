@@ -1,11 +1,10 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import '../../themes/app_colors.dart';
 import 'basket_invest_screen.dart';
 import 'basket_model.dart';
+import 'basket_api_service.dart';
 
 class BasketDetailSheet extends StatefulWidget {
   final Basket basket;
@@ -31,6 +30,8 @@ class BasketDetailSheet extends StatefulWidget {
 
 class _BasketDetailSheetState extends State<BasketDetailSheet> {
   final TextEditingController _amountController = TextEditingController();
+  final BasketApiService _apiService = BasketApiService();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -38,17 +39,117 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
     super.dispose();
   }
 
-
   void _navigateToInvestScreen() {
-    Navigator.pop(context); // Close the bottom sheet first
+    Navigator.pop(context);
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => BasketInvestScreen(
-          basketId: widget.basket.id, // Make sure your Basket model has an 'id' field
+          basketId: widget.basket.id,
         ),
       ),
     );
+  }
+
+  Future<void> _handleSubscribe() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await _apiService.subscribeBasket(widget.basket.id);
+
+      if (mounted) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Successfully subscribed to ${widget.basket.basketName}'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+          ),
+        );
+
+        // Call the onSubscribe callback
+        widget.onSubscribe();
+
+        // Close the bottom sheet
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to subscribe: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleUnsubscribe() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await _apiService.unsubscribeBasket(widget.basket.id);
+
+      if (mounted) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Successfully unsubscribed from ${widget.basket.basketName}'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+          ),
+        );
+
+        // Call the onUnsubscribe callback
+        widget.onUnsubscribe();
+
+        // Close dialogs and bottom sheet
+        Navigator.pop(context); // Close dialog
+        Navigator.pop(context); // Close bottom sheet
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close dialog on error
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to unsubscribe: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   void _confirmUnsubscribe() {
@@ -83,11 +184,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
             child: Text('Cancel', style: TextStyle(color: AppColors.secondaryText)),
           ),
           ElevatedButton(
-            onPressed: () {
-              widget.onUnsubscribe();
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
+            onPressed: _isLoading ? null : _handleUnsubscribe,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: AppColors.onPrimaryColor,
@@ -95,7 +192,16 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                 borderRadius: BorderRadius.circular(12.r),
               ),
             ),
-            child: const Text('Unsubscribe'),
+            child: _isLoading
+                ? SizedBox(
+              width: 20.w,
+              height: 20.h,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.onPrimaryColor,
+              ),
+            )
+                : const Text('Unsubscribe'),
           ),
         ],
       ),
@@ -514,7 +620,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                         ),
                       )),
 
-                    SizedBox(height: 80.h), // Space for button
+                    SizedBox(height: 80.h),
                   ],
                 ),
               ),
@@ -537,7 +643,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                     Expanded(
                       flex: 2,
                       child: ElevatedButton.icon(
-                        onPressed: _navigateToInvestScreen,
+                        onPressed: _isLoading ? null : _navigateToInvestScreen,
                         icon: Icon(Icons.add_circle_outline, size: 20.sp),
                         label: const Text('Invest'),
                         style: ElevatedButton.styleFrom(
@@ -554,7 +660,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                     SizedBox(width: 12.w),
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: _confirmUnsubscribe,
+                        onPressed: _isLoading ? null : _confirmUnsubscribe,
                         icon: Icon(Icons.cancel_outlined, size: 18.sp),
                         label: const Text('Exit'),
                         style: OutlinedButton.styleFrom(
@@ -572,13 +678,19 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                     : SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      widget.onSubscribe();
-                      Navigator.pop(context);
-                    },
-                    icon: Icon(Icons.check_circle, size: 22.sp),
+                    onPressed: _isLoading ? null : _handleSubscribe,
+                    icon: _isLoading
+                        ? SizedBox(
+                      width: 20.w,
+                      height: 20.h,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.onPrimaryColor,
+                      ),
+                    )
+                        : Icon(Icons.check_circle, size: 22.sp),
                     label: Text(
-                      'Subscribe to Basket',
+                      _isLoading ? 'Subscribing...' : 'Subscribe to Basket',
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.bold,

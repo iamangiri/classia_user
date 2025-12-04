@@ -80,4 +80,81 @@ class BasketApiService {
       throw Exception('Failed to load basket: ${response.statusCode}');
     }
   }
+
+  // Subscribe to basket
+  Future<Map<String, dynamic>> subscribeBasket(int basketId) async {
+    final uri = Uri.parse('$_baseUrl/subscribe-basket');
+
+    final response = await http.post(
+      uri,
+      headers: {
+        'Authorization': '${UserConstants.TOKEN}',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: {
+        'basketId': basketId.toString(),
+      },
+    );
+
+    print('Subscribe Basket Response: ${response.body}');
+    print('Status Code: ${response.statusCode}');
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return json;
+    } else {
+      throw Exception('Failed to subscribe to basket: ${response.statusCode}');
+    }
+  }
+
+  // Unsubscribe from basket
+  Future<Map<String, dynamic>> unsubscribeBasket(int basketId) async {
+    final uri = Uri.parse('$_baseUrl/unsubscribe-basket');
+
+    final response = await http.post(
+      uri,
+      headers: {
+        'Authorization': '${UserConstants.TOKEN}',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: {
+        'basketId': basketId.toString(),
+      },
+    );
+
+    print('Unsubscribe Basket Response: ${response.body}');
+    print('Status Code: ${response.statusCode}');
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return json;
+    } else {
+      throw Exception('Failed to unsubscribe from basket: ${response.statusCode}');
+    }
+  }
+
+  // Fetch user's subscribed baskets
+  Future<List<Basket>> fetchMyBaskets() async {
+    final uri = Uri.parse('$_baseUrl/my-basket');
+
+    final response = await http.get(
+      uri,
+      headers: {'Authorization': '${UserConstants.TOKEN}'},
+    );
+
+    print('Fetch My Baskets Response: ${response.body}');
+    print('Status Code: ${response.statusCode}');
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+
+      // The 'data' field is directly a List, not an object with basketList
+      final List<dynamic> dataList = json['data'] as List<dynamic>;
+
+      // Convert each item to Basket
+      return dataList.map((item) => Basket.fromJson(item as Map<String, dynamic>)).toList();
+    } else {
+      throw Exception('Failed to load my baskets: ${response.statusCode}');
+    }
+  }
 }
