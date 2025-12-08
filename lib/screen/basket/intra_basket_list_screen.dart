@@ -640,32 +640,33 @@ class IntraBasketCard extends StatefulWidget {
   @override
   State<IntraBasketCard> createState() => _IntraBasketCardState();
 }
-
-class _IntraBasketCardState extends State<IntraBasketCard>
-    with SingleTickerProviderStateMixin {
+// IntraBasketCard - Updated _IntraBasketCardState class
+class _IntraBasketCardState extends State<IntraBasketCard> with SingleTickerProviderStateMixin {
   late AnimationController _horseController;
   late Animation<double> _horseAnimation;
 
   @override
   void initState() {
     super.initState();
-
     _horseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     );
-
     _updateHorseAnimation();
     _horseController.forward();
   }
 
   void _updateHorseAnimation() {
-    // Get the actual performance value
+    // Get the actual performance value (can be negative or positive)
     final double performance = widget.basket.performanceValue;
 
-    // Map performance percentage to race position
-    // -10% → 0%, 0% → 50%, +10% → 100%
-    double racePosition = ((performance + 10) / 20).clamp(0.0, 1.0);
+    // Map performance to 0-10 scale where:
+    // performance = 0 → racePosition = 0 (start)
+    // performance = 10 → racePosition = 1.0 (end)
+    // performance = -10 → racePosition = 0 (start, but will show red)
+
+    // Clamp the performance between -10 and +10, then normalize to 0-1
+    double racePosition = (performance.abs() / 10).clamp(0.0, 1.0);
 
     _horseAnimation = Tween<double>(begin: 0, end: racePosition).animate(
       CurvedAnimation(parent: _horseController, curve: Curves.easeInOut),
@@ -691,9 +692,7 @@ class _IntraBasketCardState extends State<IntraBasketCard>
   }
 
   Color _getTypeColor() {
-    return widget.basketType == 'INTRADAY'
-        ? AppColors.warning
-        : AppColors.error;
+    return widget.basketType == 'INTRADAY' ? AppColors.warning : AppColors.error;
   }
 
   Color _volatilityColor(String vol) {
@@ -714,7 +713,6 @@ class _IntraBasketCardState extends State<IntraBasketCard>
     };
   }
 
-  // Action badge colors and icons
   Color _actionBgColor(String action) {
     return action.toUpperCase() == 'BUY'
         ? AppColors.success.withOpacity(0.15)
@@ -722,26 +720,22 @@ class _IntraBasketCardState extends State<IntraBasketCard>
   }
 
   Color _actionTextColor(String action) {
-    return action.toUpperCase() == 'BUY'
-        ? AppColors.success
-        : AppColors.error;
+    return action.toUpperCase() == 'BUY' ? AppColors.success : AppColors.error;
   }
 
   IconData _actionIcon(String action) {
-    return action.toUpperCase() == 'BUY'
-        ? Icons.arrow_upward
-        : Icons.arrow_downward;
+    return action.toUpperCase() == 'BUY' ? Icons.arrow_upward : Icons.arrow_downward;
   }
 
   @override
   Widget build(BuildContext context) {
     final double cardWidth = MediaQuery.of(context).size.width - 48.w;
     final String action = widget.basket.action;
-
-    // Use the unified performance value (price change or expected return)
     final double performance = widget.basket.performanceValue;
     final bool isPositive = performance >= 0;
-    final bool hasPriceData = widget.basket.hasPriceData;
+
+    // Determine race bar color based on positive/negative
+    final Color raceBarColor = isPositive ? _getTypeColor() : AppColors.error;
 
     return Card(
       elevation: widget.isSubscribed ? 6 : 3,
@@ -769,7 +763,6 @@ class _IntraBasketCardState extends State<IntraBasketCard>
                   // Header: Type Icon + Name + RA + Action Badge
                   Row(
                     children: [
-                      // Type Icon
                       Container(
                         padding: EdgeInsets.all(8.w),
                         decoration: BoxDecoration(
@@ -777,9 +770,7 @@ class _IntraBasketCardState extends State<IntraBasketCard>
                           borderRadius: BorderRadius.circular(10.r),
                         ),
                         child: Icon(
-                          widget.basketType == 'INTRADAY'
-                              ? Icons.flash_on
-                              : Icons.speed,
+                          widget.basketType == 'INTRADAY' ? Icons.flash_on : Icons.speed,
                           color: _getTypeColor(),
                           size: 20.sp,
                         ),
@@ -805,11 +796,7 @@ class _IntraBasketCardState extends State<IntraBasketCard>
                                 ),
                                 if (widget.isSubscribed) ...[
                                   SizedBox(width: 8.w),
-                                  Icon(
-                                    Icons.verified,
-                                    color: _getTypeColor(),
-                                    size: 20.sp,
-                                  ),
+                                  Icon(Icons.verified, color: _getTypeColor(), size: 20.sp),
                                 ],
                               ],
                             ),
@@ -818,31 +805,20 @@ class _IntraBasketCardState extends State<IntraBasketCard>
                               children: [
                                 Text(
                                   'RA: ${widget.basket.raName}',
-                                  style: TextStyle(
-                                    fontSize: 12.sp,
-                                    color: AppColors.secondaryText,
-                                  ),
+                                  style: TextStyle(fontSize: 12.sp, color: AppColors.secondaryText),
                                 ),
                                 SizedBox(width: 8.w),
-                                // Action Badge
                                 Container(
                                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                                   decoration: BoxDecoration(
                                     color: _actionBgColor(action),
                                     borderRadius: BorderRadius.circular(6.r),
-                                    border: Border.all(
-                                      color: _actionTextColor(action),
-                                      width: 1,
-                                    ),
+                                    border: Border.all(color: _actionTextColor(action), width: 1),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(
-                                        _actionIcon(action),
-                                        color: _actionTextColor(action),
-                                        size: 12.sp,
-                                      ),
+                                      Icon(_actionIcon(action), color: _actionTextColor(action), size: 12.sp),
                                       SizedBox(width: 4.w),
                                       Text(
                                         action.toUpperCase(),
@@ -862,10 +838,9 @@ class _IntraBasketCardState extends State<IntraBasketCard>
                       ),
                     ],
                   ),
-
                   SizedBox(height: 16.h),
 
-                  // Always show price information
+                  // Price Information
                   Row(
                     children: [
                       Expanded(
@@ -892,7 +867,6 @@ class _IntraBasketCardState extends State<IntraBasketCard>
                         ),
                       ),
                       SizedBox(width: 12.w),
-                      // Change percentage badge
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
                         decoration: BoxDecoration(
@@ -905,59 +879,54 @@ class _IntraBasketCardState extends State<IntraBasketCard>
                             width: 1.5,
                           ),
                         ),
-                          child: Column(
-                      children: [
-                      Row(
-                      mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            isPositive ? Icons.trending_up : Icons.trending_down,
-                            color: isPositive ? AppColors.success : AppColors.error,
-                            size: 16.sp,
-                          ),
-                          SizedBox(width: 4.w),
-                          Text(
-                            '${performance.toStringAsFixed(2)}%',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13.sp,
-                              color: isPositive ? AppColors.success : AppColors.error,
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  isPositive ? Icons.trending_up : Icons.trending_down,
+                                  color: isPositive ? AppColors.success : AppColors.error,
+                                  size: 16.sp,
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  '${performance.toStringAsFixed(2)}%',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13.sp,
+                                    color: isPositive ? AppColors.success : AppColors.error,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                      // CHANGED: Always show "Change" - never "Expected"
-                      Text(
-                        'Change',
-                        style: TextStyle(
-                          fontSize: 9.sp,
-                          color: AppColors.secondaryText,
+                            Text(
+                              'Change',
+                              style: TextStyle(fontSize: 9.sp, color: AppColors.secondaryText),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                      ),
-                    ],
-                  ),
-
                   SizedBox(height: 18.h),
 
-                  // Horse Race Animation
+                  // Horse Race Animation with 0-10 Scale
                   Stack(
                     clipBehavior: Clip.none,
                     children: [
+                      // Background Track
                       Container(
                         width: cardWidth,
                         height: 10.h,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(6.r),
-                          color: _getTypeColor().withOpacity(0.18),
-                          border: Border.all(
-                            color: _getTypeColor().withOpacity(0.4),
-                            width: 1.5,
-                          ),
+                          color: raceBarColor.withOpacity(0.18),
+                          border: Border.all(color: raceBarColor.withOpacity(0.4), width: 1.5),
                         ),
                       ),
+
+                      // Progress Bar
                       AnimatedBuilder(
                         animation: _horseAnimation,
                         builder: (context, child) {
@@ -967,15 +936,14 @@ class _IntraBasketCardState extends State<IntraBasketCard>
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(6.r),
                               gradient: LinearGradient(
-                                colors: [
-                                  _getTypeColor(),
-                                  _getTypeColor().withOpacity(0.7),
-                                ],
+                                colors: [raceBarColor, raceBarColor.withOpacity(0.7)],
                               ),
                             ),
                           );
                         },
                       ),
+
+                      // Horse Animation
                       AnimatedBuilder(
                         animation: _horseAnimation,
                         builder: (context, child) {
@@ -992,12 +960,28 @@ class _IntraBasketCardState extends State<IntraBasketCard>
                           );
                         },
                       ),
+
+                      // Scale Labels (0 to 10)
+                      Positioned(
+                        bottom: -20.h,
+                        left: 0,
+                        right: 0,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('0', style: TextStyle(fontSize: 10.sp, color: AppColors.secondaryText)),
+                            Text('2.5', style: TextStyle(fontSize: 9.sp, color: AppColors.secondaryText)),
+                            Text('5', style: TextStyle(fontSize: 9.sp, color: AppColors.secondaryText)),
+                            Text('7.5', style: TextStyle(fontSize: 9.sp, color: AppColors.secondaryText)),
+                            Text('10', style: TextStyle(fontSize: 10.sp, color: AppColors.secondaryText)),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
+                  SizedBox(height: 30.h), // Extra space for scale labels
 
-                  SizedBox(height: 24.h),
-
-                  // Invested Amount (if any)
+                  // Invested Amount
                   if (widget.isSubscribed && widget.investedAmount > 0) ...[
                     Container(
                       width: double.infinity,
@@ -1010,33 +994,16 @@ class _IntraBasketCardState extends State<IntraBasketCard>
                           ],
                         ),
                         borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(
-                          color: _getTypeColor().withOpacity(0.4),
-                          width: 1.5,
-                        ),
+                        border: Border.all(color: _getTypeColor().withOpacity(0.4), width: 1.5),
                       ),
                       child: Row(
                         children: [
-                          Icon(
-                            Icons.account_balance_wallet,
-                            color: _getTypeColor(),
-                            size: 20.sp,
-                          ),
+                          Icon(Icons.account_balance_wallet, color: _getTypeColor(), size: 20.sp),
                           SizedBox(width: 10.w),
-                          Text(
-                            'Total Invested: ',
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              color: AppColors.secondaryText,
-                            ),
-                          ),
+                          Text('Total Invested: ', style: TextStyle(fontSize: 13.sp, color: AppColors.secondaryText)),
                           Text(
                             '₹${widget.investedAmount.toStringAsFixed(0)}',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
-                              color: _getTypeColor(),
-                            ),
+                            style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: _getTypeColor()),
                           ),
                         ],
                       ),
@@ -1044,32 +1011,16 @@ class _IntraBasketCardState extends State<IntraBasketCard>
                     SizedBox(height: 16.h),
                   ],
 
-                  // Chips Row
+                  // Chips
                   Wrap(
                     spacing: 10.w,
                     runSpacing: 8.h,
                     children: [
-                      _miniChip(
-                        widget.basket.subscryptionType,
-                        AppColors.primaryColor.withOpacity(0.12),
-                        AppColors.primaryColor,
-                      ),
-                      _miniChip(
-                        widget.basket.volatility,
-                        _volatilityColor(widget.basket.volatility),
-                        _volatilityTextColor(widget.basket.volatility),
-                      ),
+                      _miniChip(widget.basket.subscryptionType, AppColors.primaryColor.withOpacity(0.12), AppColors.primaryColor),
+                      _miniChip(widget.basket.volatility, _volatilityColor(widget.basket.volatility), _volatilityTextColor(widget.basket.volatility)),
                       if (!widget.basket.isFree)
-                        _miniChip(
-                          '₹${widget.basket.subscriptionAmountValue.toString()}',
-                          _getTypeColor().withOpacity(0.12),
-                          _getTypeColor(),
-                        ),
-                      _miniChip(
-                        '${widget.basket.holdingsCount} Holdings',
-                        AppColors.accent.withOpacity(0.12),
-                        AppColors.accent,
-                      ),
+                        _miniChip('₹${widget.basket.subscriptionAmountValue.toString()}', _getTypeColor().withOpacity(0.12), _getTypeColor()),
+                      _miniChip('${widget.basket.holdingsCount} Holdings', AppColors.accent.withOpacity(0.12), AppColors.accent),
                     ],
                   ),
                 ],
@@ -1086,31 +1037,14 @@ class _IntraBasketCardState extends State<IntraBasketCard>
                   decoration: BoxDecoration(
                     color: _getTypeColor(),
                     borderRadius: BorderRadius.circular(20.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
+                    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.check_circle,
-                        color: AppColors.onPrimaryColor,
-                        size: 16.sp,
-                      ),
+                      Icon(Icons.check_circle, color: AppColors.onPrimaryColor, size: 16.sp),
                       SizedBox(width: 4.w),
-                      Text(
-                        'Subscribed',
-                        style: TextStyle(
-                          color: AppColors.onPrimaryColor,
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      Text('Subscribed', style: TextStyle(color: AppColors.onPrimaryColor, fontSize: 11.sp, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
@@ -1132,19 +1066,9 @@ class _IntraBasketCardState extends State<IntraBasketCard>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(fontSize: 10.sp, color: AppColors.secondaryText),
-          ),
+          Text(label, style: TextStyle(fontSize: 10.sp, color: AppColors.secondaryText)),
           SizedBox(height: 2.h),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 13.sp,
-              fontWeight: FontWeight.bold,
-              color: textColor,
-            ),
-          ),
+          Text(value, style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.bold, color: textColor)),
         ],
       ),
     );
@@ -1158,14 +1082,7 @@ class _IntraBasketCardState extends State<IntraBasketCard>
         borderRadius: BorderRadius.circular(20.r),
         border: Border.all(color: textColor.withOpacity(0.3), width: 1),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11.5.sp,
-          fontWeight: FontWeight.w600,
-          color: textColor,
-        ),
-      ),
+      child: Text(label, style: TextStyle(fontSize: 11.5.sp, fontWeight: FontWeight.w600, color: textColor)),
     );
   }
 }

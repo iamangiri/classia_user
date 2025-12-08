@@ -8,7 +8,7 @@ class BasketApiService {
   static const String _baseUrl = 'https://nodeapi.classiacapital.com/basket';
   static const String _tokenKey = 'bajaj_auth_token';
 
-  // Get Bajaj access token from SharedPreferences
+  // Get Bajaj access token
   static Future<String?> _getBajajAccessToken() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -19,23 +19,29 @@ class BasketApiService {
     }
   }
 
-  // Fetch all baskets
+  // 🔥 Helper: Builds URI with or without accessToken
+  Future<Uri> _buildUri(String path, Map<String, dynamic> params) async {
+    final token = await _getBajajAccessToken();
+
+    if (token != null) {
+      params['accessToken'] = token;
+    } else {
+      print("Bajaj access token not found → calling API without token");
+    }
+
+    return Uri.parse("$_baseUrl/$path").replace(queryParameters: params);
+  }
+
+  // ================================
+  // 1️⃣ Fetch All Baskets
+  // ================================
   Future<List<Basket>> fetchBaskets({
     int page = 1,
     int sizePerPage = 100,
   }) async {
-
-    // Get Bajaj access token
-    final bajajToken = await _getBajajAccessToken();
-
-    if (bajajToken == null) {
-      throw Exception('Bajaj access token not found. Please login to Bajaj.');
-    }
-
-    final uri = Uri.parse('$_baseUrl/list').replace(queryParameters: {
-      'accessToken': bajajToken,
-      'page': page.toString(),
-      'sizePerPage': sizePerPage.toString(),
+    final uri = await _buildUri("list", {
+      "page": page.toString(),
+      "sizePerPage": sizePerPage.toString(),
     });
 
     final response = await http.get(
@@ -43,30 +49,23 @@ class BasketApiService {
       headers: {'Authorization': '${UserConstants.TOKEN}'},
     );
 
-    print('Fetch Baskets Response: ${response.body}');
-    print('Status Code: ${response.statusCode}');
+    print("Fetch Baskets Response: ${response.body}");
+    print("Status Code: ${response.statusCode}");
 
     if (response.statusCode == 200) {
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-      final basketResp = BasketResponse.fromJson(json);
-      return basketResp.data.basketList;
+      final json = jsonDecode(response.body);
+      return BasketResponse.fromJson(json).data.basketList;
     } else {
-      throw Exception('Failed to load baskets: ${response.statusCode}');
+      throw Exception("Failed to load baskets: ${response.statusCode}");
     }
   }
 
-
-  // Fetch single basket by ID with accessToken
+  // ================================
+  // 2️⃣ Fetch Basket By ID
+  // ================================
   Future<Basket> fetchBasketById(int basketId) async {
-    final bajajToken = await _getBajajAccessToken();
-
-    if (bajajToken == null) {
-      throw Exception('Bajaj access token not found. Please login to Bajaj.');
-    }
-
-    final uri = Uri.parse('$_baseUrl/list').replace(queryParameters: {
-      'id': basketId.toString(),
-      'accessToken': bajajToken,
+    final uri = await _buildUri("list", {
+      "id": basketId.toString(),
     });
 
     final response = await http.get(
@@ -74,24 +73,47 @@ class BasketApiService {
       headers: {'Authorization': '${UserConstants.TOKEN}'},
     );
 
-    print('Fetch Basket By ID Response: ${response.body}');
-    print('Status Code: ${response.statusCode}');
+    print("Fetch Basket By ID Response: ${response.body}");
+    print("Status Code: ${response.statusCode}");
 
     if (response.statusCode == 200) {
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-      final basketResp = BasketResponse.fromJson(json);
+      final json = jsonDecode(response.body);
+      final basketList = BasketResponse.fromJson(json).data.basketList;
 
-      if (basketResp.data.basketList.isEmpty) {
-        throw Exception('Basket not found');
-      }
+      if (basketList.isEmpty) throw Exception("Basket not found");
 
-      return basketResp.data.basketList.first;
+      return basketList.first;
     } else {
-      throw Exception('Failed to load basket: ${response.statusCode}');
+      throw Exception("Failed to load basket: ${response.statusCode}");
     }
   }
 
-  // Subscribe to basket
+  // ================================
+  // 3️⃣ Fetch My Subscribed Baskets
+  // ================================
+  Future<List<Basket>> fetchMyBaskets() async {
+    final uri = await _buildUri("my-basket", {});
+
+    final response = await http.get(
+      uri,
+      headers: {'Authorization': '${UserConstants.TOKEN}'},
+    );
+
+    print("Fetch My Baskets Response: ${response.body}");
+    print("Status Code: ${response.statusCode}");
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      final List<dynamic> dataList = json['data'];
+      return dataList.map((i) => Basket.fromJson(i)).toList();
+    } else {
+      throw Exception("Failed to load my baskets: ${response.statusCode}");
+    }
+  }
+
+  // ================================
+  // Subscribe
+  // ================================
   Future<Map<String, dynamic>> subscribeBasket(int basketId) async {
     final uri = Uri.parse('$_baseUrl/subscribe-basket');
 
@@ -101,23 +123,17 @@ class BasketApiService {
         'Authorization': '${UserConstants.TOKEN}',
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: {
-        'basketId': basketId.toString(),
-      },
+      body: {"basketId": basketId.toString()},
     );
 
-    print('Subscribe Basket Response: ${response.body}');
-    print('Status Code: ${response.statusCode}');
+    print("Subscribe Response: ${response.body}");
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-      return json;
-    } else {
-      throw Exception('Failed to subscribe to basket: ${response.statusCode}');
-    }
+    return jsonDecode(response.body);
   }
 
-  // Unsubscribe from basket
+  // ================================
+  // Unsubscribe
+  // ================================
   Future<Map<String, dynamic>> unsubscribeBasket(int basketId) async {
     final uri = Uri.parse('$_baseUrl/unsubscribe-basket');
 
@@ -127,52 +143,11 @@ class BasketApiService {
         'Authorization': '${UserConstants.TOKEN}',
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: {
-        'basketId': basketId.toString(),
-      },
+      body: {"basketId": basketId.toString()},
     );
 
-    print('Unsubscribe Basket Response: ${response.body}');
-    print('Status Code: ${response.statusCode}');
+    print("Unsubscribe Response: ${response.body}");
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-      return json;
-    } else {
-      throw Exception('Failed to unsubscribe from basket: ${response.statusCode}');
-    }
-  }
-
-  // Fetch user's subscribed baskets with accessToken
-  Future<List<Basket>> fetchMyBaskets() async {
-    final bajajToken = await _getBajajAccessToken();
-
-    if (bajajToken == null) {
-      throw Exception('Bajaj access token not found. Please login to Bajaj.');
-    }
-
-    final uri = Uri.parse('$_baseUrl/my-basket').replace(queryParameters: {
-      'accessToken': bajajToken,
-    });
-
-    final response = await http.get(
-      uri,
-      headers: {'Authorization': '${UserConstants.TOKEN}'},
-    );
-
-    print('Fetch My Baskets Response: ${response.body}');
-    print('Status Code: ${response.statusCode}');
-
-    if (response.statusCode == 200) {
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-
-      // The 'data' field is directly a List, not an object with basketList
-      final List<dynamic> dataList = json['data'] as List<dynamic>;
-
-      // Convert each item to Basket
-      return dataList.map((item) => Basket.fromJson(item as Map<String, dynamic>)).toList();
-    } else {
-      throw Exception('Failed to load my baskets: ${response.statusCode}');
-    }
+    return jsonDecode(response.body);
   }
 }

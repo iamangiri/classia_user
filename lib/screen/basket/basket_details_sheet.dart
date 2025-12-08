@@ -1,10 +1,14 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../themes/app_colors.dart';
+import '../bajal-auth/bajal_login_screen.dart';
 import 'basket_invest_screen.dart';
 import 'basket_model.dart';
 import 'basket_api_service.dart';
+
+
 
 class BasketDetailSheet extends StatefulWidget {
   final Basket basket;
@@ -32,6 +36,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
   final TextEditingController _amountController = TextEditingController();
   final BasketApiService _apiService = BasketApiService();
   bool _isLoading = false;
+  static const String _tokenKey = 'bajaj_auth_token';
 
   @override
   void dispose() {
@@ -39,16 +44,97 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
     super.dispose();
   }
 
-  void _navigateToInvestScreen() {
-    Navigator.pop(context);
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BasketInvestScreen(
-          basketId: widget.basket.id,
-        ),
-      ),
-    );
+  // Check Bajaj Access Token
+  Future<String?> _getBajajAccessToken() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(_tokenKey);
+    } catch (e) {
+      print('Error getting Bajaj access token: $e');
+      return null;
+    }
+  }
+
+  // Navigate to Invest Screen with Token Check
+  Future<void> _navigateToInvestScreen() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Check if Bajaj access token exists
+      final token = await _getBajajAccessToken();
+
+      if (mounted) {
+        if (token == null || token.isEmpty) {
+          // Token not found - Navigate to Bajaj Login Screen
+          Navigator.pop(context); // Close bottom sheet first
+
+          // TODO: Replace with your actual Bajaj Login Screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => BajalLoginScreen()),
+          );
+
+          // Show message to user
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: AppColors.onPrimaryColor),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text('Please login to Bajaj to proceed with investment'),
+                  ),
+                ],
+              ),
+              backgroundColor: AppColors.warning,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              duration: Duration(seconds: 3),
+            ),
+          );
+
+          // Uncomment this when you have BajalLoginScreen ready
+          // await Navigator.push(
+          //   context,
+          //   MaterialPageRoute(builder: (context) => BajalLoginScreen()),
+          // );
+        } else {
+          // Token exists - Navigate to Invest Screen
+          Navigator.pop(context); // Close bottom sheet
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BasketInvestScreen(
+                basketId: widget.basket.id,
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error checking authentication: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _handleSubscribe() async {
@@ -60,7 +146,6 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
       final response = await _apiService.subscribeBasket(widget.basket.id);
 
       if (mounted) {
-        // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Successfully subscribed to ${widget.basket.basketName}'),
@@ -72,10 +157,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
           ),
         );
 
-        // Call the onSubscribe callback
         widget.onSubscribe();
-
-        // Close the bottom sheet
         Navigator.pop(context);
       }
     } catch (e) {
@@ -109,7 +191,6 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
       final response = await _apiService.unsubscribeBasket(widget.basket.id);
 
       if (mounted) {
-        // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Successfully unsubscribed from ${widget.basket.basketName}'),
@@ -121,10 +202,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
           ),
         );
 
-        // Call the onUnsubscribe callback
         widget.onUnsubscribe();
-
-        // Close dialogs and bottom sheet
         Navigator.pop(context); // Close dialog
         Navigator.pop(context); // Close bottom sheet
       }
@@ -565,8 +643,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                                         ),
                                       ),
                                     ),
-                                  if (h.tgtPrice != '0' && h.slPrice != '0')
-                                    SizedBox(width: 8.w),
+                                  if (h.tgtPrice != '0' && h.slPrice != '0') SizedBox(width: 8.w),
                                   if (h.slPrice != '0')
                                     Expanded(
                                       child: Container(
@@ -644,8 +721,17 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                       flex: 2,
                       child: ElevatedButton.icon(
                         onPressed: _isLoading ? null : _navigateToInvestScreen,
-                        icon: Icon(Icons.add_circle_outline, size: 20.sp),
-                        label: const Text('Invest'),
+                        icon: _isLoading
+                            ? SizedBox(
+                          width: 18.w,
+                          height: 18.h,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.onPrimaryColor,
+                          ),
+                        )
+                            : Icon(Icons.add_circle_outline, size: 20.sp),
+                        label: Text(_isLoading ? 'Checking...' : 'Invest'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primaryGold,
                           foregroundColor: AppColors.onPrimaryColor,
