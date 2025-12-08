@@ -22,9 +22,18 @@ class BasketApiService {
   // Fetch all baskets
   Future<List<Basket>> fetchBaskets({
     int page = 1,
-    int sizePerPage = 10,
+    int sizePerPage = 100,
   }) async {
+
+    // Get Bajaj access token
+    final bajajToken = await _getBajajAccessToken();
+
+    if (bajajToken == null) {
+      throw Exception('Bajaj access token not found. Please login to Bajaj.');
+    }
+
     final uri = Uri.parse('$_baseUrl/list').replace(queryParameters: {
+      'accessToken': bajajToken,
       'page': page.toString(),
       'sizePerPage': sizePerPage.toString(),
     });
@@ -45,6 +54,7 @@ class BasketApiService {
       throw Exception('Failed to load baskets: ${response.statusCode}');
     }
   }
+
 
   // Fetch single basket by ID with accessToken
   Future<Basket> fetchBasketById(int basketId) async {

@@ -43,16 +43,12 @@ class _BasketRaceCardState extends State<BasketRaceCard>
   }
 
   void _updateHorseAnimation() {
-    // Calculate race position based on actual price change
-    double racePosition = 0.5; // Default middle position
+    // Get the actual performance value (always price change, never expected return)
+    final double performance = widget.basket.performanceValue;
 
-    if (widget.basket.hasPriceData) {
-      // Use actual price change percentage
-      final priceChange = widget.basket.priceChangePercentage;
-      // Map -10% to 0%, 0% to 50%, +10% to 100%
-      // This creates a visual scale where 0% change is middle
-      racePosition = ((priceChange + 10) / 20).clamp(0.0, 1.0);
-    }
+    // Map performance percentage to race position
+    // -10% → 0%, 0% → 50%, +10% → 100%
+    double racePosition = ((performance + 10) / 20).clamp(0.0, 1.0);
 
     _horseAnimation = Tween<double>(begin: 0, end: racePosition).animate(
       CurvedAnimation(parent: _horseController, curve: Curves.easeInOut),
@@ -118,11 +114,8 @@ class _BasketRaceCardState extends State<BasketRaceCard>
     final double cardWidth = MediaQuery.of(context).size.width - 48.w;
     final String action = widget.basket.action;
 
-    // Use actual price change if available, otherwise use expected return
-    final bool hasPriceData = widget.basket.hasPriceData;
-    final double performance = hasPriceData
-        ? widget.basket.priceChangePercentage
-        : widget.basket.expectedReturnValue;
+    // Always use price change percentage
+    final double performance = widget.basket.performanceValue;
     final bool isPositive = performance >= 0;
 
     return Card(
@@ -224,67 +217,82 @@ class _BasketRaceCardState extends State<BasketRaceCard>
 
                   SizedBox(height: 16.h),
 
-                  // Price Information (for My Baskets)
-                  if (hasPriceData) ...[
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _priceBox(
-                            'Initial',
-                            '₹${widget.basket.initialPriceValue.toStringAsFixed(0)}',
-                            AppColors.primaryColor.withOpacity(0.12),
-                            AppColors.primaryColor,
+                  // Always show price information
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _priceBox(
+                          'Initial',
+                          widget.basket.initialPriceValue > 0
+                              ? '₹${widget.basket.initialPriceValue.toStringAsFixed(0)}'
+                              : '₹0',
+                          AppColors.primaryColor.withOpacity(0.12),
+                          AppColors.primaryColor,
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: _priceBox(
+                          'Current',
+                          widget.basket.currentPriceValue > 0
+                              ? '₹${widget.basket.currentPriceValue.toStringAsFixed(0)}'
+                              : '₹0',
+                          isPositive
+                              ? AppColors.success.withOpacity(0.12)
+                              : AppColors.error.withOpacity(0.12),
+                          isPositive ? AppColors.success : AppColors.error,
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      // Change percentage badge - ALWAYS shows "Change"
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                        decoration: BoxDecoration(
+                          color: isPositive
+                              ? AppColors.success.withOpacity(0.12)
+                              : AppColors.error.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(10.r),
+                          border: Border.all(
+                            color: isPositive ? AppColors.success : AppColors.error,
+                            width: 1.5,
                           ),
                         ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: _priceBox(
-                            'Current',
-                            '₹${widget.basket.currentPriceValue.toStringAsFixed(0)}',
-                            isPositive
-                                ? AppColors.success.withOpacity(0.12)
-                                : AppColors.error.withOpacity(0.12),
-                            isPositive ? AppColors.success : AppColors.error,
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-                        // Change percentage badge
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                          decoration: BoxDecoration(
-                            color: isPositive
-                                ? AppColors.success.withOpacity(0.12)
-                                : AppColors.error.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(10.r),
-                            border: Border.all(
-                              color: isPositive ? AppColors.success : AppColors.error,
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                isPositive ? Icons.trending_up : Icons.trending_down,
-                                color: isPositive ? AppColors.success : AppColors.error,
-                                size: 18.sp,
-                              ),
-                              SizedBox(width: 6.w),
-                              Text(
-                                '${performance.toStringAsFixed(2)}%',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14.sp,
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  isPositive ? Icons.trending_up : Icons.trending_down,
                                   color: isPositive ? AppColors.success : AppColors.error,
+                                  size: 16.sp,
                                 ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  '${performance.toStringAsFixed(2)}%',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13.sp,
+                                    color: isPositive ? AppColors.success : AppColors.error,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            // CHANGED: Always show "Change" - never "Expected"
+                            Text(
+                              'Change',
+                              style: TextStyle(
+                                fontSize: 9.sp,
+                                color: AppColors.secondaryText,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    SizedBox(height: 18.h),
-                  ],
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: 18.h),
 
                   // Horse Race Animation
                   Stack(

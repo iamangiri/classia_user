@@ -122,25 +122,46 @@ class Basket extends Equatable {
   bool get isDeliveryType => type.toUpperCase() == 'DELIVERY';
   bool get isBuyAction => action.toUpperCase() == 'BUY';
 
-  // Price getters
-  double get initialPriceValue => double.tryParse(basketInitialPrice ?? '0') ?? 0.0;
+  // Price getters - ALWAYS return valid numbers, default to 0
+  double get initialPriceValue {
+    if (basketInitialPrice == null || basketInitialPrice == 'null' || basketInitialPrice == '') {
+      return 0.0;
+    }
+    return double.tryParse(basketInitialPrice!) ?? 0.0;
+  }
+
   double get currentPriceValue {
-    if (basketCurrentPrice == null) return 0.0;
-    if (basketCurrentPrice is num) return (basketCurrentPrice as num).toDouble();
+    if (basketCurrentPrice == null || basketCurrentPrice == 'null' || basketCurrentPrice == '') {
+      return 0.0;
+    }
+    if (basketCurrentPrice is num) {
+      return (basketCurrentPrice as num).toDouble();
+    }
     return double.tryParse(basketCurrentPrice.toString()) ?? 0.0;
   }
 
-  // Calculate percentage change
+  // Calculate percentage change - returns 0 if either price is 0 or null
   double get priceChangePercentage {
-    if (initialPriceValue == 0) return 0.0;
+    if (initialPriceValue == 0 || currentPriceValue == 0) {
+      return 0.0;
+    }
     return ((currentPriceValue - initialPriceValue) / initialPriceValue) * 100;
   }
 
   // Calculate absolute change
-  double get priceChangeAmount => currentPriceValue - initialPriceValue;
+  double get priceChangeAmount {
+    if (initialPriceValue == 0 || currentPriceValue == 0) {
+      return 0.0;
+    }
+    return currentPriceValue - initialPriceValue;
+  }
 
-  // Check if we have valid price data
+  // Check if we have valid price data (both must be greater than 0)
   bool get hasPriceData => initialPriceValue > 0 && currentPriceValue > 0;
+
+  // CHANGED: Always use price change percentage, never expected return
+  // If no price data available, return 0
+  double get performanceValue => priceChangePercentage;
 
   @override
   List<Object?> get props => [id];
