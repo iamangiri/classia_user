@@ -14,7 +14,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.classia.capital"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion "26.1.10909125"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -29,8 +29,8 @@ android {
         applicationId = "com.classia.capital"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode 22
-        versionName "1.3.2"
+        versionCode 24
+        versionName "1.3.4"
     }
 
     signingConfigs {

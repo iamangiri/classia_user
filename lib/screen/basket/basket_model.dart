@@ -37,7 +37,7 @@ class BasketData {
     return BasketData(
       totalRecords: _safeInt(json['totalRecords']),
       totalPages: _safeInt(json['totalPages']),
-      currentPage: _safeInt(json['currentPage']), // ← This was the crash!
+      currentPage: _safeInt(json['currentPage']),
       basketList: (json['basketList'] as List<dynamic>?)
           ?.map((e) => Basket.fromJson(e as Map<String, dynamic>))
           .toList() ??
@@ -57,6 +57,9 @@ class Basket extends Equatable {
   final String volatility;
   final String status;
   final String type;
+  final String action;
+  final String? basketInitialPrice;
+  final dynamic basketCurrentPrice;
   final List<Holding> holdings;
   final dynamic createdBy;
   final bool isDeleted;
@@ -74,6 +77,9 @@ class Basket extends Equatable {
     required this.volatility,
     required this.status,
     required this.type,
+    required this.action,
+    this.basketInitialPrice,
+    this.basketCurrentPrice,
     required this.holdings,
     this.createdBy,
     required this.isDeleted,
@@ -92,6 +98,9 @@ class Basket extends Equatable {
     volatility: json['volatility']?.toString() ?? 'LOW',
     status: json['status']?.toString() ?? 'INACTIVE',
     type: json['type']?.toString() ?? 'DELIVERY',
+    action: json['action']?.toString() ?? 'BUY',
+    basketInitialPrice: json['basketInitialPrice']?.toString(),
+    basketCurrentPrice: json['basketCurrentPrice'],
     holdings: (json['holdings'] as List<dynamic>?)
         ?.map((e) => Holding.fromJson(e as Map<String, dynamic>))
         .toList() ??
@@ -111,6 +120,27 @@ class Basket extends Equatable {
   bool get isFree => subscryptionType.toUpperCase() == 'FREE';
   bool get isActive => status.toUpperCase() == 'ACTIVE';
   bool get isDeliveryType => type.toUpperCase() == 'DELIVERY';
+  bool get isBuyAction => action.toUpperCase() == 'BUY';
+
+  // Price getters
+  double get initialPriceValue => double.tryParse(basketInitialPrice ?? '0') ?? 0.0;
+  double get currentPriceValue {
+    if (basketCurrentPrice == null) return 0.0;
+    if (basketCurrentPrice is num) return (basketCurrentPrice as num).toDouble();
+    return double.tryParse(basketCurrentPrice.toString()) ?? 0.0;
+  }
+
+  // Calculate percentage change
+  double get priceChangePercentage {
+    if (initialPriceValue == 0) return 0.0;
+    return ((currentPriceValue - initialPriceValue) / initialPriceValue) * 100;
+  }
+
+  // Calculate absolute change
+  double get priceChangeAmount => currentPriceValue - initialPriceValue;
+
+  // Check if we have valid price data
+  bool get hasPriceData => initialPriceValue > 0 && currentPriceValue > 0;
 
   @override
   List<Object?> get props => [id];

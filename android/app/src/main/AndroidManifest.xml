@@ -9,6 +9,10 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.CAMERA"/>
 
+
+
+
+
     <!-- ✅ <queries> should be here -->
     <queries>
         <intent>
@@ -31,6 +35,12 @@
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"
         android:enableOnBackInvokedCallback="true">
+
+        <!-- Add 16KB page size support -->
+        <property
+            android:name="android.app.16kb_page_support"
+            android:value="true" />
+
 
         <activity
             android:name=".MainActivity"

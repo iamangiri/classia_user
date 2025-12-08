@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -30,12 +28,10 @@ class _BasketRaceCardState extends State<BasketRaceCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _horseController;
   late Animation<double> _horseAnimation;
-  late double _raceScore;
 
   @override
   void initState() {
     super.initState();
-    _raceScore = (Random().nextDouble() * 9 + 1); // Random 1.0 to 10.0
 
     _horseController = AnimationController(
       vsync: this,
@@ -47,10 +43,31 @@ class _BasketRaceCardState extends State<BasketRaceCard>
   }
 
   void _updateHorseAnimation() {
-    double normalizedValue = (_raceScore / 10).clamp(0.0, 1.0);
-    _horseAnimation = Tween<double>(begin: 0, end: normalizedValue).animate(
+    // Calculate race position based on actual price change
+    double racePosition = 0.5; // Default middle position
+
+    if (widget.basket.hasPriceData) {
+      // Use actual price change percentage
+      final priceChange = widget.basket.priceChangePercentage;
+      // Map -10% to 0%, 0% to 50%, +10% to 100%
+      // This creates a visual scale where 0% change is middle
+      racePosition = ((priceChange + 10) / 20).clamp(0.0, 1.0);
+    }
+
+    _horseAnimation = Tween<double>(begin: 0, end: racePosition).animate(
       CurvedAnimation(parent: _horseController, curve: Curves.easeInOut),
     );
+  }
+
+  @override
+  void didUpdateWidget(BasketRaceCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.basket.currentPriceValue != widget.basket.currentPriceValue ||
+        oldWidget.basket.initialPriceValue != widget.basket.initialPriceValue) {
+      _updateHorseAnimation();
+      _horseController.reset();
+      _horseController.forward();
+    }
   }
 
   @override
@@ -77,12 +94,36 @@ class _BasketRaceCardState extends State<BasketRaceCard>
     };
   }
 
+  // Action badge colors and icons
+  Color _actionBgColor(String action) {
+    return action.toUpperCase() == 'BUY'
+        ? AppColors.success.withOpacity(0.15)
+        : AppColors.error.withOpacity(0.15);
+  }
+
+  Color _actionTextColor(String action) {
+    return action.toUpperCase() == 'BUY'
+        ? AppColors.success
+        : AppColors.error;
+  }
+
+  IconData _actionIcon(String action) {
+    return action.toUpperCase() == 'BUY'
+        ? Icons.arrow_upward
+        : Icons.arrow_downward;
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Safely parse expected return
-    final double performance = widget.basket.expectedReturnValue;
-    final bool isPositive = performance >= 0;
     final double cardWidth = MediaQuery.of(context).size.width - 48.w;
+    final String action = widget.basket.action;
+
+    // Use actual price change if available, otherwise use expected return
+    final bool hasPriceData = widget.basket.hasPriceData;
+    final double performance = hasPriceData
+        ? widget.basket.priceChangePercentage
+        : widget.basket.expectedReturnValue;
+    final bool isPositive = performance >= 0;
 
     return Card(
       elevation: widget.isSubscribed ? 6 : 3,
@@ -107,7 +148,7 @@ class _BasketRaceCardState extends State<BasketRaceCard>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header: Name + RA + Expected Return
+                  // Header: Name + RA + Action Badge
                   Row(
                     children: [
                       Expanded(
@@ -135,48 +176,45 @@ class _BasketRaceCardState extends State<BasketRaceCard>
                               ],
                             ),
                             SizedBox(height: 4.h),
-                            Text(
-                              'RA: ${widget.basket.raName}',
-                              style: TextStyle(fontSize: 12.sp, color: AppColors.secondaryText),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
-                        decoration: BoxDecoration(
-                          color: isPositive
-                              ? AppColors.success.withOpacity(0.12)
-                              : AppColors.error.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(10.r),
-                          border: Border.all(
-                            color: isPositive ? AppColors.success : AppColors.error,
-                            width: 1.2,
-                          ),
-                        ),
-                        child: Column(
-                          children: [
                             Row(
                               children: [
-                                Icon(
-                                  isPositive ? Icons.trending_up : Icons.trending_down,
-                                  color: isPositive ? AppColors.success : AppColors.error,
-                                  size: 18.sp,
-                                ),
-                                SizedBox(width: 6.w),
                                 Text(
-                                  '${performance.toStringAsFixed(1)}%',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15.sp,
-                                    color: isPositive ? AppColors.success : AppColors.error,
+                                  'RA: ${widget.basket.raName}',
+                                  style: TextStyle(fontSize: 12.sp, color: AppColors.secondaryText),
+                                ),
+                                SizedBox(width: 8.w),
+                                // Action Badge
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                                  decoration: BoxDecoration(
+                                    color: _actionBgColor(action),
+                                    borderRadius: BorderRadius.circular(6.r),
+                                    border: Border.all(
+                                      color: _actionTextColor(action),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        _actionIcon(action),
+                                        color: _actionTextColor(action),
+                                        size: 12.sp,
+                                      ),
+                                      SizedBox(width: 4.w),
+                                      Text(
+                                        action.toUpperCase(),
+                                        style: TextStyle(
+                                          fontSize: 10.sp,
+                                          fontWeight: FontWeight.bold,
+                                          color: _actionTextColor(action),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
-                            ),
-                            Text(
-                              'Expected',
-                              style: TextStyle(fontSize: 10.sp, color: AppColors.secondaryText),
                             ),
                           ],
                         ),
@@ -184,7 +222,69 @@ class _BasketRaceCardState extends State<BasketRaceCard>
                     ],
                   ),
 
-                  SizedBox(height: 18.h),
+                  SizedBox(height: 16.h),
+
+                  // Price Information (for My Baskets)
+                  if (hasPriceData) ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _priceBox(
+                            'Initial',
+                            '₹${widget.basket.initialPriceValue.toStringAsFixed(0)}',
+                            AppColors.primaryColor.withOpacity(0.12),
+                            AppColors.primaryColor,
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: _priceBox(
+                            'Current',
+                            '₹${widget.basket.currentPriceValue.toStringAsFixed(0)}',
+                            isPositive
+                                ? AppColors.success.withOpacity(0.12)
+                                : AppColors.error.withOpacity(0.12),
+                            isPositive ? AppColors.success : AppColors.error,
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        // Change percentage badge
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                          decoration: BoxDecoration(
+                            color: isPositive
+                                ? AppColors.success.withOpacity(0.12)
+                                : AppColors.error.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(10.r),
+                            border: Border.all(
+                              color: isPositive ? AppColors.success : AppColors.error,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isPositive ? Icons.trending_up : Icons.trending_down,
+                                color: isPositive ? AppColors.success : AppColors.error,
+                                size: 18.sp,
+                              ),
+                              SizedBox(width: 6.w),
+                              Text(
+                                '${performance.toStringAsFixed(2)}%',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14.sp,
+                                  color: isPositive ? AppColors.success : AppColors.error,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 18.h),
+                  ],
 
                   // Horse Race Animation
                   Stack(
@@ -326,6 +426,35 @@ class _BasketRaceCardState extends State<BasketRaceCard>
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _priceBox(String label, String value, Color bgColor, Color textColor) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: textColor.withOpacity(0.3), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(fontSize: 10.sp, color: AppColors.secondaryText),
+          ),
+          SizedBox(height: 2.h),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 13.sp,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
+          ),
+        ],
       ),
     );
   }

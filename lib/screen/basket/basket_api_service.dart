@@ -133,9 +133,17 @@ class BasketApiService {
     }
   }
 
-  // Fetch user's subscribed baskets
+  // Fetch user's subscribed baskets with accessToken
   Future<List<Basket>> fetchMyBaskets() async {
-    final uri = Uri.parse('$_baseUrl/my-basket');
+    final bajajToken = await _getBajajAccessToken();
+
+    if (bajajToken == null) {
+      throw Exception('Bajaj access token not found. Please login to Bajaj.');
+    }
+
+    final uri = Uri.parse('$_baseUrl/my-basket').replace(queryParameters: {
+      'accessToken': bajajToken,
+    });
 
     final response = await http.get(
       uri,
