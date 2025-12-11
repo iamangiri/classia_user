@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../service/apiservice/auth_service.dart';
 import '../../themes/app_colors.dart';
-import 'login_screen.dart';
+import '../../widget/common_app_bar.dart';
+import 'login_with_password_screen.dart';
+
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -111,7 +113,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               duration: const Duration(seconds: 2),
             ),
           );
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginWithPasswordScreen()));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -143,7 +145,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.screenBackground,
-      appBar: CustomAppBar(
+      appBar: CommonAppBar(
         title: 'Forgot Password',),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -156,7 +158,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 _buildProgressIndicator(),
                 SizedBox(height: 24.h),
                 Text(
-                  'Jockey Trading',
+                  'Classia Capital',
                   style: TextStyle(
                     color: AppColors.primaryText,
                     fontWeight: FontWeight.bold,
@@ -296,7 +298,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       onTap: () {
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (context) => const LoginScreen()),
+                          MaterialPageRoute(builder: (context) => LoginWithPasswordScreen()),
                         );
                       },
                       child: Text(

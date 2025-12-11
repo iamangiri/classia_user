@@ -6,6 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../service/localauth/auth_service.dart';
 import '../basket/basket_list_screen.dart';
 import '../basket/intra_basket_list_screen.dart';
+import '../basket/my_basket_screen.dart';
 import '../main/home_screen.dart';
 import '../main/jt_mutual_fund_screen.dart';
 import '../sip/jockey_sip_screen.dart';
@@ -28,11 +29,13 @@ class _MainScreenState extends State<MainScreen> {
   final AuthFingerprintService _authService = AuthFingerprintService();
 
   final List<Widget> screens = [
-    HomeScreen(),           // 0
+    HomeScreen(),
+
+    MyBasketScreen(),// 0
     BasketListScreen(),         // 1
     //TradingScreen(),        // 2
 
-    IntraBasketListScreen(),
+   // IntraBasketListScreen(),
     JockeySipScreen(),
     JtMutualFundScreen()// 3
            // 4
@@ -161,7 +164,7 @@ class _MainScreenState extends State<MainScreen> {
         height: 60,
         items: [
           TabItem(icon: FaIcon(FontAwesomeIcons.house, size: 24), title: 'Home'),
-          TabItem(icon: FaIcon(FontAwesomeIcons.chartLine, size: 24), title: 'Basket'),
+          TabItem(icon: FaIcon(FontAwesomeIcons.chartLine, size: 24), title: 'My Basket'),
           // JT uses custom image asset
           TabItem(
             icon: Image.asset(

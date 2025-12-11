@@ -71,7 +71,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
                 padding: const EdgeInsets.all(20.0),
                 child: ElevatedButton(
                   onPressed: () {
-                    context.goNamed('login');
+                    context.goNamed('loginwithpassword');
                   },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),

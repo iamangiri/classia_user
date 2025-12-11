@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../service/apiservice/auth_service.dart';
 import '../../utills/constent/user_constant.dart';
 import '../../utills/themes/light_app_theme.dart';
+import 'forgot_password_screen.dart';
 
 
 class LoginWithPasswordScreen extends StatefulWidget {
@@ -147,7 +148,14 @@ class _LoginScreenState extends State<LoginWithPasswordScreen> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ForgotPasswordScreen(),
+                            ),
+                          );
+                        },
                         child: Text(
                           "Forgot Password?",
                           style: TextStyle(color: AppTheme.lightTheme.primaryColor),
