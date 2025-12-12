@@ -64,7 +64,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             // TODO: Implement customer support action
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => CustomerSupportScreen()),
+              MaterialPageRoute(builder: (context) =>  CustomerSupportScreen(showBackButton :true)),
             );
           },
         ),

@@ -5,7 +5,6 @@ import 'basket_api_service.dart';
 import 'basket_details_sheet.dart';
 import 'basket_model.dart';
 import 'package:classia_amc/themes/app_colors.dart';
-
 import 'intra_basket_card.dart';
 
 
@@ -118,7 +117,7 @@ class _IntraBasketListScreenState extends State<IntraBasketListScreen> {
             );
           }
         },
-        onUnsubscribe: () => _unsubscribeBasket(basket.id),
+
       ),
     );
   }

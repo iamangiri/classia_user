@@ -330,7 +330,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => CustomerSupportScreen(),
+                          builder: (context) =>  CustomerSupportScreen(showBackButton :true),
                         ),
                       );
                     },

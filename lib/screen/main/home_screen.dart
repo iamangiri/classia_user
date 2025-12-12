@@ -2,6 +2,7 @@ import 'package:classia_amc/screen/homefetures/investment_history_screen.dart';
 import 'package:classia_amc/screen/homefetures/market_news.dart';
 import 'package:classia_amc/screen/main/profile_heath_screen.dart';
 import 'package:classia_amc/screen/profile/learn_screen.dart';
+import 'package:classia_amc/screen/profile/my_wallet_screen.dart';
 import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:classia_amc/widget/custom_heading.dart';
 import 'package:flutter/material.dart';
@@ -85,10 +86,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void _navigateToFeature(String title, BuildContext context) {
     Widget destination;
     switch (title) {
-      case 'Withdraw':
-        destination = const WithdrawScreen();
+      case 'My Wallet':
+        destination = MyWalletScreen();
         break;
-      case 'Deposit':
+      case 'Investment':
         destination = const InvestmentHistoryScreen();
         break;
       case 'Learn':
@@ -222,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
               SizedBox(height: 24.h),
 
               HomeStockMarketSection(),
-             // HomeJockeyTradeSection(),
+              // HomeJockeyTradeSection(),
               SizedBox(height: 24.h),
               // New Section: Learn & Earn
               HomeLearnSection(),
@@ -239,20 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      floatingActionButton: _buildProgressFab(context),
+     // floatingActionButton: _buildProgressFab(context),
     );
-  }
-
-  bool _isValidFund(Map<String, String?> fund) {
-    return fund['logo'] != null &&
-        fund['logo']!.isNotEmpty &&
-        fund['symbol'] != null &&
-        fund['symbol']!.isNotEmpty &&
-        fund['company'] != null &&
-        fund['company']!.isNotEmpty &&
-        fund['price'] != null &&
-        fund['price']!.isNotEmpty &&
-        fund['change'] != null &&
-        fund['change']!.isNotEmpty;
   }
 }

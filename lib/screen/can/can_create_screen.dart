@@ -1371,12 +1371,7 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
       }
     } catch (e) {
       setState(() => _isCheckingCanStatus = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error checking CAN status: $e'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+     print('Error checking CAN status: $e');
     }
   }
 

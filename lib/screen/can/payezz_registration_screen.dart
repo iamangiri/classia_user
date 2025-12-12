@@ -698,12 +698,7 @@ class _PayZeeRegistrationScreenState extends State<PayZeeRegistrationScreen>
       }
     } catch (e) {
       print('Error checking PayZee status: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error checking PayZee status: $e'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+
     } finally {
       setState(() => _isCheckingStatus = false);
     }

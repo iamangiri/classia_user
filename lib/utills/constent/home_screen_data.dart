@@ -49,11 +49,6 @@ class HomeScreenData {
       'icon': FontAwesomeIcons.rocket,
       'color': Color(0xFFE91E63), // pink
     },
-    // {
-    //   'title': 'Learn',
-    //   'icon': FontAwesomeIcons.graduationCap,
-    //   'color': Color(0xFF9C27B0), // purple
-    // },
     {
       'title': 'Market News',
       'icon': FontAwesomeIcons.newspaper,
@@ -65,21 +60,20 @@ class HomeScreenData {
       'color': Color(0xFF2196F3), // blue
     },
     {
-      'title': 'Deposit',
-      'icon': FontAwesomeIcons.moneyBillWave,
+      'title': 'Investment',
+      'icon': FontAwesomeIcons.chartLine,
       'color': Color(0xFF4CAF50), // green
     },
     {
-      'title': 'Withdraw',
+      'title': 'My Wallet',
       'icon': FontAwesomeIcons.wallet,
-      'color': Color(0xFFE91E63), // pink (reused for consistency)
+      'color': Color(0xFFFF9800), // orange
     },
     {
       'title': 'My Reports',
       'icon': FontAwesomeIcons.fileDownload,
-      'color': Color(0xFFFF9800), // orange
+      'color': Color(0xFF9C27B0), // purple
     },
-
   ];
 
   static List<Map<String, String>> trendingFunds = [

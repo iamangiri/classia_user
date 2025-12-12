@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../service/WithoutLogin/auth_login_check_service.dart';
 import 'basket_model.dart';
 
 class BasketApiService {
@@ -51,7 +52,7 @@ class BasketApiService {
 
     print("Fetch Baskets Response: ${response.body}");
     print("Status Code: ${response.statusCode}");
-
+    await checkValidUserWithRouter(response.statusCode);
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
       return BasketResponse.fromJson(json).data.basketList;
@@ -75,7 +76,7 @@ class BasketApiService {
 
     print("Fetch Basket By ID Response: ${response.body}");
     print("Status Code: ${response.statusCode}");
-
+    await checkValidUserWithRouter(response.statusCode);
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
       final basketList = BasketResponse.fromJson(json).data.basketList;
@@ -101,7 +102,7 @@ class BasketApiService {
 
     print("Fetch My Baskets Response: ${response.body}");
     print("Status Code: ${response.statusCode}");
-
+    await checkValidUserWithRouter(response.statusCode);
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
       final List<dynamic> dataList = json['data'];
@@ -127,27 +128,9 @@ class BasketApiService {
     );
 
     print("Subscribe Response: ${response.body}");
-
+    await checkValidUserWithRouter(response.statusCode);
     return jsonDecode(response.body);
   }
 
-  // ================================
-  // Unsubscribe
-  // ================================
-  Future<Map<String, dynamic>> unsubscribeBasket(int basketId) async {
-    final uri = Uri.parse('$_baseUrl/unsubscribe-basket');
 
-    final response = await http.post(
-      uri,
-      headers: {
-        'Authorization': '${UserConstants.TOKEN}',
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: {"basketId": basketId.toString()},
-    );
-
-    print("Unsubscribe Response: ${response.body}");
-
-    return jsonDecode(response.body);
-  }
 }

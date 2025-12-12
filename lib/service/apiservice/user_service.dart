@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:classia_amc/utills/constent/app_constant.dart';
 import 'package:http/http.dart' as http;
 import '../../models/user_kyc_model.dart';
+import '../../utills/constent/user_constant.dart';
 import '../WithoutLogin/auth_login_check_service.dart';
 
 class UserService {
@@ -146,5 +147,143 @@ class UserService {
     }
   }
 
+
+
+  static Future<Map<String, dynamic>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+
+
+      final response = await http.put(
+        Uri.parse("${AppConstant.API_URL}/auth/change/login/password"),
+        headers: {
+          "Authorization": "Bearer ${UserConstants.TOKEN}",
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: {
+          "currentPassword": currentPassword,
+          "newPassword": newPassword,
+          "cnfPassword": confirmPassword,
+        },
+      );
+
+      print(response.body);
+      print(response.statusCode);
+      await checkValidUserWithRouter(response.statusCode);
+      final jsonResponse = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          "success": true,
+          "message": "Password updated successfully",
+        };
+      } else if (response.statusCode == 422) {
+        final data = jsonResponse['data'] as Map<String, dynamic>?;
+        final message = jsonResponse['message'] ?? 'Validation failed';
+
+        List<String> errors = [];
+        if (data != null) {
+          data.forEach((field, error) {
+            errors.add(error.toString());
+          });
+        }
+
+        return {
+          "success": false,
+          "message": message,
+          "errors": errors,
+        };
+      } else {
+        return {
+          "success": false,
+          "message": jsonResponse['message'] ?? "Failed to change password",
+        };
+      }
+    } catch (e) {
+      return {
+        "success": false,
+        "message": "Error: $e",
+      };
+    }
+  }
+
+
+
+  static Future<Map<String, dynamic>> getLoginHistory({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    try {
+
+
+      final response = await http.get(
+        Uri.parse("${AppConstant.API_URL}/auth/login/history?limit=$limit&page=$page"),
+        headers: {
+          "Authorization": "Bearer ${UserConstants.TOKEN}",
+        },
+      );
+
+      print(response.body);
+      print(response.statusCode);
+      await checkValidUserWithRouter(response.statusCode);
+      final jsonResponse = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> historyData = jsonResponse['data']['loginTraking'];
+        final pagination = jsonResponse['data']['pagination'];
+
+        List<LoginHistory> history = historyData
+            .map((item) => LoginHistory.fromJson(item))
+            .toList();
+
+        return {
+          "success": true,
+          "history": history,
+          "pagination": pagination,
+        };
+      } else {
+        return {
+          "success": false,
+          "message": jsonResponse['message'] ?? "Failed to load login history",
+        };
+      }
+    } catch (e) {
+      return {
+        "success": false,
+        "message": "Error: $e",
+      };
+    }
+  }
+
+
+
+}
+
+
+
+class LoginHistory {
+  final int id;
+  final String ipAddress;
+  final String device;
+  final DateTime timestamp;
+
+  LoginHistory({
+    required this.id,
+    required this.ipAddress,
+    required this.device,
+    required this.timestamp,
+  });
+
+  factory LoginHistory.fromJson(Map<String, dynamic> json) {
+    return LoginHistory(
+      id: json['ID'],
+      ipAddress: json['ip_address'] ?? 'Unknown',
+      device: json['device'] ?? 'Unknown',
+      timestamp: DateTime.parse(json['timestamp']),
+    );
+  }
 }
 

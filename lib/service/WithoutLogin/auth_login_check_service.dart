@@ -48,7 +48,7 @@ Future<void> checkValidUser(BuildContext context, int statusCode) async {
 
     // Use GoRouter navigation instead
     if (context.mounted) {
-      context.go('/login');
+      context.go('/loginwithpassword');
     }
   }
 }
@@ -69,6 +69,6 @@ Future<void> checkValidUserWithRouter(int statusCode) async {
     await prefs.clear();
 
     // Use the router directly
-    router.go('/login');
+    router.go('/loginwithpassword');
   }
 }

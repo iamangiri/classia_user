@@ -14,7 +14,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.classia.capital"
     compileSdk = 36
-    ndkVersion "26.1.10909125"
+    ndkVersion = "26.1.10909125"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -27,12 +27,11 @@ android {
 
     defaultConfig {
         applicationId = "com.classia.capital"
-        minSdkVersion = flutter.minSdkVersion  // Minimum SDK that supports 16KB
-        targetSdk = 36  // Update to latest
-        versionCode 26
-        versionName "1.3.6"
+        minSdkVersion = flutter.minSdkVersion  // Changed from flutter.minSdkVersion
+        targetSdk = 36
+        versionCode = 29
+        versionName = "1.3.8"
 
-        // Add this for 16KB page size support
         ndk {
             abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'
         }
@@ -53,14 +52,12 @@ android {
             minifyEnabled false
             shrinkResources false
 
-            // Add this for better compatibility
             ndk {
                 debugSymbolLevel 'SYMBOL_TABLE'
             }
         }
     }
 
-    // Add packaging options to handle 16KB pages
     packagingOptions {
         jniLibs {
             useLegacyPackaging = false
@@ -73,6 +70,5 @@ flutter {
 }
 
 dependencies {
-    // Ensure you're using latest compatible versions
-    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.core:core-ktx:1.13.1'
 }

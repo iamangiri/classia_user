@@ -209,7 +209,7 @@ class _JockeySipScreenState extends State<JockeySipScreen>
                               onPressed: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context) => CustomerSupportScreen()),
+                                  MaterialPageRoute(builder: (context) =>  CustomerSupportScreen(showBackButton :true)),
                                 );
                               },
                               tooltip: 'Support',

@@ -16,7 +16,7 @@ class BasketDetailSheet extends StatefulWidget {
   final double investedAmount;
   final VoidCallback onSubscribe;
   final Function(double) onInvest;
-  final VoidCallback onUnsubscribe;
+
 
   const BasketDetailSheet({
     super.key,
@@ -25,7 +25,7 @@ class BasketDetailSheet extends StatefulWidget {
     required this.investedAmount,
     required this.onSubscribe,
     required this.onInvest,
-    required this.onUnsubscribe,
+
   });
 
   @override
@@ -182,109 +182,8 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
     }
   }
 
-  Future<void> _handleUnsubscribe() async {
-    setState(() {
-      _isLoading = true;
-    });
 
-    try {
-      final response = await _apiService.unsubscribeBasket(widget.basket.id);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Successfully unsubscribed from ${widget.basket.basketName}'),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.r),
-            ),
-          ),
-        );
-
-        widget.onUnsubscribe();
-        Navigator.pop(context); // Close dialog
-        Navigator.pop(context); // Close bottom sheet
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.pop(context); // Close dialog on error
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to unsubscribe: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.r),
-            ),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  void _confirmUnsubscribe() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: AppColors.warning),
-            SizedBox(width: 8.w),
-            Text(
-              'Unsubscribe',
-              style: TextStyle(
-                color: AppColors.headingText,
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          'Are you sure you want to unsubscribe from ${widget.basket.basketName}?',
-          style: TextStyle(color: AppColors.primaryText),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: AppColors.secondaryText)),
-          ),
-          ElevatedButton(
-            onPressed: _isLoading ? null : _handleUnsubscribe,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: AppColors.onPrimaryColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-            ),
-            child: _isLoading
-                ? SizedBox(
-              width: 20.w,
-              height: 20.h,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.onPrimaryColor,
-              ),
-            )
-                : const Text('Unsubscribe'),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -744,21 +643,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                       ),
                     ),
                     SizedBox(width: 12.w),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _isLoading ? null : _confirmUnsubscribe,
-                        icon: Icon(Icons.cancel_outlined, size: 18.sp),
-                        label: const Text('Exit'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.error,
-                          side: BorderSide(color: AppColors.error),
-                          padding: EdgeInsets.symmetric(vertical: 16.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                        ),
-                      ),
-                    ),
+
                   ],
                 )
                     : SizedBox(

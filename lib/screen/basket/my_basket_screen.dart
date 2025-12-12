@@ -38,35 +38,7 @@ class _MyBasketScreenState extends State<MyBasketScreen> {
     });
   }
 
-  Future<void> _unsubscribeBasket(int basketId) async {
-    try {
-      await _service.unsubscribeBasket(basketId);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('✓ Unsubscribed successfully'),
-            backgroundColor: AppColors.warning,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-          ),
-        );
-      }
-
-      _loadMyBaskets();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-          ),
-        );
-      }
-    }
-  }
 
   Future<void> _refresh() async {
     await _loadMyBaskets();
@@ -98,7 +70,7 @@ class _MyBasketScreenState extends State<MyBasketScreen> {
             );
           }
         },
-        onUnsubscribe: () => _unsubscribeBasket(basket.id),
+
       ),
     );
   }

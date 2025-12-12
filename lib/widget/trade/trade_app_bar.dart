@@ -106,7 +106,7 @@ class _TradeAppBarState extends State<TradeAppBar> {
                         ),
                         onPressed: () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => CustomerSupportScreen()),
+                          MaterialPageRoute(builder: (context) => CustomerSupportScreen(showBackButton :true)),
                         ),
                         tooltip: 'Support',
                         padding: EdgeInsets.all(6.w),
