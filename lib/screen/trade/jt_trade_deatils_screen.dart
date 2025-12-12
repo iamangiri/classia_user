@@ -27,14 +27,11 @@ class JtTradeDeatilsScreen extends StatefulWidget {
   _TradingDetailsScreenState createState() => _TradingDetailsScreenState();
 }
 
-class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
-    with SingleTickerProviderStateMixin {
+class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen> with SingleTickerProviderStateMixin {
   final TextEditingController _amountController = TextEditingController();
   bool _isLoading = false;
   final _formKey = GlobalKey<FormState>();
-  bool _isFavorite = false;
   int _selectedTab = 0;
-
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -58,13 +55,23 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
     super.dispose();
   }
 
+  String _getString(dynamic value, String defaultValue) {
+    if (value == null) return defaultValue;
+    return value.toString();
+  }
+
+  String _getPercentage(dynamic value) {
+    if (value == null || value == 'null') return 'N/A';
+    String strValue = value.toString().replaceAll('%', '').trim();
+    if (strValue.isEmpty) return 'N/A';
+    return '$strValue%';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.screenBackground,
-      appBar: CommonAppBar(
-        title: widget.fundName,
-      ),
+      appBar: CommonAppBar(title: widget.fundName),
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: Column(
@@ -88,31 +95,15 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
         color: AppColors.cardBackground?.withOpacity(0.8),
         borderRadius: BorderRadius.circular(10.r),
         border: Border.all(color: AppColors.primaryGold!.withOpacity(0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8.r,
-            offset: Offset(0, 2),
-          ),
-        ],
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.info_outline,
-            color: AppColors.warning,
-            size: 20.sp,
-          ),
+          Icon(Icons.info_outline, color: AppColors.warning, size: 20.sp),
           SizedBox(width: 8.w),
           Expanded(
             child: Text(
               'Past performance is not indicative of future results. Investments are subject to market risks.',
-              style: TextStyle(
-                fontSize: 11.sp,
-                color: AppColors.warning,
-                fontWeight: FontWeight.w500,
-                height: 1.4,
-              ),
+              style: TextStyle(fontSize: 11.sp, color: AppColors.warning, fontWeight: FontWeight.w500, height: 1.4),
             ),
           ),
         ],
@@ -121,17 +112,29 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
   }
 
   Widget _buildFundOverviewCard() {
+    String category = 'Equity';
+    if (widget.fundData['category'] != null) {
+      if (widget.fundData['category'] is Map && widget.fundData['category']['category'] != null) {
+        if (widget.fundData['category']['category'] is Map) {
+          category = widget.fundData['category']['category']['name']?.toString() ?? 'Equity';
+        } else {
+          category = widget.fundData['category']['category'].toString();
+        }
+      } else if (widget.fundData['category'] is String) {
+        category = widget.fundData['category'];
+      }
+    }
+
+    String planType = 'Regular';
+    if (widget.fundData['prodMfData'] != null && widget.fundData['prodMfData']['planType'] != null) {
+      planType = widget.fundData['prodMfData']['planType'].toString();
+    }
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10.r,
-            offset: Offset(0, 4),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10.r, offset: Offset(0, 4))],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16.r),
@@ -154,10 +157,13 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
                         color: AppColors.primaryGold!.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12.r),
                       ),
-                      child: Icon(
-                        Icons.account_balance,
-                        color: AppColors.primaryGold,
-                        size: 32.sp,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12.r),
+                        child: widget.logo.isNotEmpty
+                            ? Image.network(widget.logo, fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Icon(Icons.account_balance, color: AppColors.primaryGold, size: 32.sp))
+                            : Icon(Icons.account_balance, color: AppColors.primaryGold, size: 32.sp),
                       ),
                     ),
                     SizedBox(width: 12.w),
@@ -165,24 +171,11 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            widget.fundName,
-                            style: TextStyle(
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.primaryText,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          Text(widget.fundName,
+                              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700, color: AppColors.primaryText),
+                              maxLines: 2, overflow: TextOverflow.ellipsis),
                           SizedBox(height: 4.h),
-                          Text(
-                            widget.name,
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: AppColors.secondaryText,
-                            ),
-                          ),
+                          Text(widget.name, style: TextStyle(fontSize: 13.sp, color: AppColors.secondaryText)),
                           SizedBox(height: 4.h),
                           Container(
                             padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
@@ -190,14 +183,8 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
                               color: AppColors.primaryGold!.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8.r),
                             ),
-                            child: Text(
-                              '${widget.fundData['category'] ?? 'Equity'} • ${widget.fundData['planType'] ?? 'Regular'}',
-                              style: TextStyle(
-                                fontSize: 11.sp,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primaryGold,
-                              ),
-                            ),
+                            child: Text('$category • $planType',
+                                style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.w600, color: AppColors.primaryGold)),
                           ),
                         ],
                       ),
@@ -208,9 +195,9 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildStatCard('Current NAV', '₹${widget.fundData['nav'] ?? '25.50'}', Icons.account_balance_wallet, AppColors.primaryGold),
-                    _buildStatCard('1Y Return', widget.fundData['oneYearChange'] ?? '12.5%', Icons.trending_up, AppColors.success),
-                    // _buildStatCard('Jockey Point', '${widget.value}%', FontAwesomeIcons.star, AppColors.accent),
+                    _buildStatCard('AMC', _getString(widget.fundData['amc'], 'N/A'), Icons.business, AppColors.primaryGold),
+                    _buildStatCard('1Y Return', _getPercentage(widget.fundData['oneYearChange']), Icons.trending_up, AppColors.success),
+                    _buildStatCard('3Y Return', _getPercentage(widget.fundData['threeYearsChange']), FontAwesomeIcons.chartLine, AppColors.accent),
                   ],
                 ),
               ],
@@ -235,30 +222,12 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
           children: [
             Container(
               padding: EdgeInsets.all(6.w),
-              decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+              decoration: BoxDecoration(color: iconColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8.r)),
               child: Icon(icon, color: iconColor, size: 16.sp),
             ),
             SizedBox(height: 4.h),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primaryText,
-              ),
-            ),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 10.sp,
-                fontWeight: FontWeight.w500,
-                color: AppColors.secondaryText,
-              ),
-              textAlign: TextAlign.center,
-            ),
+            Text(value, style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.w700, color: AppColors.primaryText), textAlign: TextAlign.center),
+            Text(title, style: TextStyle(fontSize: 9.sp, fontWeight: FontWeight.w500, color: AppColors.secondaryText), textAlign: TextAlign.center),
           ],
         ),
       ),
@@ -266,7 +235,7 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
   }
 
   Widget _buildTabSection() {
-    final List<String> tabs = ['Overview', 'Holdings', 'Manager', 'Portfolio', 'Documents'];
+    final List<String> tabs = ['Overview', 'Holdings', 'Manager', 'Performance'];
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
@@ -298,15 +267,10 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
                     color: isSelected ? AppColors.primaryGold!.withOpacity(0.9) : Colors.transparent,
                     borderRadius: BorderRadius.circular(10.r),
                   ),
-                  child: Text(
-                    tab,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: isSelected ? AppColors.buttonText : AppColors.primaryText,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12.sp,
-                    ),
-                  ),
+                  child: Text(tab, textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: isSelected ? AppColors.buttonText : AppColors.primaryText,
+                          fontWeight: FontWeight.w600, fontSize: 12.sp)),
                 ),
               ),
             );
@@ -320,54 +284,68 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SingleChildScrollView(
-        child: Container(
-          margin: EdgeInsets.all(12.w),
-          child: _getTabContent(),
-        ),
+        child: Container(margin: EdgeInsets.all(12.w), child: _getTabContent()),
       ),
     );
   }
 
   Widget _getTabContent() {
     switch (_selectedTab) {
-      case 0:
-        return _buildOverviewTab();
-      case 1:
-        return _buildHoldingsTab();
-      case 2:
-        return _buildManagerTab();
-      case 3:
-        return _buildPortfolioTab();
-      case 4:
-        return _buildDocumentsTab();
-      default:
-        return _buildOverviewTab();
+      case 0: return _buildOverviewTab();
+      case 1: return _buildHoldingsTab();
+      case 2: return _buildManagerTab();
+      case 3: return _buildPerformanceTab();
+      default: return _buildOverviewTab();
     }
   }
 
   Widget _buildOverviewTab() {
+    Map<String, dynamic>? analysis = widget.fundData['analysis'];
+    String expenseRatio = 'N/A';
+    String exitLoad = 'N/A';
+
+    if (analysis != null && analysis['expense_ratio'] != null) {
+      expenseRatio = analysis['expense_ratio'].toString() + '%';
+    }
+    if (widget.fundData['prodMfData'] != null && widget.fundData['prodMfData']['exitLoad'] != null) {
+      exitLoad = widget.fundData['prodMfData']['exitLoad'].toString();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionTitle('About the Fund'),
         SizedBox(height: 8.h),
         _buildSectionContainer(
-          child: Text(
-            'This ${widget.fundData['category'] ?? 'Equity'} fund seeks long-term capital growth by investing in ${widget.fundData['category'] == 'Equity' ? 'equity securities' : 'diverse assets'}.',
-            style: TextStyle(color: AppColors.primaryText, fontSize: 13.sp, height: 1.5),
-          ),
+          child: Text(widget.fundData['scheamName']?.toString() ?? widget.fundName,
+              style: TextStyle(color: AppColors.primaryText, fontSize: 13.sp, height: 1.5)),
         ),
         SizedBox(height: 16.h),
-        _buildSectionTitle('Key Metrics'),
+        _buildSectionTitle('Performance Metrics'),
         SizedBox(height: 8.h),
         _buildSectionContainer(
           child: Column(
             children: [
-              _buildMetricRow('Expense Ratio', widget.fundData['expenseRatio'] ?? '1.5%'),
-              _buildMetricRow('Exit Load', widget.fundData['exitLoad'] ?? 'Not Available'),
-              _buildMetricRow('Plan Type', widget.fundData['planType'] ?? 'Regular'),
-              _buildMetricRow('1 Year Return', widget.fundData['oneYearChange'] ?? '12.5%'),
-              _buildMetricRow('3 Year Return', widget.fundData['threeYearsChange'] ?? '35.67%'),
+              _buildMetricRow('1 Day Change', _getPercentage(widget.fundData['dayChange'])),
+              _buildMetricRow('1 Week Change', _getPercentage(widget.fundData['weekChange'])),
+              _buildMetricRow('1 Month Change', _getPercentage(widget.fundData['monthChange'])),
+              _buildMetricRow('6 Month Change', _getPercentage(widget.fundData['sixMonthChange'])),
+              _buildMetricRow('1 Year Return', _getPercentage(widget.fundData['oneYearChange'])),
+              _buildMetricRow('3 Year Return', _getPercentage(widget.fundData['threeYearsChange'])),
+              _buildMetricRow('5 Year Return', _getPercentage(widget.fundData['fiveYearsChange'])),
+              _buildMetricRow('All Time', _getPercentage(widget.fundData['allTime'])),
+            ],
+          ),
+        ),
+        SizedBox(height: 16.h),
+        _buildSectionTitle('Fund Details'),
+        SizedBox(height: 8.h),
+        _buildSectionContainer(
+          child: Column(
+            children: [
+              _buildMetricRow('Expense Ratio', expenseRatio),
+              _buildMetricRow('Exit Load', exitLoad),
+              _buildMetricRow('Scheme Code', _getString(widget.fundData['scheamCode'], 'N/A')),
             ],
           ),
         ),
@@ -376,6 +354,30 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
   }
 
   Widget _buildHoldingsTab() {
+    var holdingsData = widget.fundData['holdings'];
+    List<dynamic> holdings = [];
+
+    if (holdingsData != null) {
+      if (holdingsData is Map && holdingsData['portfolio'] != null) {
+        holdings = holdingsData['portfolio'];
+      } else if (holdingsData is List) {
+        holdings = holdingsData;
+      }
+    }
+
+    if (holdings.isEmpty) {
+      return _buildSectionContainer(
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(20.w),
+            child: Text('Holdings data not available', style: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp)),
+          ),
+        ),
+      );
+    }
+
+    List<dynamic> topHoldings = holdings.take(10).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -383,34 +385,22 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
         SizedBox(height: 8.h),
         _buildSectionContainer(
           child: Column(
-            children: [
-              ...[
-                {'name': 'Reliance Industries', 'percentage': 8.5, 'sector': 'Energy'},
-                {'name': 'TCS Limited', 'percentage': 7.2, 'sector': 'IT Services'},
-                {'name': 'HDFC Bank', 'percentage': 6.8, 'sector': 'Banking'},
-                {'name': 'Infosys Limited', 'percentage': 5.9, 'sector': 'IT Services'},
-                {'name': 'ICICI Bank', 'percentage': 4.7, 'sector': 'Banking'},
-              ].map((holding) => _buildHoldingItem(
-                holding['name'] as String,
-                holding['percentage'] as double,
-                holding['sector'] as String,
-              )),
-              SizedBox(height: 12.h),
-              _buildSectionTitle('Sector Allocation'),
-              SizedBox(height: 8.h),
-              ...[
-                {'name': 'IT Services', 'percentage': 25.0, 'color': AppColors.primaryGold},
-                {'name': 'Banking', 'percentage': 20.0, 'color': AppColors.accent},
-                {'name': 'Energy', 'percentage': 15.0, 'color': AppColors.success},
-                {'name': 'Healthcare', 'percentage': 12.0, 'color': Colors.purple},
-                {'name': 'FMCG', 'percentage': 10.0, 'color': Colors.blue},
-                {'name': 'Others', 'percentage': 18.0, 'color': AppColors.border},
-              ].map((sector) => _buildAllocationBar(
-                sector['name'] as String,
-                (sector['percentage'] as double).toInt(),
-                sector['color'] as Color,
-              )),
-            ],
+            children: topHoldings.map<Widget>((holding) {
+              String name = holding['name']?.toString() ?? 'Unknown';
+              double weight = 0.0;
+
+              if (holding['weight_%'] != null) {
+                weight = double.tryParse(holding['weight_%'].toString()) ?? 0.0;
+              } else if (holding['weight'] != null) {
+                weight = double.tryParse(holding['weight'].toString()) ?? 0.0;
+              } else if (holding['assets'] != null) {
+                String assets = holding['assets'].toString().replaceAll('%', '');
+                weight = double.tryParse(assets) ?? 0.0;
+              }
+
+              String sector = holding['sector']?.toString() ?? 'Unknown';
+              return _buildHoldingItem(name, weight, sector);
+            }).toList(),
           ),
         ),
       ],
@@ -418,148 +408,102 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
   }
 
   Widget _buildManagerTab() {
+    var managersData = widget.fundData['fundManagers'];
+    List<dynamic> managers = [];
+
+    if (managersData != null) {
+      if (managersData is List) {
+        managers = managersData;
+      } else if (managersData is Map && managersData['fund_management'] != null) {
+        managers = managersData['fund_management'];
+      }
+    }
+
+    if (managers.isEmpty) {
+      return _buildSectionContainer(
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(20.w),
+            child: Text('Fund manager data not available', style: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp)),
+          ),
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Fund Manager'),
+        _buildSectionTitle('Fund Managers'),
         SizedBox(height: 8.h),
-        _buildSectionContainer(
-          child: Column(
-            children: [
-              Row(
+        ...managers.map<Widget>((manager) {
+          String name = manager['name']?.toString() ?? 'Unknown Manager';
+          String tenure = '';
+
+          if (manager['tenure'] != null) {
+            tenure = manager['tenure'].toString();
+          } else if (manager['since'] != null) {
+            tenure = manager['since'].toString();
+          } else if (manager['from'] != null && manager['to'] != null) {
+            tenure = '${manager['from']} - ${manager['to']}';
+          } else if (manager['start_date'] != null && manager['end_date'] != null) {
+            tenure = '${manager['start_date']} - ${manager['end_date']}';
+          }
+
+          return _buildManagerCard(name, tenure);
+        }).toList(),
+      ],
+    );
+  }
+
+  Widget _buildManagerCard(String name, String tenure) {
+    String initials = name.split(' ').map((word) => word.isNotEmpty ? word[0] : '').take(2).join('').toUpperCase();
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      child: _buildSectionContainer(
+        child: Row(
+          children: [
+            Container(
+              width: 48.r, height: 48.r,
+              decoration: BoxDecoration(color: AppColors.primaryGold!.withOpacity(0.2), borderRadius: BorderRadius.circular(12.r)),
+              child: Center(child: Text(initials, style: TextStyle(color: AppColors.primaryGold, fontSize: 16.sp, fontWeight: FontWeight.bold))),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 48.r,
-                    height: 48.r,
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryGold!.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'RS',
-                        style: TextStyle(
-                          color: AppColors.primaryGold,
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Rahul Sharma',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.primaryText,
-                          ),
-                        ),
-                        Text(
-                          'MBA Finance, CFA',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: AppColors.secondaryText,
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Row(
-                          children: [
-                            _buildManagerStatChip('12 Years Experience'),
-                            SizedBox(width: 8.w),
-                            _buildManagerStatChip('8 Funds'),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                  Text(name, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: AppColors.primaryText)),
+                  if (tenure.isNotEmpty) ...[
+                    SizedBox(height: 4.h),
+                    Text(tenure, style: TextStyle(fontSize: 12.sp, color: AppColors.secondaryText)),
+                  ],
                 ],
               ),
-              SizedBox(height: 12.h),
-              Text(
-                'Rahul has managed equity funds for over 12 years with a proven track record. He specializes in large-cap investments.',
-                style: TextStyle(color: AppColors.primaryText, fontSize: 13.sp, height: 1.5),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildPortfolioTab() {
+  Widget _buildPerformanceTab() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Asset Allocation'),
+        _buildSectionTitle('Returns Analysis'),
         SizedBox(height: 8.h),
         _buildSectionContainer(
           child: Column(
             children: [
-              ...[
-                {'name': 'Equity', 'percentage': 70, 'color': AppColors.primaryGold},
-                {'name': 'Debt', 'percentage': 20, 'color': AppColors.accent},
-                {'name': 'Cash', 'percentage': 10, 'color': AppColors.success},
-              ].map((alloc) => _buildAllocationBar(
-                alloc['name'] as String,
-                alloc['percentage'] as int,
-                alloc['color'] as Color,
-              )),
-            ],
-          ),
-        ),
-        SizedBox(height: 16.h),
-        _buildSectionTitle('Portfolio Statistics'),
-        SizedBox(height: 8.h),
-        _buildSectionContainer(
-          child: Column(
-            children: [
-              _buildMetricRow('Number of Holdings', '45'),
-              _buildMetricRow('Portfolio Turnover', '35%'),
-              _buildMetricRow('Cash Position', '5.2%'),
-              _buildMetricRow('Average Market Cap', '₹85,000 Cr'),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDocumentsTab() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle('Fund Documents'),
-        SizedBox(height: 8.h),
-        _buildSectionContainer(
-          child: Column(
-            children: [
-              ...[
-                {'title': 'Scheme Information Document', 'type': 'PDF', 'size': '2.5 MB'},
-                {'title': 'Key Information Memorandum', 'type': 'PDF', 'size': '1.8 MB'},
-                {'title': 'Annual Report 2024', 'type': 'PDF', 'size': '4.2 MB'},
-              ].map((doc) => _buildDocumentItem(doc['title']!, doc['type']!, doc['size']!)),
-              SizedBox(height: 12.h),
-              _buildSectionTitle('FAQs'),
-              SizedBox(height: 8.h),
-              ...[
-                {
-                  'question': 'What is the investment objective?',
-                  'answer': 'The fund aims for long-term capital appreciation via ${widget.fundData['category'] == 'Equity' ? 'equity securities' : 'diverse assets'}.'
-                },
-                {
-                  'question': 'What is the minimum investment?',
-                  'answer': '₹1,000 for lump sum.'
-                },
-                {
-                  'question': 'How can I redeem my investment?',
-                  'answer': 'Redeem via the app’s portfolio section.'
-                },
-              ].map((faq) => _buildFAQItem(faq['question']!, faq['answer']!)),
+              _buildMetricRow('1 Day', _getPercentage(widget.fundData['dayChange'])),
+              _buildMetricRow('1 Week', _getPercentage(widget.fundData['weekChange'])),
+              _buildMetricRow('1 Month', _getPercentage(widget.fundData['monthChange'])),
+              _buildMetricRow('6 Months', _getPercentage(widget.fundData['sixMonthChange'])),
+              _buildMetricRow('1 Year', _getPercentage(widget.fundData['oneYearChange'])),
+              _buildMetricRow('3 Years', _getPercentage(widget.fundData['threeYearsChange'])),
+              _buildMetricRow('5 Years', _getPercentage(widget.fundData['fiveYearsChange'])),
+              _buildMetricRow('Since Inception', _getPercentage(widget.fundData['allTime'])),
             ],
           ),
         ),
@@ -568,14 +512,7 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
   }
 
   Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 16.sp,
-        fontWeight: FontWeight.w700,
-        color: AppColors.primaryText,
-      ),
-    );
+    return Text(title, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700, color: AppColors.primaryText));
   }
 
   Widget _buildSectionContainer({required Widget child}) {
@@ -597,18 +534,8 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(color: AppColors.primaryText, fontSize: 13.sp),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              color: AppColors.primaryText,
-              fontSize: 13.sp,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          Text(label, style: TextStyle(color: AppColors.primaryText, fontSize: 13.sp)),
+          Text(value, style: TextStyle(color: AppColors.primaryText, fontSize: 13.sp, fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -627,247 +554,39 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
       child: Row(
         children: [
           Container(
-            width: 32.r,
-            height: 32.r,
-            decoration: BoxDecoration(
-              color: AppColors.primaryGold!.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Center(
-              child: Text(
-                displayInitial,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primaryGold,
-                ),
-              ),
-            ),
+            width: 32.r, height: 32.r,
+            decoration: BoxDecoration(color: AppColors.primaryGold!.withOpacity(0.1), borderRadius: BorderRadius.circular(8.r)),
+            child: Center(child: Text(displayInitial, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: AppColors.primaryGold))),
           ),
           SizedBox(width: 8.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name.isNotEmpty ? name : 'Unknown Holding',
-                  style: TextStyle(
-                    color: AppColors.primaryText,
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  sector.isNotEmpty ? sector : 'Unknown Sector',
-                  style: TextStyle(color: AppColors.secondaryText, fontSize: 11.sp),
-                ),
+                Text(name, style: TextStyle(color: AppColors.primaryText, fontSize: 13.sp, fontWeight: FontWeight.w600),
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(sector, style: TextStyle(color: AppColors.secondaryText, fontSize: 11.sp)),
               ],
             ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                percentage.isNaN ? '0.0%' : '${percentage.toStringAsFixed(1)}%',
-                style: TextStyle(
-                  color: AppColors.primaryText,
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              Text('${percentage.toStringAsFixed(2)}%',
+                  style: TextStyle(color: AppColors.primaryText, fontSize: 12.sp, fontWeight: FontWeight.w600)),
               SizedBox(height: 4.h),
               Container(
-                width: 60.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryGold!.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(2.r),
-                ),
+                width: 60.w, height: 4.h,
+                decoration: BoxDecoration(color: AppColors.primaryGold!.withOpacity(0.2), borderRadius: BorderRadius.circular(2.r)),
                 child: FractionallySizedBox(
                   alignment: Alignment.centerLeft,
-                  widthFactor: percentage.isNaN ? 0.0 : (percentage / 10).clamp(0.0, 1.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryGold,
-                      borderRadius: BorderRadius.circular(2.r),
-                    ),
-                  ),
+                  widthFactor: (percentage / 10).clamp(0.0, 1.0),
+                  child: Container(decoration: BoxDecoration(color: AppColors.primaryGold, borderRadius: BorderRadius.circular(2.r))),
                 ),
               ),
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildAllocationBar(String label, int percentage, Color color) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 6.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                label,
-                style: TextStyle(color: AppColors.primaryText, fontSize: 13.sp),
-              ),
-              Text(
-                '$percentage%',
-                style: TextStyle(
-                  color: color,
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 6.h),
-          Container(
-            height: 6.h,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(3.r),
-              color: AppColors.border.withOpacity(0.2),
-            ),
-            child: FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: percentage / 100,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(3.r),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildManagerStatChip(String text) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground?.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: AppColors.primaryGold!.withOpacity(0.2)),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 10.sp,
-          fontWeight: FontWeight.w500,
-          color: AppColors.primaryText,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDocumentItem(String title, String type, String size) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 8.h),
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(
-        color: AppColors.screenBackground,
-        borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: AppColors.primaryGold!.withOpacity(0.2)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32.r,
-            height: 32.r,
-            decoration: BoxDecoration(
-              color: AppColors.accent?.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Icon(
-              type == 'PDF' ? Icons.picture_as_pdf : Icons.table_chart,
-              color: AppColors.accent,
-              size: 16.sp,
-            ),
-          ),
-          SizedBox(width: 8.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: AppColors.primaryText,
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  '$type • $size',
-                  style: TextStyle(color: AppColors.secondaryText, fontSize: 10.sp),
-                ),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Downloading $title...'),
-                  backgroundColor: AppColors.success,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-                ),
-              );
-            },
-            child: Container(
-              padding: EdgeInsets.all(6.w),
-              decoration: BoxDecoration(
-                color: AppColors.primaryGold!.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Icon(
-                Icons.download,
-                color: AppColors.primaryGold,
-                size: 16.sp,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFAQItem(String question, String answer) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 8.h),
-      decoration: BoxDecoration(
-        color: AppColors.screenBackground,
-        borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: AppColors.primaryGold!.withOpacity(0.2)),
-      ),
-      child: ExpansionTile(
-        title: Text(
-          question,
-          style: TextStyle(
-            color: AppColors.primaryText,
-            fontSize: 13.sp,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        children: [
-          Padding(
-            padding: EdgeInsets.all(12.w),
-            child: Text(
-              answer,
-              style: TextStyle(color: AppColors.secondaryText, fontSize: 13.sp, height: 1.5),
-            ),
-          ),
-        ],
-        iconColor: AppColors.primaryGold,
-        collapsedIconColor: AppColors.secondaryText,
       ),
     );
   }
@@ -877,10 +596,7 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
         color: AppColors.cardBackground?.withOpacity(0.8),
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(16.r),
-          topRight: Radius.circular(16.r),
-        ),
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(16.r), topRight: Radius.circular(16.r)),
         border: Border.all(color: AppColors.primaryGold!.withOpacity(0.3)),
       ),
       child: Row(
@@ -896,20 +612,9 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.account_balance_wallet,
-                    color: AppColors.buttonText,
-                    size: 16.sp,
-                  ),
+                  Icon(Icons.account_balance_wallet, color: AppColors.buttonText, size: 16.sp),
                   SizedBox(width: 6.w),
-                  Text(
-                    'Lumpsum',
-                    style: TextStyle(
-                      color: AppColors.buttonText,
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  Text('Invest Now', style: TextStyle(color: AppColors.buttonText, fontSize: 14.sp, fontWeight: FontWeight.w600)),
                 ],
               ),
             ),
@@ -920,216 +625,226 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
   }
 
   void _showInvestmentBottomSheet() {
-    String? errorMessage = '';
-    bool isLoading = false;
-
     showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setModalState) {
-            return Container(
-              height: MediaQuery.of(context).size.height * 0.6,
-              decoration: BoxDecoration(
-                color: AppColors.cardBackground?.withOpacity(0.8),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(16.r),
-                  topRight: Radius.circular(16.r),
-                ),
-                border: Border.all(color: AppColors.primaryGold!.withOpacity(0.3)),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    margin: EdgeInsets.symmetric(vertical: 12.h),
-                    width: 40.w,
-                    height: 4.h,
-                    decoration: BoxDecoration(
-                      color: AppColors.secondaryText?.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(2.r),
-                    ),
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (BuildContext context) {
+          return StatefulBuilder(
+              builder: (BuildContext context, StateSetter setModalState) {
+                return Container(
+                  height: MediaQuery.of(context).size.height * 0.65,
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBackground?.withOpacity(0.95),
+                    borderRadius: BorderRadius.only(topLeft: Radius.circular(16.r), topRight: Radius.circular(16.r)),
+                    border: Border.all(color: AppColors.primaryGold!.withOpacity(0.3)),
                   ),
-                  Padding(
-                    padding: EdgeInsets.all(12.w),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
                       children: [
-                        Text(
-                          'Lumpsum Investment',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primaryText,
-                          ),
+                  Container(
+                  margin: EdgeInsets.symmetric(vertical: 12.h),
+                  width: 40.w, height: 4.h,
+                  decoration: BoxDecoration(color: AppColors.secondaryText?.withOpacity(0.3), borderRadius: BorderRadius.circular(2.r)),
+                ),
+                Padding(
+                padding: EdgeInsets.all(12.w),
+                child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                Text('Investment Details',
+                style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w700, color: AppColors.primaryText)),
+                IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: Icon(Icons.close, color: AppColors.secondaryText, size: 24.sp),
+                ),
+                ],
+                ),
+                ),
+                Expanded(
+                child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: Form(
+                key: _formKey,
+                child: Column(
+                children: [
+                Container(
+                padding: EdgeInsets.all(16.w),
+                decoration: BoxDecoration(
+                gradient: LinearGradient(
+                colors: [AppColors.primaryGold!.withOpacity(0.1), AppColors.primaryGold!.withOpacity(0.05)],
+                begin: Alignment.topLeft, end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: AppColors.primaryGold!.withOpacity(0.3)),
+                ),
+                child: Row(
+                children: [
+                Container(
+                width: 48.w, height: 48.w,
+                decoration: BoxDecoration(color: AppColors.primaryGold!.withOpacity(0.2), borderRadius: BorderRadius.circular(10.r)),
+                child: Icon(Icons.account_balance, color: AppColors.primaryGold, size: 24.sp),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                Text(widget.fundName,
+                style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: AppColors.primaryText),
+                maxLines: 2, overflow: TextOverflow.ellipsis),
+                SizedBox(height: 2.h),
+                Text(widget.name, style: TextStyle(fontSize: 12.sp, color: AppColors.secondaryText)),
+                ],
+                ),
+                ),
+                ],
+                ),
+                ),
+                SizedBox(height: 20.h),
+                TextFormField(
+                controller: _amountController,
+                keyboardType: TextInputType.number,
+                style: TextStyle(color: AppColors.primaryText, fontSize: 16.sp, fontWeight: FontWeight.w600),
+                decoration: InputDecoration(
+                labelText: 'Investment Amount',
+                labelStyle: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp),
+                hintText: 'Enter amount (Min ₹1,000)',
+                hintStyle: TextStyle(color: AppColors.secondaryText?.withOpacity(0.6)),
+                prefixIcon: Padding(
+                padding: EdgeInsets.all(12.w),
+                child: Icon(Icons.currency_rupee, color: AppColors.primaryGold, size: 20.sp),
+                ),
+                suffixIcon: _amountController.text.isNotEmpty
+                ? IconButton(
+                  // Add this to the end of _TradingDetailsScreenState class
+
+// Continue the suffixIcon from previous part:
+                  onPressed: () {
+                    _amountController.clear();
+                    setModalState(() {});
+                  },
+                  icon: Icon(Icons.clear_rounded, color: AppColors.secondaryText, size: 20.sp),
+                )
+                    : null,
+                  filled: true,
+                  fillColor: AppColors.screenBackground,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: BorderSide(color: AppColors.primaryGold!.withOpacity(0.3), width: 1.5),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: BorderSide(color: AppColors.border, width: 1),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: BorderSide(color: AppColors.primaryGold!, width: 2),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: BorderSide(color: AppColors.error, width: 1.5),
+                  ),
+                ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Please enter an amount';
+                    final amount = double.tryParse(value);
+                    if (amount == null || amount <= 0) return 'Enter a valid amount';
+                    if (amount < 1000) return 'Minimum investment is ₹1,000';
+                    return null;
+                  },
+                  onChanged: (value) => setModalState(() {}),
+                ),
+                  SizedBox(height: 16.h),
+                  Row(
+                    children: [
+                      _buildAmountChip('₹1,000', 1000, setModalState),
+                      SizedBox(width: 8.w),
+                      _buildAmountChip('₹5,000', 5000, setModalState),
+                      SizedBox(width: 8.w),
+                      _buildAmountChip('₹10,000', 10000, setModalState),
+                    ],
+                  ),
+                  Spacer(),
+                  _isLoading
+                      ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGold!),
                         ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: Icon(Icons.close, color: AppColors.secondaryText, size: 20.sp),
-                        ),
+                        SizedBox(height: 12.h),
+                        Text('Processing your investment...',
+                            style: TextStyle(color: AppColors.secondaryText, fontSize: 13.sp)),
                       ],
                     ),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(12.w),
-                              decoration: BoxDecoration(
-                                color: AppColors.screenBackground,
-                                borderRadius: BorderRadius.circular(10.r),
-                                border: Border.all(color: AppColors.primaryGold!.withOpacity(0.2)),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 40.w,
-                                    height: 40.w,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primaryGold!.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(8.r),
-                                    ),
-                                    child: Icon(
-                                      Icons.account_balance,
-                                      color: AppColors.primaryGold,
-                                      size: 20.sp,
-                                    ),
-                                  ),
-                                  SizedBox(width: 8.w),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          widget.fundName,
-                                          style: TextStyle(
-                                            fontSize: 14.sp,
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.primaryText,
-                                          ),
-                                        ),
-                                        Text(
-                                          'Category: ${widget.fundData['category'] ?? 'Equity'}',
-                                          style: TextStyle(
-                                            fontSize: 12.sp,
-                                            color: AppColors.secondaryText,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(height: 12.h),
-                            TextFormField(
-                              controller: _amountController,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                labelText: 'Investment Amount',
-                                labelStyle: TextStyle(color: AppColors.secondaryText),
-                                hintText: '₹1,000',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12.r),
-                                  borderSide: BorderSide(color: AppColors.primaryGold!.withOpacity(0.3)),
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.currency_rupee,
-                                  color: AppColors.primaryGold,
-                                ),
-                                suffixIcon: _amountController.text.isNotEmpty
-                                    ? IconButton(
-                                  onPressed: () {
-                                    _amountController.clear();
-                                    setModalState(() {});
-                                  },
-                                  icon: Icon(Icons.clear_rounded, color: AppColors.secondaryText, size: 18.sp),
-                                )
-                                    : null,
-                              ),
-                              style: TextStyle(color: AppColors.primaryText),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) return 'Enter an amount';
-                                final amount = double.tryParse(value);
-                                if (amount == null || amount <= 0) return 'Enter a valid amount';
-
-                                return null;
-                              },
-                              onChanged: (value) => setModalState(() => errorMessage = ''),
-                            ),
-                            SizedBox(height: 12.h),
-                            Row(
-                              children: [
-                                _buildAmountChip('₹1,000', 1000, setModalState),
-                                SizedBox(width: 8.w),
-                                _buildAmountChip('₹5,000', 5000, setModalState),
-                                SizedBox(width: 8.w),
-                                _buildAmountChip('₹10,000', 10000, setModalState),
-                              ],
-                            ),
-                            SizedBox(height: 16.h),
-                            isLoading
-                                ? CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGold!),
-                            )
-                                : ElevatedButton(
-                              onPressed: () => _handleInvest(setModalState),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primaryGold!.withOpacity(0.9),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-                              ),
-                              child: Text(
-                                'Confirm Lumpsum',
-                                style: TextStyle(
-                                  color: AppColors.buttonText,
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                  )
+                      : SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => _handleInvest(setModalState),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryGold!,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                        elevation: 2,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.check_circle_outline, color: AppColors.buttonText, size: 20.sp),
+                          SizedBox(width: 8.w),
+                          Text('Proceed to Invest',
+                              style: TextStyle(
+                                  color: AppColors.buttonText, fontSize: 16.sp, fontWeight: FontWeight.w700)),
+                        ],
                       ),
                     ),
                   ),
+                  SizedBox(height: 12.h),
                 ],
-              ),
-            );
-          },
-        );
-      },
+                ),
+                ),
+                ),
+                ),
+                      ],
+                  ),
+                );
+              },
+          );
+        },
     );
   }
 
   Widget _buildAmountChip(String amount, int value, StateSetter setModalState) {
     bool isSelected = _amountController.text == value.toString();
-    return GestureDetector(
-      onTap: () {
-        _amountController.text = value.toString();
-        setModalState(() {});
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryGold!.withOpacity(0.1) : AppColors.screenBackground,
-          borderRadius: BorderRadius.circular(8.r),
-          border: Border.all(
-            color: isSelected ? AppColors.primaryGold! : AppColors.border,
-            width: isSelected ? 1.5 : 1,
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          _amountController.text = value.toString();
+          setModalState(() {});
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+          decoration: BoxDecoration(
+            gradient: isSelected
+                ? LinearGradient(colors: [AppColors.primaryGold!.withOpacity(0.2), AppColors.primaryGold!.withOpacity(0.1)])
+                : null,
+            color: isSelected ? null : AppColors.screenBackground,
+            borderRadius: BorderRadius.circular(10.r),
+            border: Border.all(
+              color: isSelected ? AppColors.primaryGold! : AppColors.border,
+              width: isSelected ? 2 : 1,
+            ),
           ),
-        ),
-        child: Text(
-          amount,
-          style: TextStyle(
-            fontSize: 11.sp,
-            color: isSelected ? AppColors.primaryGold : AppColors.primaryText,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          child: Text(
+            amount,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13.sp,
+              color: isSelected ? AppColors.primaryGold : AppColors.primaryText,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            ),
           ),
         ),
       ),
@@ -1138,6 +853,7 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
 
   Future<void> _handleInvest(StateSetter setModalState) async {
     if (!_formKey.currentState!.validate()) return;
+
     final confirmed = await _showConfirmationDialog();
     if (confirmed != true) return;
 
@@ -1145,29 +861,66 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
 
     try {
       final amount = double.parse(_amountController.text);
+
+      // Extract scheme and fund codes from fundData
+      String rtaSchCode = '';
+      String rtaAmcCode = '';
+
+      // Try to get scheme code
+      if (widget.fundData['scheamCode'] != null) {
+        rtaSchCode = widget.fundData['scheamCode'].toString();
+      } else if (widget.fundData['prodMfData'] != null && widget.fundData['prodMfData']['schemeCode'] != null) {
+        rtaSchCode = widget.fundData['prodMfData']['schemeCode'].toString();
+      }
+
+      // Try to get AMC/fund code
+      if (widget.fundData['prodMfData'] != null && widget.fundData['prodMfData']['fundCode'] != null) {
+        rtaAmcCode = widget.fundData['prodMfData']['fundCode'].toString();
+      } else if (widget.fundData['amc'] != null) {
+        rtaAmcCode = widget.fundData['amc'].toString();
+      }
+
+      print('Investment Details:');
+      print('Amount: $amount');
+      print('Scheme Code: $rtaSchCode');
+      print('AMC Code: $rtaAmcCode');
+
+      // Call the API to purchase lumpsum
       final response = await MutualFundService.purchaseLumpsum(
         totAmt: amount,
-        rtaAmcCode: widget.fundData['fundCode'],
-        rtaSchCode: widget.fundData['schemeCode'],
-
+        rtaAmcCode: rtaAmcCode,
+        rtaSchCode: rtaSchCode,
         folio: 'new',
       );
 
+      setModalState(() => _isLoading = false);
+
+      print('API Response: $response');
+
       if (response['status'] == true) {
         final approvalLink = response['data']?['approvalLink']?.toString() ?? '';
-        if (await canLaunchUrl(Uri.parse(approvalLink))) {
-          await launchUrl(Uri.parse(approvalLink), mode: LaunchMode.externalApplication);
-          setModalState(() => _isLoading = false);
+
+        if (approvalLink.isNotEmpty) {
           Navigator.pop(context); // Close bottom sheet
           await _showSuccessDialog();
+
+          // Launch the approval URL
+          final Uri url = Uri.parse(approvalLink);
+          if (await canLaunchUrl(url)) {
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+          } else {
+            throw Exception('Unable to open approval link');
+          }
+
           _amountController.clear();
         } else {
-          throw Exception('Unable to open approval link');
+          throw Exception('Approval link not received');
         }
       } else {
         throw Exception(response['message']?.toString() ?? 'Transaction failed');
       }
     } catch (e) {
+      print('Error during investment: $e');
       setModalState(() => _isLoading = false);
       await _showErrorDialog(e.toString());
     }
@@ -1179,84 +932,68 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-        contentPadding: EdgeInsets.all(20.w),
+        contentPadding: EdgeInsets.all(24.w),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: EdgeInsets.all(12.w),
+              padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
-                color: AppColors.primaryGold!.withOpacity(0.1),
+                gradient: LinearGradient(
+                  colors: [AppColors.primaryGold!.withOpacity(0.2), AppColors.primaryGold!.withOpacity(0.1)],
+                ),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.trending_up,
-                color: AppColors.primaryGold,
-                size: 28.sp,
-              ),
+              child: Icon(Icons.trending_up, color: AppColors.primaryGold, size: 32.sp),
             ),
+            SizedBox(height: 16.h),
+            Text('Confirm Investment',
+                style: TextStyle(color: AppColors.primaryText, fontSize: 20.sp, fontWeight: FontWeight.bold)),
             SizedBox(height: 12.h),
-            Text(
-              'Confirm Investment',
-              style: TextStyle(
-                color: AppColors.primaryText,
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8.h),
             RichText(
               textAlign: TextAlign.center,
               text: TextSpan(
-                style: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp, height: 1.4),
+                style: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp, height: 1.5),
                 children: [
                   TextSpan(text: 'You are about to invest '),
                   TextSpan(
                     text: '₹${_amountController.text}',
-                    style: TextStyle(color: AppColors.primaryText, fontWeight: FontWeight.bold),
+                    style: TextStyle(color: AppColors.primaryGold, fontWeight: FontWeight.bold, fontSize: 16.sp),
                   ),
-                  TextSpan(text: ' in ${widget.fundName}.'),
+                  TextSpan(text: ' in\n'),
+                  TextSpan(
+                    text: widget.fundName,
+                    style: TextStyle(color: AppColors.primaryText, fontWeight: FontWeight.w600),
+                  ),
                 ],
               ),
             ),
-            SizedBox(height: 16.h),
+            SizedBox(height: 20.h),
             Row(
               children: [
                 Expanded(
                   child: TextButton(
                     onPressed: () => Navigator.pop(context, false),
                     style: TextButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 10.h),
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                      backgroundColor: AppColors.screenBackground,
                     ),
-                    child: Text(
-                      'Cancel',
-                      style: TextStyle(
-                        color: AppColors.secondaryText,
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    child: Text('Cancel',
+                        style: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp, fontWeight: FontWeight.w600)),
                   ),
                 ),
-                SizedBox(width: 8.w),
+                SizedBox(width: 12.w),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => Navigator.pop(context, true),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryGold,
-                      elevation: 0,
-                      padding: EdgeInsets.symmetric(vertical: 10.h),
+                      elevation: 2,
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
                     ),
-                    child: Text(
-                      'Confirm',
-                      style: TextStyle(
-                        color: AppColors.buttonText,
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: Text('Confirm', style: TextStyle(color: AppColors.buttonText, fontSize: 14.sp, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -1273,52 +1010,41 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-        contentPadding: EdgeInsets.all(20.w),
+        contentPadding: EdgeInsets.all(24.w),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: EdgeInsets.all(12.w),
+              padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.1),
+                gradient: LinearGradient(
+                  colors: [AppColors.success.withOpacity(0.2), AppColors.success.withOpacity(0.1)],
+                ),
                 shape: BoxShape.circle,
               ),
-              child: FaIcon(FontAwesomeIcons.checkCircle, color: AppColors.success, size: 28.sp),
-            ),
-            SizedBox(height: 12.h),
-            Text(
-              'Investment Successful!',
-              style: TextStyle(
-                color: AppColors.primaryText,
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              'Your investment of ₹${_amountController.text} has been initiated.',
-              style: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp, height: 1.4),
-              textAlign: TextAlign.center,
+              child: FaIcon(FontAwesomeIcons.checkCircle, color: AppColors.success, size: 32.sp),
             ),
             SizedBox(height: 16.h),
+            Text('Investment Initiated!',
+                style: TextStyle(color: AppColors.primaryText, fontSize: 20.sp, fontWeight: FontWeight.bold)),
+            SizedBox(height: 12.h),
+            Text(
+              'Your investment of ₹${_amountController.text} has been initiated successfully. Please complete the approval process in your browser.',
+              style: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp, height: 1.5),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 20.h),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryGold,
-                  elevation: 0,
-                  padding: EdgeInsets.symmetric(vertical: 10.h),
+                  backgroundColor: AppColors.success,
+                  elevation: 2,
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
                 ),
-                child: Text(
-                  'Done',
-                  style: TextStyle(
-                    color: AppColors.buttonText,
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: Text('Done', style: TextStyle(color: AppColors.buttonText, fontSize: 14.sp, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -1333,52 +1059,41 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen>
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-        contentPadding: EdgeInsets.all(20.w),
+        contentPadding: EdgeInsets.all(24.w),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: EdgeInsets.all(12.w),
+              padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
-                color: AppColors.error.withOpacity(0.1),
+                gradient: LinearGradient(
+                  colors: [AppColors.error.withOpacity(0.2), AppColors.error.withOpacity(0.1)],
+                ),
                 shape: BoxShape.circle,
               ),
-              child: FaIcon(FontAwesomeIcons.exclamationCircle, color: AppColors.error, size: 28.sp),
-            ),
-            SizedBox(height: 12.h),
-            Text(
-              'Transaction Failed',
-              style: TextStyle(
-                color: AppColors.primaryText,
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              message,
-              style: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp, height: 1.4),
-              textAlign: TextAlign.center,
+              child: FaIcon(FontAwesomeIcons.exclamationCircle, color: AppColors.error, size: 32.sp),
             ),
             SizedBox(height: 16.h),
+            Text('Transaction Failed',
+                style: TextStyle(color: AppColors.primaryText, fontSize: 20.sp, fontWeight: FontWeight.bold)),
+            SizedBox(height: 12.h),
+            Text(
+              message.contains('Exception:') ? message.replaceAll('Exception:', '').trim() : message,
+              style: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp, height: 1.5),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 20.h),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.error,
-                  elevation: 0,
-                  padding: EdgeInsets.symmetric(vertical: 10.h),
+                  elevation: 2,
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
                 ),
-                child: Text(
-                  'Try Again',
-                  style: TextStyle(
-                    color: AppColors.buttonText,
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: Text('Try Again', style: TextStyle(color: AppColors.buttonText, fontSize: 14.sp, fontWeight: FontWeight.bold)),
               ),
             ),
           ],

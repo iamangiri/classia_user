@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../themes/app_colors.dart';
 import '../market/market_stock_chart_screen.dart';
+import '../market/stock_market_screen.dart';
 
 class HomeStockMarketSection extends StatefulWidget {
   const HomeStockMarketSection({Key? key}) : super(key: key);
@@ -89,6 +90,17 @@ class _HomeStockMarketSectionState extends State<HomeStockMarketSection> {
     );
   }
 
+  void _navigateToMarketScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const MarketScreen(
+          showBackButton: true,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -108,9 +120,7 @@ class _HomeStockMarketSectionState extends State<HomeStockMarketSection> {
                 ),
               ),
               TextButton(
-                onPressed: () {
-                  // Navigate to full stock list screen
-                },
+                onPressed: _navigateToMarketScreen,
                 child: Text(
                   'View All',
                   style: TextStyle(

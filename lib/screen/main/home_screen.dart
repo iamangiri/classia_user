@@ -227,13 +227,13 @@ class _HomeScreenState extends State<HomeScreen> {
               SizedBox(height: 24.h),
               // New Section: Learn & Earn
               HomeLearnSection(),
-              SizedBox(height: 24.h),
-              HomeTrendingFundWidget(),
+             // SizedBox(height: 24.h),
+           //   HomeTrendingFundWidget(),
               SizedBox(height: 24.h),
               HomeSipGoalSection(),
               SizedBox(height: 24.h),
               // Top Mutual Funds Section
-              TopMutualFundsSection(),
+            //  TopMutualFundsSection(),
               SizedBox(height: 12.h),
               HomeCertificateSection(),
             ],

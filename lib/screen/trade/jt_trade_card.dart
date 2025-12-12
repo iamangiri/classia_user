@@ -1,8 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:classia_amc/themes/app_colors.dart';
-import 'package:classia_amc/screen/trade/jt_trade_deatils_screen.dart';
+
+import 'jt_trade_deatils_screen.dart';
 
 class JtTradeCard extends StatefulWidget {
   final String logo;
@@ -21,34 +20,22 @@ class JtTradeCard extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _TradingCardState createState() => _TradingCardState();
+  _JtTradeCardState createState() => _JtTradeCardState();
 }
 
-class _TradingCardState extends State<JtTradeCard> with TickerProviderStateMixin {
-  late AnimationController _scaleController;
+class _JtTradeCardState extends State<JtTradeCard> with SingleTickerProviderStateMixin {
   late AnimationController _horseController;
-  late Animation<double> _scaleAnimation;
   late Animation<double> _horseAnimation;
 
   @override
   void initState() {
     super.initState();
-
-    // Scale animation for tap effect
-    _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
-    );
-
-    // Horse race animation
     _horseController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 5),
+      duration: const Duration(milliseconds: 1500),
     );
     _updateHorseAnimation();
+    _horseController.forward();
   }
 
   @override
@@ -60,8 +47,6 @@ class _TradingCardState extends State<JtTradeCard> with TickerProviderStateMixin
   }
 
   void _updateHorseAnimation() {
-    // Normalize value for animation (map percentage to 0.0-1.0 range)
-    // Using 20 as the divisor for better visibility like in TradingCard
     double normalizedValue = (widget.value.abs() / 20).clamp(0.0, 1.0);
     _horseAnimation = Tween<double>(
       begin: 0,
@@ -72,211 +57,184 @@ class _TradingCardState extends State<JtTradeCard> with TickerProviderStateMixin
 
   @override
   void dispose() {
-    _scaleController.dispose();
     _horseController.dispose();
     super.dispose();
-  }
-
-  String _truncateText(String text, {int maxWords = 4}) {
-    final normalized = text.replaceAll(RegExp(r'[\u00A0\u202F]'), ' ').trim();
-    final words = normalized.split(RegExp(r'\s+'));
-    if (words.length <= maxWords) return normalized;
-    return '${words.sublist(0, maxWords).join(' ')}...';
   }
 
   @override
   Widget build(BuildContext context) {
     final bool isPositive = widget.value >= 0;
-    final double cardWidth = MediaQuery.of(context).size.width * 0.85;
+    final double cardWidth = MediaQuery.of(context).size.width - 32.w;
 
-    return InkWell(
-      onTapDown: (_) => _scaleController.forward(),
-      onTapUp: (_) => _scaleController.reverse(),
-      onTapCancel: () => _scaleController.reverse(),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => JtTradeDeatilsScreen(
-              logo: widget.logo,
-              name: widget.name,
-              fundName: widget.fundName,
-              value: widget.value,
-              fundData: widget.fundData,
-            ),
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
-        );
-      },
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: Container(
-          margin: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
-          padding: EdgeInsets.all(12.w),
-          decoration: BoxDecoration(
-            color: AppColors.cardBackground?.withOpacity(0.8),
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: AppColors.primaryGold!.withOpacity(0.3)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10.r,
-                offset: Offset(0, 4),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => JtTradeDeatilsScreen(
+                  logo: widget.logo,
+                  name: widget.name,
+                  fundName: widget.fundName,
+                  value: widget.value,
+                  fundData: widget.fundData,
+                ),
               ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header Row
-              Row(
-                children: [
-                  Container(
-                    width: 48.r,
-                    height: 48.r,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12.r),
-                      color: AppColors.primaryGold!.withOpacity(0.1),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12.r),
-                      child: Image.network(
-                        widget.logo,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Icon(
-                          Icons.image_not_supported,
-                          color: AppColors.primaryGold,
-                          size: 24.sp,
+            );
+          },
+          borderRadius: BorderRadius.circular(16.r),
+          child: Padding(
+            padding: EdgeInsets.all(12.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header Row
+                Row(
+                  children: [
+                    Container(
+                      width: 44.r,
+                      height: 44.r,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10.r),
+                        color: const Color(0xFFFFD700).withOpacity(0.1),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10.r),
+                        child: Image.network(
+                          widget.logo,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Icon(
+                            Icons.account_balance,
+                            color: const Color(0xFFFFD700),
+                            size: 22.sp,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _truncateText(widget.fundName, maxWords: 3),
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.primaryText,
+                    SizedBox(width: 10.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.fundName,
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF0A1F3A),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 2.h),
-                        Text(
-                          _truncateText(widget.name, maxWords: 4),
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: AppColors.secondaryText,
+                          SizedBox(height: 2.h),
+                          Text(
+                            widget.name,
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              color: Colors.grey[600],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Row(
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 5.h),
+                      decoration: BoxDecoration(
+                        color: isPositive
+                            ? const Color(0xFF4CAF50).withOpacity(0.1)
+                            : const Color(0xFFE53935).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6.r),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.trending_up,
-                            color: isPositive ? AppColors.success : AppColors.error,
-                            size: 16.sp,
+                            isPositive ? Icons.trending_up : Icons.trending_down,
+                            color: isPositive ? const Color(0xFF4CAF50) : const Color(0xFFE53935),
+                            size: 12.sp,
                           ),
-                          SizedBox(width: 4.w),
+                          SizedBox(width: 3.w),
                           Text(
                             '${widget.value.toStringAsFixed(2)}%',
                             style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w600,
-                              color: isPositive ? AppColors.success : AppColors.error,
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.bold,
+                              color: isPositive ? const Color(0xFF4CAF50) : const Color(0xFFE53935),
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        isPositive ? 'Gain' : 'Loss',
-                        style: TextStyle(
-                          fontSize: 11.sp,
-                          color: AppColors.secondaryText,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 16.h),
-
-              // Progress Bar + Horse Animation
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  // Background progress bar
-                  Container(
-                    width: cardWidth,
-                    height: 6.h,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(3.r),
-                      color: AppColors.primaryGold!.withOpacity(0.2),
                     ),
-                  ),
+                  ],
+                ),
+                SizedBox(height: 12.h),
 
-                  // Animated progress bar
-                  AnimatedBuilder(
-                    animation: _horseAnimation,
-                    builder: (context, child) {
-                      return Container(
-                        width: _horseAnimation.value * cardWidth,
-                        height: 6.h,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(3.r),
-                          gradient: LinearGradient(
-                            colors: isPositive
-                                ? [
-                              AppColors.primaryGold ?? Colors.amber[700]!,
-                              (AppColors.primaryGold ?? Colors.amber[700]!)
-                                  .withOpacity(0.8),
-                            ]
-                                : [
-                              AppColors.error ?? Colors.red[400]!,
-                              (AppColors.error ?? Colors.red[400]!)
-                                  .withOpacity(0.8),
-                            ],
+                // Horse Race Animation
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: cardWidth,
+                      height: 5.h,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(2.5.r),
+                        color: const Color(0xFFFFD700).withOpacity(0.2),
+                      ),
+                    ),
+                    AnimatedBuilder(
+                      animation: _horseAnimation,
+                      builder: (context, child) {
+                        return Container(
+                          width: _horseAnimation.value * cardWidth,
+                          height: 5.h,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(2.5.r),
+                            gradient: LinearGradient(
+                              colors: isPositive
+                                  ? [const Color(0xFFFFD700), const Color(0xFFDAA520)]
+                                  : [const Color(0xFFE53935), const Color(0xFFC62828)],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-
-                  // Animated horse
-                  AnimatedBuilder(
-                    animation: _horseAnimation,
-                    builder: (context, child) {
-                      double horsePosition = _horseAnimation.value * cardWidth;
-                      return Positioned(
-                        left: (horsePosition - 20.w).clamp(0.0, cardWidth - 40.w),
-                        top: -30.h,
-                        child: SizedBox(
-                          height: 60.h,
-                          width: 70.w,
+                        );
+                      },
+                    ),
+                    AnimatedBuilder(
+                      animation: _horseAnimation,
+                      builder: (context, child) {
+                        double horsePosition = _horseAnimation.value * cardWidth;
+                        return Positioned(
+                          left: (horsePosition - 18.w).clamp(0.0, cardWidth - 36.w),
+                          top: -26.h,
                           child: Image.asset(
                             'assets/images/jt1.gif',
+                            height: 36.h,
+                            width: 40.w,
                             fit: BoxFit.contain,
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
