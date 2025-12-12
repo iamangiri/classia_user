@@ -3,6 +3,7 @@ import 'package:classia_amc/screen/sip/sip_goal_amc_fund.dart';
 import 'package:classia_amc/screen/sip/sip_model.dart';
 import 'package:classia_amc/widget/common_app_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,6 +32,10 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
   double _topUpValue = 0.0;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+
+  // Text controllers for input boxes
+  final TextEditingController _periodController = TextEditingController();
+  final TextEditingController _amountController = TextEditingController();
 
   // Helper methods for dynamic text based on frequency
   String get _periodLabel => _frequency == 'daily' ? 'months' : 'years';
@@ -61,11 +66,28 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
     if (_frequency == 'daily') {
       _monthlyAmount = 100 * 30; // 100 per day * 30 days = 3000 monthly equivalent
     }
+
+    // Initialize text controllers
+    _updateControllers();
+  }
+
+  void _updateControllers() {
+    // Update period controller
+    if (_frequency == 'daily') {
+      _periodController.text = _period.toStringAsFixed(0);
+    } else {
+      _periodController.text = (_period / 12).toStringAsFixed(1);
+    }
+
+    // Update amount controller
+    _amountController.text = _getDisplayAmount().toStringAsFixed(0);
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _periodController.dispose();
+    _amountController.dispose();
     super.dispose();
   }
 
@@ -208,8 +230,6 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
     );
   }
 
-
-
   void _showSipConfirmationDialog() {
     final allFunds = [..._selectedAMCFunds, ..._selectedTopFunds];
     double totalPercentage = allFunds.fold(0.0, (sum, fund) => sum + (_fundPercentages[fund] ?? 0.0));
@@ -227,261 +247,229 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
     }
 
     showDialog(
-        context: context,
-        builder: (context) => Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            padding: EdgeInsets.all(24.w),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.surfaceColor?.withOpacity(0.95) ?? Colors.grey[100]!.withOpacity(0.95),
-                  AppColors.backgroundColor?.withOpacity(0.9) ?? Colors.white.withOpacity(0.9),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20.r),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 12.r,
-                  offset: Offset(0, 4.h),
-                ),
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: EdgeInsets.all(24.w),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.surfaceColor?.withOpacity(0.95) ?? Colors.grey[100]!.withOpacity(0.95),
+                AppColors.backgroundColor?.withOpacity(0.9) ?? Colors.white.withOpacity(0.9),
               ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Lottie.asset(
-                  'assets/anim/sip_anim_success.json',
-                  height: 100.h,
-                  width: 100.w,
-                  fit: BoxFit.contain,
+            borderRadius: BorderRadius.circular(20.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 12.r,
+                offset: Offset(0, 4.h),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Lottie.asset(
+                'assets/anim/sip_anim_success.json',
+                height: 100.h,
+                width: 100.w,
+                fit: BoxFit.contain,
+              ),
+              SizedBox(height: 16.h),
+              Text(
+                'Your SIP is Ready to Start!',
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryColor ?? Colors.blue,
                 ),
-                SizedBox(height: 16.h),
-                Text(
-                  'Your SIP is Ready to Start!',
-                  style: TextStyle(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primaryColor ?? Colors.blue,
-                  ),
-                  textAlign: TextAlign.center,
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                'Goal: ${widget.goal.name}',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  color: AppColors.secondaryText ?? Colors.grey,
                 ),
-                SizedBox(height: 12.h),
-                Text(
-                  'Goal: ${widget.goal.name}',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    color: AppColors.secondaryText ?? Colors.grey,
-                  ),
+              ),
+              Text(
+                'Frequency: ${_frequency[0].toUpperCase()}${_frequency.substring(1)}',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  color: AppColors.secondaryText ?? Colors.grey,
                 ),
-                Text(
-                  'Frequency: ${_frequency[0].toUpperCase()}${_frequency.substring(1)}',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    color: AppColors.secondaryText ?? Colors.grey,
-                  ),
+              ),
+              Text(
+                'Period: $_periodDisplayValue',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  color: AppColors.secondaryText ?? Colors.grey,
                 ),
-                Text(
-                  'Period: $_periodDisplayValue',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    color: AppColors.secondaryText ?? Colors.grey,
-                  ),
+              ),
+              Text(
+                '${_frequency == 'daily' ? 'Daily' : 'Monthly'} Amount: ₹${_getDisplayAmount().toStringAsFixed(0)}',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  color: AppColors.secondaryText ?? Colors.grey,
                 ),
-                Text(
-                  '${_frequency == 'daily' ? 'Daily' : 'Monthly'} Amount: ₹${_getDisplayAmount().toStringAsFixed(0)}',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    color: AppColors.secondaryText ?? Colors.grey,
-                  ),
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                'Selected Funds:',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primaryColor ?? Colors.blue,
                 ),
-                SizedBox(height: 8.h),
-                Text(
-                  'Selected Funds:',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primaryColor ?? Colors.blue,
-                  ),
-                ),
-                ...allFunds.map(
-                      (fund) => Padding(
-                    padding: EdgeInsets.symmetric(vertical: 4.h),
-                    child: Text(
-                      '• ${fund.name} (${_fundPercentages[fund]?.toStringAsFixed(1)}%)',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: AppColors.secondaryText ?? Colors.grey,
-                      ),
-                    ),
-                  ),
-                ),
-                if (_topUpEnabled)
-                  Text(
-                    'Top-up: ${_topUpValue.toStringAsFixed(1)} ${_topUpType == 'percentage' ? '%' : '₹'}',
+              ),
+              ...allFunds.map(
+                    (fund) => Padding(
+                  padding: EdgeInsets.symmetric(vertical: 4.h),
+                  child: Text(
+                    '• ${fund.name} (${_fundPercentages[fund]?.toStringAsFixed(1)}%)',
                     style: TextStyle(
-                      fontSize: 16.sp,
+                      fontSize: 14.sp,
                       color: AppColors.secondaryText ?? Colors.grey,
                     ),
                   ),
-                SizedBox(height: 16.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        'Cancel',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          color: AppColors.error ?? Colors.red,
-                        ),
+                ),
+              ),
+              if (_topUpEnabled)
+                Text(
+                  'Top-up: ${_topUpValue.toStringAsFixed(1)} ${_topUpType == 'percentage' ? '%' : '₹'}',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    color: AppColors.secondaryText ?? Colors.grey,
+                  ),
+                ),
+              SizedBox(height: 16.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppColors.error ?? Colors.red,
                       ),
                     ),
-                    ElevatedButton(
-                      onPressed: () async {
-                        try {
-                          // Call SipService to register SIP
-                          final sipService = SipService();
-                          final responseData = await sipService.registerSip(
-                            totalAmount: _monthlyAmount,
-                            funds: allFunds,
-                            fundPercentages: _fundPercentages,
-                            frequency: _frequency,
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      try {
+                        final sipService = SipService();
+                        final responseData = await sipService.registerSip(
+                          totalAmount: _monthlyAmount,
+                          funds: allFunds,
+                          fundPercentages: _fundPercentages,
+                          frequency: _frequency,
+                          endMonth: 9,
+                          endYear: 2026,
+                        );
 
-                            endMonth: 9,
-                            endYear: 2026,
+                        if (responseData['status'] == true) {
+                          Goal newGoal = Goal(
+                            id: widget.goal.toGoal().id,
+                            name: widget.goal.name,
+                            icon: widget.goal.icon ?? Icons.star,
+                            target: _monthlyAmount * _period,
+                            current: widget.goal.toGoal().current,
+                            monthlyPayment: widget.goal.toGoal().monthlyPayment,
+                            color: widget.goal.color,
+                            progress: widget.goal.toGoal().progress,
+                            lottieAsset: widget.goal.lottieAsset ?? 'assets/anim/sip_anim_1.json',
+                          );
+                          Sip newSip = Sip(
+                            id: DateTime.now().millisecondsSinceEpoch,
+                            goal: newGoal,
+                            frequency: _frequency,
+                            periodMonths: _period.round(),
+                            monthlyAmount: _monthlyAmount,
+                            funds: allFunds
+                                .map((f) => FundAllocation(
+                              fund: f,
+                              percentage: _fundPercentages[f] ?? 0.0,
+                            ))
+                                .toList(),
+                            topUp: _topUpEnabled
+                                ? TopUp(
+                              type: _topUpType,
+                              value: _topUpValue,
+                              enabled: true,
+                            )
+                                : null,
+                          );
+                          await _saveSip(newSip);
+
+                          final approvalLink = responseData['data']['approvalLink'] as String?;
+                          if (approvalLink != null && approvalLink.isNotEmpty) {
+                            final Uri uri = Uri.parse(approvalLink);
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            }
+                          }
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(responseData['message'])),
                           );
 
-                          if (responseData['status'] == true) {
-                            // Save SIP locally
-                            Goal newGoal = Goal(
-                              id: widget.goal.toGoal().id,
-                              name: widget.goal.name,
-                              icon: widget.goal.icon ?? Icons.star,
-                              target: _monthlyAmount * _period,
-                              current: widget.goal.toGoal().current,
-                              monthlyPayment: widget.goal.toGoal().monthlyPayment,
-                              color: widget.goal.color,
-                              progress: widget.goal.toGoal().progress,
-                              lottieAsset: widget.goal.lottieAsset ?? 'assets/anim/sip_anim_1.json',
-                            );
-                            Sip newSip = Sip(
-                              id: DateTime.now().millisecondsSinceEpoch,
-                              goal: newGoal,
-                              frequency: _frequency,
-                              periodMonths: _period.round(),
-                              monthlyAmount: _monthlyAmount,
-                              funds: allFunds
-                                  .map((f) => FundAllocation(
-                                fund: f,
-                                percentage: _fundPercentages[f] ?? 0.0,
-                              ))
-                                  .toList(),
-                              topUp: _topUpEnabled
-                                  ? TopUp(
-                                type: _topUpType,
-                                value: _topUpValue,
-                                enabled: true,
-                              )
-                                  : null,
-                            );
-                            await _saveSip(newSip);
-
-                            // Extract approval link
-                            final approvalLink = responseData['data']['approvalLink'] as String?;
-                            if (approvalLink != null && approvalLink.isNotEmpty) {
-                              // Launch the approval link
-                              final Uri uri = Uri.parse(approvalLink);
-                              if (await canLaunchUrl(uri)) {
-                                await launchUrl(uri, mode: LaunchMode.externalApplication);
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Could not launch UPI Autopay link')),
-                                );
-                              }
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('No approval link provided')),
-                              );
-                            }
-
-                            // Show success message
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(responseData['message']),
-                                action: approvalLink != null
-                                    ? SnackBarAction(
-                                  label: 'Open UPI Link',
-                                  onPressed: () async {
-                                    final Uri uri = Uri.parse(approvalLink);
-                                    if (await canLaunchUrl(uri)) {
-                                      await launchUrl(uri, mode: LaunchMode.externalApplication);
-                                    } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Could not launch UPI Autopay link')),
-                                      );
-                                    }
-                                  },
-                                )
-                                    : null,
-                              ),
-                            );
-
-                            // Navigate back
-                            if (mounted) {
-                              Navigator.pop(context);
-                              Navigator.pop(context);
-                            }
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('SIP registration failed: ${responseData['message']}')),
-                            );
+                          if (mounted) {
+                            Navigator.pop(context);
+                            Navigator.pop(context);
                           }
-                        } catch (e) {
+                        } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error registering SIP: $e')),
+                            SnackBar(content: Text('SIP registration failed: ${responseData['message']}')),
                           );
                         }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                        elevation: 0,
-                        shadowColor: Colors.transparent,
-                        foregroundColor: Colors.white,
-                        surfaceTintColor: Colors.transparent,
-                      ).copyWith(
-                        backgroundColor: MaterialStateProperty.resolveWith(
-                              (states) => AppColors.primaryGold ?? const Color(0xFFDAA520),
-                        ),
-                      ),
-                      child: Text(
-                        'Confirm SIP',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error registering SIP: $e')),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                      elevation: 0,
+                      shadowColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      surfaceTintColor: Colors.transparent,
+                    ).copyWith(
+                      backgroundColor: MaterialStateProperty.resolveWith(
+                            (states) => AppColors.primaryGold ?? const Color(0xFFDAA520),
                       ),
                     ),
-                  ],
-                ),
-              ],
-            ),
+                    child: Text(
+                      'Confirm SIP',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-    ) ;
-    }
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final allFunds = [..._selectedAMCFunds, ..._selectedTopFunds];
     return Scaffold(
-      appBar:  CommonAppBar(title: 'Invest in ${widget.goal.name}'),
+      appBar: CommonAppBar(title: 'Invest in ${widget.goal.name}'),
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: SingleChildScrollView(
@@ -539,10 +527,9 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
                           selectedColor: AppColors.primaryGold ?? const Color(0xFFDAA520),
                           onSelected: (selected) => setState(() {
                             _frequency = 'daily';
-                            // Reset amount to default daily equivalent
-                            _monthlyAmount = 100 * 30; // 100/day = 3000/month
-                            // Reset period to months for daily
-                            _period = 12; // 12 months
+                            _monthlyAmount = 100 * 30;
+                            _period = 12;
+                            _updateControllers();
                           }),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12.r),
@@ -562,10 +549,9 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
                           selectedColor: AppColors.primaryGold ?? const Color(0xFFDAA520),
                           onSelected: (selected) => setState(() {
                             _frequency = 'monthly';
-                            // Reset amount to default monthly
                             _monthlyAmount = 5000;
-                            // Reset period to months for conversion to years
-                            _period = 12; // 1 year
+                            _period = 12;
+                            _updateControllers();
                           }),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12.r),
@@ -574,6 +560,8 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
                       ],
                     ),
                     SizedBox(height: 16.h),
+
+                    // Investment Period with Input Box
                     Text(
                       'Investment Period',
                       style: TextStyle(
@@ -582,16 +570,62 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
                         color: AppColors.primaryColor ?? Colors.blue,
                       ),
                     ),
-                    Slider(
-                      value: _period,
-                      min: _frequency == 'daily' ? 1 : 12, // 1 month min for daily, 12 months (1 year) for monthly
-                      max: _frequency == 'daily' ? 60 : 360, // 60 months max for daily, 360 months (30 years) for monthly
-                      divisions: _frequency == 'daily' ? 59 : 348,
-                      label: _periodDisplayValue,
-                      activeColor: AppColors.primaryGold ?? const Color(0xFFDAA520),
-                      inactiveColor: AppColors.secondaryText?.withOpacity(0.3) ?? Colors.grey[300],
-                      onChanged: (value) => setState(() => _period = value),
+                    SizedBox(height: 8.h),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Slider(
+                            value: _period,
+                            min: _frequency == 'daily' ? 1 : 12,
+                            max: _frequency == 'daily' ? 60 : 360,
+                            divisions: _frequency == 'daily' ? 59 : 348,
+                            label: _periodDisplayValue,
+                            activeColor: AppColors.primaryGold ?? const Color(0xFFDAA520),
+                            inactiveColor: AppColors.secondaryText?.withOpacity(0.3) ?? Colors.grey[300],
+                            onChanged: (value) => setState(() {
+                              _period = value;
+                              _updateControllers();
+                            }),
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          flex: 1,
+                          child: TextField(
+                            controller: _periodController,
+                            keyboardType: TextInputType.numberWithOptions(decimal: true),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                            ],
+                            decoration: InputDecoration(
+                              suffixText: _frequency == 'daily' ? 'mo' : 'yr',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              contentPadding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 12.h),
+                              isDense: true,
+                            ),
+                            onChanged: (value) {
+                              double? parsed = double.tryParse(value);
+                              if (parsed != null) {
+                                if (_frequency == 'daily') {
+                                  if (parsed >= 1 && parsed <= 60) {
+                                    setState(() => _period = parsed);
+                                  }
+                                } else {
+                                  double months = parsed * 12;
+                                  if (months >= 12 && months <= 360) {
+                                    setState(() => _period = months);
+                                  }
+                                }
+                              }
+                            },
+                          ),
+                        ),
+                      ],
                     ),
+                    SizedBox(height: 4.h),
                     Text(
                       _periodDisplayValue,
                       style: TextStyle(
@@ -603,7 +637,8 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
                 ),
               ),
               SizedBox(height: 16.h),
-              // Monthly/Daily Investment
+
+              // Monthly/Daily Investment with Input Box
               Container(
                 padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
@@ -635,22 +670,65 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
                         color: AppColors.primaryColor ?? Colors.blue,
                       ),
                     ),
-                    Slider(
-                      value: _frequency == 'daily' ? _monthlyAmount / 30 : _monthlyAmount,
-                      min: _frequency == 'daily' ? 100 : 1000, // Min 100/day or 1000/month
-                      max: _frequency == 'daily' ? 3333 : 100000, // Max ~3333/day (100k/month) or 100k/month
-                      divisions: _frequency == 'daily' ? 32 : 99,
-                      label: '₹${_getDisplayAmount().toStringAsFixed(0)}',
-                      activeColor: AppColors.primaryGold ?? const Color(0xFFDAA520),
-                      inactiveColor: AppColors.secondaryText?.withOpacity(0.3) ?? Colors.grey[300],
-                      onChanged: (value) => setState(() {
-                        if (_frequency == 'daily') {
-                          _monthlyAmount = value * 30; // Convert daily to monthly equivalent for storage
-                        } else {
-                          _monthlyAmount = value;
-                        }
-                      }),
+                    SizedBox(height: 8.h),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Slider(
+                            value: _frequency == 'daily' ? _monthlyAmount / 30 : _monthlyAmount,
+                            min: _frequency == 'daily' ? 100 : 1000,
+                            max: _frequency == 'daily' ? 3333 : 100000,
+                            divisions: _frequency == 'daily' ? 32 : 99,
+                            label: '₹${_getDisplayAmount().toStringAsFixed(0)}',
+                            activeColor: AppColors.primaryGold ?? const Color(0xFFDAA520),
+                            inactiveColor: AppColors.secondaryText?.withOpacity(0.3) ?? Colors.grey[300],
+                            onChanged: (value) => setState(() {
+                              if (_frequency == 'daily') {
+                                _monthlyAmount = value * 30;
+                              } else {
+                                _monthlyAmount = value;
+                              }
+                              _updateControllers();
+                            }),
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          flex: 1,
+                          child: TextField(
+                            controller: _amountController,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            decoration: InputDecoration(
+                              prefixText: '₹',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              contentPadding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 12.h),
+                              isDense: true,
+                            ),
+                            onChanged: (value) {
+                              double? parsed = double.tryParse(value);
+                              if (parsed != null) {
+                                if (_frequency == 'daily') {
+                                  if (parsed >= 100 && parsed <= 3333) {
+                                    setState(() => _monthlyAmount = parsed * 30);
+                                  }
+                                } else {
+                                  if (parsed >= 1000 && parsed <= 100000) {
+                                    setState(() => _monthlyAmount = parsed);
+                                  }
+                                }
+                              }
+                            },
+                          ),
+                        ),
+                      ],
                     ),
+                    SizedBox(height: 4.h),
                     Text(
                       _amountDisplayValue,
                       style: TextStyle(
@@ -900,16 +978,15 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
                       onChanged: (value) => setState(() => _topUpEnabled = value),
                     ),
                     if (_topUpEnabled) ...[
-
                       Row(
                         children: [
                           Expanded(
                             child: RadioListTile<String>(
-                              contentPadding: EdgeInsets.zero, // Removes internal padding
-                              dense: true, // Makes the tile more compact
-                              visualDensity: VisualDensity(horizontal: -4, vertical: -4), // Reduces spacing further
+                              contentPadding: EdgeInsets.zero,
+                              dense: true,
+                              visualDensity: VisualDensity(horizontal: -4, vertical: -4),
                               title: Transform.translate(
-                                offset: Offset(-8, 0), // Move text slightly left to be closer to radio
+                                offset: Offset(-8, 0),
                                 child: Text('Value', style: TextStyle(fontSize: 13.sp)),
                               ),
                               value: 'value',
@@ -935,7 +1012,6 @@ class _SipGoalBasedFundScreenState extends State<SipGoalBasedFundScreen> with Ti
                           ),
                         ],
                       ),
-
                       TextField(
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
