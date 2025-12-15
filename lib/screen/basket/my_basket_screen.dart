@@ -21,6 +21,9 @@ class _MyBasketScreenState extends State<MyBasketScreen> {
   late Future<List<Basket>> _futureMyBaskets;
   final bool _isMarketOpen = true;
 
+  // Filter state
+  Set<String> _selectedFilters = {'DELIVERY', 'INTRADAY', 'INTRAHOUR'};
+
   @override
   void initState() {
     super.initState();
@@ -73,7 +76,6 @@ class _MyBasketScreenState extends State<MyBasketScreen> {
     );
   }
 
-  // ✅ Navigate to BasketListScreen with showBackButton = true
   void _navigateToBrowseBaskets() async {
     final result = await Navigator.push(
       context,
@@ -82,10 +84,30 @@ class _MyBasketScreenState extends State<MyBasketScreen> {
       ),
     );
 
-    // Refresh when coming back
     if (result == true) {
       _refresh();
     }
+  }
+
+  // Toggle filter selection
+  void _toggleFilter(String filter) {
+    setState(() {
+      if (_selectedFilters.contains(filter)) {
+        // Don't allow deselecting all filters
+        if (_selectedFilters.length > 1) {
+          _selectedFilters.remove(filter);
+        }
+      } else {
+        _selectedFilters.add(filter);
+      }
+    });
+  }
+
+  // Filter baskets based on selected filters
+  List<Basket> _filterBaskets(List<Basket> baskets) {
+    return baskets.where((basket) {
+      return _selectedFilters.contains(basket.type.toUpperCase());
+    }).toList();
   }
 
   // Categorize baskets by type
@@ -196,11 +218,109 @@ class _MyBasketScreenState extends State<MyBasketScreen> {
             ),
           ),
 
+          // Filter Chips
+          _buildFilterChips(),
+
           // Basket List
           Expanded(
             child: _buildMyBasketsList(),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChips() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: AppColors.primaryColor.withOpacity(0.05),
+        border: Border(
+          bottom: BorderSide(
+            color: AppColors.divider.withOpacity(0.5),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.filter_list,
+            size: 18.sp,
+            color: AppColors.secondaryText,
+          ),
+          SizedBox(width: 8.w),
+          Text(
+            'Filter:',
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: AppColors.secondaryText,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFilterChip('DELIVERY', Icons.trending_up, AppColors.primaryGold),
+                  SizedBox(width: 8.w),
+                  _buildFilterChip('INTRADAY', Icons.flash_on, AppColors.warning),
+                  SizedBox(width: 8.w),
+                  _buildFilterChip('INTRAHOUR', Icons.speed, AppColors.error),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, IconData icon, Color color) {
+    final isSelected = _selectedFilters.contains(label);
+
+    return GestureDetector(
+      onTap: () => _toggleFilter(label),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withOpacity(0.15) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20.r),
+          border: Border.all(
+            color: isSelected ? color : AppColors.divider,
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 14.sp,
+              color: isSelected ? color : AppColors.secondaryText,
+            ),
+            SizedBox(width: 4.w),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? color : AppColors.secondaryText,
+              ),
+            ),
+            if (isSelected) ...[
+              SizedBox(width: 4.w),
+              Icon(
+                Icons.check_circle,
+                size: 14.sp,
+                color: color,
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -281,9 +401,12 @@ class _MyBasketScreenState extends State<MyBasketScreen> {
             );
           }
 
-          final baskets = snapshot.data ?? [];
+          final allBaskets = snapshot.data ?? [];
 
-          if (baskets.isEmpty) {
+          // Apply filters
+          final filteredBaskets = _filterBaskets(allBaskets);
+
+          if (allBaskets.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -312,7 +435,7 @@ class _MyBasketScreenState extends State<MyBasketScreen> {
                   ),
                   SizedBox(height: 16.h),
                   ElevatedButton.icon(
-                    onPressed: _navigateToBrowseBaskets, // ✅ Updated
+                    onPressed: _navigateToBrowseBaskets,
                     icon: Icon(Icons.explore, size: 18.sp),
                     label: const Text('Browse Baskets'),
                     style: ElevatedButton.styleFrom(
@@ -329,13 +452,45 @@ class _MyBasketScreenState extends State<MyBasketScreen> {
             );
           }
 
-          // Categorize baskets
-          final categorizedBaskets = _categorizeBaskets(baskets);
+          if (filteredBaskets.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.filter_list_off,
+                    size: 80.sp,
+                    color: AppColors.disabled,
+                  ),
+                  SizedBox(height: 16.h),
+                  Text(
+                    'No baskets match the selected filters',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.headingText,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    'Try selecting different basket types',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: AppColors.secondaryText,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // Categorize filtered baskets
+          final categorizedBaskets = _categorizeBaskets(filteredBaskets);
 
           return ListView(
             padding: EdgeInsets.all(12.w),
             children: [
-              // Summary Card
+              // Summary Card - shows all baskets count
               Container(
                 padding: EdgeInsets.all(16.w),
                 margin: EdgeInsets.only(bottom: 16.h),
@@ -357,25 +512,25 @@ class _MyBasketScreenState extends State<MyBasketScreen> {
                   children: [
                     _summaryItem(
                       'Total',
-                      baskets.length.toString(),
+                      allBaskets.length.toString(),
                       Icons.shopping_basket,
                       AppColors.primaryGold,
                     ),
                     _summaryItem(
                       'Delivery',
-                      categorizedBaskets['DELIVERY']!.length.toString(),
+                      _categorizeBaskets(allBaskets)['DELIVERY']!.length.toString(),
                       Icons.trending_up,
                       AppColors.primaryGold,
                     ),
                     _summaryItem(
                       'Intraday',
-                      categorizedBaskets['INTRADAY']!.length.toString(),
+                      _categorizeBaskets(allBaskets)['INTRADAY']!.length.toString(),
                       Icons.flash_on,
                       AppColors.warning,
                     ),
                     _summaryItem(
                       'Intrahour',
-                      categorizedBaskets['INTRAHOUR']!.length.toString(),
+                      _categorizeBaskets(allBaskets)['INTRAHOUR']!.length.toString(),
                       Icons.speed,
                       AppColors.error,
                     ),
@@ -383,7 +538,7 @@ class _MyBasketScreenState extends State<MyBasketScreen> {
                 ),
               ),
 
-              // Display baskets by category
+              // Display filtered baskets by category
               ...categorizedBaskets.entries.expand((entry) {
                 final type = entry.key;
                 final basketList = entry.value;

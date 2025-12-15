@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../service/apiservice/bajaj_api_service.dart';
@@ -7,14 +5,17 @@ import '../../themes/app_colors.dart';
 import '../market/market_stock_chart_screen.dart';
 import 'basket_api_service.dart';
 import 'basket_model.dart';
+import 'my_basket_screen.dart';
 
 
 class BasketInvestScreen extends StatefulWidget {
   final int basketId;
+  final Basket? basket; // ✅ Optional basket parameter
 
   const BasketInvestScreen({
     Key? key,
     required this.basketId,
+    this.basket, // ✅ Accept basket from previous screen
   }) : super(key: key);
 
   @override
@@ -45,6 +46,16 @@ class _BasketInvestScreenState extends State<BasketInvestScreen> {
   }
 
   Future<void> _loadBasketDetails() async {
+    // ✅ If basket was passed, use it directly (NO API CALL)
+    if (widget.basket != null) {
+      setState(() {
+        _basket = widget.basket;
+        _isLoadingBasket = false;
+      });
+      return;
+    }
+
+    // Otherwise, fetch from API
     setState(() {
       _isLoadingBasket = true;
       _errorMessage = null;
@@ -88,7 +99,6 @@ class _BasketInvestScreenState extends State<BasketInvestScreen> {
     }
   }
 
-  // NEW: Show holding options bottom sheet
   void _showHoldingOptionsBottomSheet(Holding holding) {
     showModalBottomSheet(
       context: context,
@@ -114,7 +124,6 @@ class _BasketInvestScreenState extends State<BasketInvestScreen> {
     );
   }
 
-  // NEW: Show edit holding bottom sheet
   void _showEditHoldingBottomSheet(Holding holding) {
     final orderTypeController = TextEditingController(text: holding.orderType);
     final unitsController = TextEditingController(text: holding.units);
@@ -144,7 +153,6 @@ class _BasketInvestScreenState extends State<BasketInvestScreen> {
     );
   }
 
-  // NEW: Update holding in basket
   void _updateHoldingInBasket(Holding updatedHolding) {
     setState(() {
       if (_basket != null) {
@@ -159,7 +167,6 @@ class _BasketInvestScreenState extends State<BasketInvestScreen> {
     });
   }
 
-  // NEW: Navigate to chart screen
   void _navigateToChartScreen(Holding holding) {
     Navigator.push(
       context,
@@ -167,13 +174,11 @@ class _BasketInvestScreenState extends State<BasketInvestScreen> {
         builder: (context) => MarketStockChartScreen(
           exchange: holding.exchId,
           symbol: holding.symbol,
-          // You can add more parameters if needed
         ),
       ),
     );
   }
 
-  // FIXED: Updated order placement logic with correct order types
   Future<void> _placeBasketOrders() async {
     if (_basket == null || _basket!.holdings.isEmpty) {
       _showSnackBar('No holdings to invest', isError: true);
@@ -237,7 +242,6 @@ class _BasketInvestScreenState extends State<BasketInvestScreen> {
 
     for (var holding in _basket!.holdings) {
       try {
-        // FIXED: Correct order type mapping
         String orderType;
         double limitPrice = 0;
         double slPrice = 0;
@@ -245,23 +249,21 @@ class _BasketInvestScreenState extends State<BasketInvestScreen> {
         final orderTypeUpper = holding.orderType.toUpperCase();
 
         if (orderTypeUpper == 'MARKET') {
-          orderType = 'RL-M'; // Market order
+          orderType = 'RL-M';
         } else if (orderTypeUpper == 'LIMIT') {
-          orderType = 'RL'; // Limit order (NOT RL-L!)
+          orderType = 'RL';
           limitPrice = double.tryParse(holding.tgtPrice) ?? 0;
         } else if (orderTypeUpper == 'SL' || orderTypeUpper == 'STOPLOSS') {
-          orderType = 'SL'; // Stop loss
+          orderType = 'SL';
           slPrice = double.tryParse(holding.slPrice) ?? 0;
           limitPrice = double.tryParse(holding.tgtPrice) ?? 0;
         } else if (orderTypeUpper == 'SL-M') {
-          orderType = 'SL-M'; // Stop loss market
+          orderType = 'SL-M';
           slPrice = double.tryParse(holding.slPrice) ?? 0;
         } else {
-          // Default to market order if unknown type
           orderType = 'RL-M';
         }
 
-        // FIXED: Product type mapping
         final product = _basket!.type.toUpperCase() == 'DELIVERY' ? 'D' : 'I';
 
         final response = await BajajApiService.placeOrder(
@@ -384,9 +386,7 @@ class _BasketInvestScreenState extends State<BasketInvestScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              if (successCount > 0) {
-                Navigator.pop(context); // Go back after success
-              }
+
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryGold,
@@ -437,7 +437,7 @@ class _BasketInvestScreenState extends State<BasketInvestScreen> {
           : Column(
         children: [
           _buildFundsCard(),
-          _buildBasketInfoCard(),
+          _buildBasketInfoCard(), // ✅ Updated with price info
           Expanded(
             child: _basket!.holdings.isEmpty
                 ? _buildEmptyHoldingsState()
@@ -560,28 +560,119 @@ class _BasketInvestScreenState extends State<BasketInvestScreen> {
     Text(value, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: AppColors.onPrimaryColor)),
   ]);
 
-  Widget _buildBasketInfoCard() => Container(
-    margin: EdgeInsets.symmetric(horizontal: 16.w),
-    padding: EdgeInsets.all(16.w),
-    decoration: _cardDecoration(borderColor: AppColors.border),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(_basket!.basketName, style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColors.headingText)),
-        SizedBox(height: 12.h),
-        Wrap(spacing: 8.w, runSpacing: 8.h, children: [
-          _infoChip(Icons.trending_up, 'Return: ${_basket!.expectedReturn}%', AppColors.success),
-          _infoChip(Icons.speed, _basket!.volatility, AppColors.warning),
-          _infoChip(Icons.delivery_dining, _basket!.type, AppColors.primaryColor),
-        ]),
-        SizedBox(height: 12.h),
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text('Total Holdings', style: TextStyle(fontSize: 13.sp, color: AppColors.secondaryText)),
-          Text('${_basket!.holdings.length} stocks', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: AppColors.primaryText)),
-        ]),
-      ],
-    ),
-  );
+  // ✅ UPDATED: Show Initial Price, Current Price, and Change Percentage (removed Expected Return)
+  Widget _buildBasketInfoCard() {
+    final double initialPrice = _basket!.initialPriceValue;
+    final double currentPrice = _basket!.currentPriceValue;
+    final double performance = _basket!.performanceValue;
+    final bool isPositive = performance >= 0;
+    final bool hasPriceData = _basket!.hasPriceData;
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16.w),
+      padding: EdgeInsets.all(16.w),
+      decoration: _cardDecoration(borderColor: AppColors.border),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(_basket!.basketName, style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColors.headingText)),
+          SizedBox(height: 12.h),
+
+          // ✅ Price Performance Section (same as bottom sheet)
+          if (hasPriceData) ...[
+            Row(
+              children: [
+                // Initial Price
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: AppColors.primaryColor.withOpacity(0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Initial Price', style: TextStyle(fontSize: 11.sp, color: AppColors.secondaryText)),
+                        SizedBox(height: 4.h),
+                        Text('₹${initialPrice.toStringAsFixed(2)}', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: AppColors.primaryText)),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                // Current Price
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: (isPositive ? AppColors.success : AppColors.error).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: (isPositive ? AppColors.success : AppColors.error).withOpacity(0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Current Price', style: TextStyle(fontSize: 11.sp, color: AppColors.secondaryText)),
+                        SizedBox(height: 4.h),
+                        Text('₹${currentPrice.toStringAsFixed(2)}', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isPositive ? AppColors.success : AppColors.error)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12.h),
+            // Performance Badge
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: isPositive ? AppColors.success.withOpacity(0.15) : AppColors.error.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(isPositive ? Icons.trending_up : Icons.trending_down, color: isPositive ? AppColors.success : AppColors.error, size: 18.sp),
+                  SizedBox(width: 6.w),
+                  Text('${isPositive ? '+' : ''}${performance.toStringAsFixed(2)}%', style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold, color: isPositive ? AppColors.success : AppColors.error)),
+                  SizedBox(width: 4.w),
+                  Text('(₹${_basket!.priceChangeAmount.toStringAsFixed(2)})', style: TextStyle(fontSize: 12.sp, color: (isPositive ? AppColors.success : AppColors.error).withOpacity(0.8))),
+                ],
+              ),
+            ),
+          ] else ...[
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: AppColors.disabled.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: AppColors.secondaryText, size: 18.sp),
+                  SizedBox(width: 8.w),
+                  Expanded(child: Text('Price data not available', style: TextStyle(fontSize: 12.sp, color: AppColors.secondaryText))),
+                ],
+              ),
+            ),
+          ],
+
+          SizedBox(height: 12.h),
+          Wrap(spacing: 8.w, runSpacing: 8.h, children: [
+            _infoChip(Icons.speed, _basket!.volatility, AppColors.warning),
+            _infoChip(Icons.delivery_dining, _basket!.type, AppColors.primaryColor),
+          ]),
+          SizedBox(height: 12.h),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Text('Total Holdings', style: TextStyle(fontSize: 13.sp, color: AppColors.secondaryText)),
+            Text('${_basket!.holdings.length} stocks', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: AppColors.primaryText)),
+          ]),
+        ],
+      ),
+    );
+  }
 
   Widget _infoChip(IconData icon, String label, Color color) => Container(
     padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
@@ -719,7 +810,7 @@ class _BasketInvestScreenState extends State<BasketInvestScreen> {
   );
 }
 
-// NEW: Holding Options Bottom Sheet Widget
+// Holding Options Bottom Sheet Widget
 class HoldingOptionsBottomSheet extends StatelessWidget {
   final Holding holding;
   final VoidCallback onEdit;
@@ -739,7 +830,6 @@ class HoldingOptionsBottomSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header
           Row(
             children: [
               Container(
@@ -755,71 +845,29 @@ class HoldingOptionsBottomSheet extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      holding.fullName,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.headingText,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    Text(holding.fullName, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: AppColors.headingText), maxLines: 2, overflow: TextOverflow.ellipsis),
                     SizedBox(height: 4.h),
-                    Text(
-                      holding.symbol,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: AppColors.secondaryText,
-                      ),
-                    ),
+                    Text(holding.symbol, style: TextStyle(fontSize: 12.sp, color: AppColors.secondaryText)),
                   ],
                 ),
               ),
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: Icon(Icons.close, color: AppColors.secondaryText, size: 24.sp),
-              ),
+              IconButton(onPressed: () => Navigator.pop(context), icon: Icon(Icons.close, color: AppColors.secondaryText, size: 24.sp)),
             ],
           ),
           SizedBox(height: 24.h),
-
-          // Options
-          _buildOptionTile(
-            icon: Icons.edit,
-            title: 'Edit Holding',
-            subtitle: 'Change order type, units, target, stop loss',
-            onTap: onEdit,
-          ),
+          _buildOptionTile(icon: Icons.edit, title: 'Edit Holding', subtitle: 'Change order type, units, target, stop loss', onTap: onEdit),
           SizedBox(height: 16.h),
-          _buildOptionTile(
-            icon: Icons.show_chart,
-            title: 'View Chart',
-            subtitle: 'Analyze stock performance',
-            onTap: onViewChart,
-          ),
+          _buildOptionTile(icon: Icons.show_chart, title: 'View Chart', subtitle: 'Analyze stock performance', onTap: onViewChart),
           SizedBox(height: 24.h),
-
-          // Cancel Button
           SizedBox(
             width: double.infinity,
             child: TextButton(
               onPressed: () => Navigator.pop(context),
               style: TextButton.styleFrom(
                 padding: EdgeInsets.symmetric(vertical: 16.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  side: BorderSide(color: AppColors.border),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r), side: BorderSide(color: AppColors.border)),
               ),
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  color: AppColors.secondaryText,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              child: Text('Cancel', style: TextStyle(fontSize: 16.sp, color: AppColors.secondaryText, fontWeight: FontWeight.w600)),
             ),
           ),
         ],
@@ -827,29 +875,17 @@ class HoldingOptionsBottomSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildOptionTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildOptionTile({required IconData icon, required String title, required String subtitle, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.all(16.w),
-        decoration: BoxDecoration(
-          color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: AppColors.border),
-        ),
+        decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(12.r), border: Border.all(color: AppColors.border)),
         child: Row(
           children: [
             Container(
               padding: EdgeInsets.all(10.w),
-              decoration: BoxDecoration(
-                color: AppColors.primaryGold.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10.r),
-              ),
+              decoration: BoxDecoration(color: AppColors.primaryGold.withOpacity(0.1), borderRadius: BorderRadius.circular(10.r)),
               child: Icon(icon, color: AppColors.primaryGold, size: 24.sp),
             ),
             SizedBox(width: 16.w),
@@ -857,22 +893,9 @@ class HoldingOptionsBottomSheet extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.headingText,
-                    ),
-                  ),
+                  Text(title, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppColors.headingText)),
                   SizedBox(height: 4.h),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: AppColors.secondaryText,
-                    ),
-                  ),
+                  Text(subtitle, style: TextStyle(fontSize: 12.sp, color: AppColors.secondaryText)),
                 ],
               ),
             ),
@@ -884,7 +907,7 @@ class HoldingOptionsBottomSheet extends StatelessWidget {
   }
 }
 
-// NEW: Edit Holding Bottom Sheet Widget
+// Edit Holding Bottom Sheet Widget
 class EditHoldingBottomSheet extends StatefulWidget {
   final Holding holding;
   final TextEditingController orderTypeController;
@@ -925,122 +948,55 @@ class _EditHoldingBottomSheetState extends State<EditHoldingBottomSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Row(
             children: [
               Icon(Icons.edit, color: AppColors.primaryGold, size: 28.sp),
               SizedBox(width: 12.w),
-              Expanded(
-                child: Text(
-                  'Edit Holding',
-                  style: TextStyle(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.headingText,
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: Icon(Icons.close, color: AppColors.secondaryText, size: 24.sp),
-              ),
+              Expanded(child: Text('Edit Holding', style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold, color: AppColors.headingText))),
+              IconButton(onPressed: () => Navigator.pop(context), icon: Icon(Icons.close, color: AppColors.secondaryText, size: 24.sp)),
             ],
           ),
           SizedBox(height: 20.h),
-
-          // Stock Info
           Container(
             padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: AppColors.border),
-            ),
+            decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(12.r), border: Border.all(color: AppColors.border)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  widget.holding.fullName,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.headingText,
-                  ),
-                ),
+                Text(widget.holding.fullName, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppColors.headingText)),
                 SizedBox(height: 4.h),
                 Row(
                   children: [
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(6.r),
-                      ),
-                      child: Text(
-                        widget.holding.symbol,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primaryColor,
-                        ),
-                      ),
+                      decoration: BoxDecoration(color: AppColors.primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6.r)),
+                      child: Text(widget.holding.symbol, style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: AppColors.primaryColor)),
                     ),
                     SizedBox(width: 8.w),
-                    Text(
-                      '${widget.holding.holdinPercentage}%',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: AppColors.secondaryText,
-                      ),
-                    ),
+                    Text('${widget.holding.holdinPercentage}%', style: TextStyle(fontSize: 12.sp, color: AppColors.secondaryText)),
                   ],
                 ),
               ],
             ),
           ),
           SizedBox(height: 24.h),
-
-          // Form
-          Text(
-            'Order Details',
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w600,
-              color: AppColors.headingText,
-            ),
-          ),
+          Text('Order Details', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppColors.headingText)),
           SizedBox(height: 16.h),
-
-          // Order Type Dropdown
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Order Type',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: AppColors.primaryText,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              Text('Order Type', style: TextStyle(fontSize: 14.sp, color: AppColors.primaryText, fontWeight: FontWeight.w500)),
               SizedBox(height: 8.h),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
-                decoration: BoxDecoration(
-                  color: AppColors.cardBackground,
-                  borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: AppColors.border),
-                ),
+                decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(12.r), border: Border.all(color: AppColors.border)),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: _selectedOrderType,
                     isExpanded: true,
                     icon: Icon(Icons.arrow_drop_down, color: AppColors.secondaryText),
                     dropdownColor: AppColors.cardBackground,
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      color: AppColors.primaryText,
-                    ),
+                    style: TextStyle(fontSize: 16.sp, color: AppColors.primaryText),
                     onChanged: (String? newValue) {
                       setState(() {
                         _selectedOrderType = newValue!;
@@ -1048,10 +1004,7 @@ class _EditHoldingBottomSheetState extends State<EditHoldingBottomSheet> {
                       });
                     },
                     items: _orderTypes.map((String type) {
-                      return DropdownMenuItem<String>(
-                        value: type,
-                        child: Text(type),
-                      );
+                      return DropdownMenuItem<String>(value: type, child: Text(type));
                     }).toList(),
                   ),
                 ),
@@ -1059,46 +1012,22 @@ class _EditHoldingBottomSheetState extends State<EditHoldingBottomSheet> {
             ],
           ),
           SizedBox(height: 16.h),
-
-          // Units Input
-          _buildTextField(
-            controller: widget.unitsController,
-            label: 'Units',
-            hintText: 'Enter number of units',
-            keyboardType: TextInputType.number,
-          ),
+          _buildTextField(controller: widget.unitsController, label: 'Units', hintText: 'Enter number of units', keyboardType: TextInputType.number),
           SizedBox(height: 16.h),
-
-          // Target Price Input (visible for LIMIT and SL)
           if (_selectedOrderType == 'LIMIT' || _selectedOrderType == 'SL')
             Column(
               children: [
-                _buildTextField(
-                  controller: widget.targetPriceController,
-                  label: 'Target Price (₹)',
-                  hintText: 'Enter target price',
-                  keyboardType: TextInputType.number,
-                ),
+                _buildTextField(controller: widget.targetPriceController, label: 'Target Price (₹)', hintText: 'Enter target price', keyboardType: TextInputType.number),
                 SizedBox(height: 16.h),
               ],
             ),
-
-          // Stop Loss Input (visible for SL and SL-M)
           if (_selectedOrderType == 'SL' || _selectedOrderType == 'SL-M')
             Column(
               children: [
-                _buildTextField(
-                  controller: widget.stopLossController,
-                  label: 'Stop Loss (₹)',
-                  hintText: 'Enter stop loss price',
-                  keyboardType: TextInputType.number,
-                ),
+                _buildTextField(controller: widget.stopLossController, label: 'Stop Loss (₹)', hintText: 'Enter stop loss price', keyboardType: TextInputType.number),
                 SizedBox(height: 16.h),
               ],
             ),
-
-          // Save Button
-          // Save Button
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -1124,17 +1053,9 @@ class _EditHoldingBottomSheetState extends State<EditHoldingBottomSheet> {
                 backgroundColor: AppColors.primaryGold,
                 foregroundColor: AppColors.onPrimaryColor,
                 padding: EdgeInsets.symmetric(vertical: 16.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
               ),
-              child: Text(
-                'Save Changes',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: Text('Save Changes', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
             ),
           ),
           SizedBox(height: 20.h),
@@ -1143,52 +1064,25 @@ class _EditHoldingBottomSheetState extends State<EditHoldingBottomSheet> {
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hintText,
-    required TextInputType keyboardType,
-  }) {
+  Widget _buildTextField({required TextEditingController controller, required String label, required String hintText, required TextInputType keyboardType}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: AppColors.primaryText,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 14.sp, color: AppColors.primaryText, fontWeight: FontWeight.w500)),
         SizedBox(height: 8.h),
         TextField(
           controller: controller,
           keyboardType: keyboardType,
-          style: TextStyle(
-            fontSize: 16.sp,
-            color: AppColors.primaryText,
-          ),
+          style: TextStyle(fontSize: 16.sp, color: AppColors.primaryText),
           decoration: InputDecoration(
             hintText: hintText,
             hintStyle: TextStyle(color: AppColors.secondaryText),
             filled: true,
             fillColor: AppColors.cardBackground,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.primaryGold),
-            ),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 16.w,
-              vertical: 14.h,
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: AppColors.border)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: AppColors.border)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: AppColors.primaryGold)),
+            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
           ),
         ),
       ],

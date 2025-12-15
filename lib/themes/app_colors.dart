@@ -40,11 +40,13 @@ AppColors._();
   static const Color buttonText = Colors.white; // White text on buttons
 
   // Success, Error, and Warning colors
-  static const Color success = Color(0xFF28A745); // Green for success states
+  static const Color success = Color(0xFF28A745);
   static const Color error = Color(0xFFDC3545); // Red for error states
   static const Color warning = Color(0xFFFFC107); // Amber for warning states
 
   // Disabled state colors
-  static const Color disabled = Color(0xFFB0B0B0); // Gray for disabled elements
-  static const Color disabledText = Color(0xFF999999); // Lighter gray for disabled text
+  static const Color disabled = Color(0xFFB0B0B0);
+  static const Color disabledText = Color(0xFF999999);
+
+  static get divider => Color(0xFFB0B0B0);
 }

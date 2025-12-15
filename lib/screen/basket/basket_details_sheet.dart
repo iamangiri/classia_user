@@ -102,9 +102,11 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
             MaterialPageRoute(
               builder: (context) => BasketInvestScreen(
                 basketId: widget.basket.id,
+                basket: widget.basket,
               ),
             ),
           );
+
         }
       }
     } catch (e) {

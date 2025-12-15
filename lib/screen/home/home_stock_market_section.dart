@@ -112,7 +112,7 @@ class _HomeStockMarketSectionState extends State<HomeStockMarketSection> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Top Stocks',
+                'Explore Market',
                 style: TextStyle(
                   fontSize: 20.sp,
                   fontWeight: FontWeight.bold,
