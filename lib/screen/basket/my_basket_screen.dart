@@ -7,6 +7,7 @@ import 'basket_model.dart';
 import 'package:classia_amc/themes/app_colors.dart';
 import 'basket_race_card.dart';
 import 'intra_basket_card.dart';
+import 'basket_list_screen.dart';
 
 class MyBasketScreen extends StatefulWidget {
   const MyBasketScreen({super.key});
@@ -38,8 +39,6 @@ class _MyBasketScreenState extends State<MyBasketScreen> {
     });
   }
 
-
-
   Future<void> _refresh() async {
     await _loadMyBaskets();
   }
@@ -70,9 +69,23 @@ class _MyBasketScreenState extends State<MyBasketScreen> {
             );
           }
         },
-
       ),
     );
+  }
+
+  // ✅ Navigate to BasketListScreen with showBackButton = true
+  void _navigateToBrowseBaskets() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const BasketListScreen(showBackButton: true),
+      ),
+    );
+
+    // Refresh when coming back
+    if (result == true) {
+      _refresh();
+    }
   }
 
   // Categorize baskets by type
@@ -299,7 +312,7 @@ class _MyBasketScreenState extends State<MyBasketScreen> {
                   ),
                   SizedBox(height: 16.h),
                   ElevatedButton.icon(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: _navigateToBrowseBaskets, // ✅ Updated
                     icon: Icon(Icons.explore, size: 18.sp),
                     label: const Text('Browse Baskets'),
                     style: ElevatedButton.styleFrom(

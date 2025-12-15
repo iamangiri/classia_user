@@ -128,7 +128,6 @@ class BasketApiService {
     );
 
     print("Subscribe Response: ${response.body}");
-    await checkValidUserWithRouter(response.statusCode);
     return jsonDecode(response.body);
   }
 

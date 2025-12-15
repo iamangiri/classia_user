@@ -41,7 +41,14 @@ class _IntraBasketCardState extends State<IntraBasketCard> with SingleTickerProv
 
   void _updateHorseAnimation() {
     final double performance = widget.basket.performanceValue;
-    double racePosition = (performance.abs() / 10).clamp(0.0, 1.0);
+
+    // ✅ FIXED: If performance is negative or zero, horse stays at position 0
+    double racePosition = 0.0;
+    if (performance > 0) {
+      // Only move forward if positive
+      racePosition = (performance / 10).clamp(0.0, 1.0);
+    }
+
     _horseAnimation = Tween<double>(begin: 0, end: racePosition).animate(
       CurvedAnimation(parent: _horseController, curve: Curves.easeInOut),
     );

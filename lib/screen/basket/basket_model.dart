@@ -140,17 +140,29 @@ class Basket extends Equatable {
     return double.tryParse(basketCurrentPrice.toString()) ?? 0.0;
   }
 
-  // Calculate percentage change - returns 0 if either price is 0 or null
+  // ✅ FIXED: Calculate percentage change with proper validation
+  // Formula: ((Current - Initial) / Initial) × 100
   double get priceChangePercentage {
-    if (initialPriceValue == 0 || currentPriceValue == 0) {
+    // Return 0 if either price is invalid or zero
+    if (initialPriceValue <= 0 || currentPriceValue <= 0) {
       return 0.0;
     }
-    return ((currentPriceValue - initialPriceValue) / initialPriceValue) * 100;
+
+    // Calculate: (Current - Initial) / Initial * 100
+    final double change = currentPriceValue - initialPriceValue;
+    final double percentage = (change / initialPriceValue) * 100;
+
+    // Return 0 if result is NaN or Infinite
+    if (percentage.isNaN || percentage.isInfinite) {
+      return 0.0;
+    }
+
+    return percentage;
   }
 
   // Calculate absolute change
   double get priceChangeAmount {
-    if (initialPriceValue == 0 || currentPriceValue == 0) {
+    if (initialPriceValue <= 0 || currentPriceValue <= 0) {
       return 0.0;
     }
     return currentPriceValue - initialPriceValue;
@@ -159,9 +171,13 @@ class Basket extends Equatable {
   // Check if we have valid price data (both must be greater than 0)
   bool get hasPriceData => initialPriceValue > 0 && currentPriceValue > 0;
 
-  // CHANGED: Always use price change percentage, never expected return
-  // If no price data available, return 0
-  double get performanceValue => priceChangePercentage;
+  // ✅ FIXED: Performance always uses actual price change, returns 0 if no data
+  double get performanceValue {
+    if (!hasPriceData) {
+      return 0.0;
+    }
+    return priceChangePercentage;
+  }
 
   @override
   List<Object?> get props => [id];
