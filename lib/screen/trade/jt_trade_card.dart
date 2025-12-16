@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import 'jt_trade_deatils_screen.dart';
 
 class JtTradeCard extends StatefulWidget {
@@ -26,6 +25,7 @@ class JtTradeCard extends StatefulWidget {
 class _JtTradeCardState extends State<JtTradeCard> with SingleTickerProviderStateMixin {
   late AnimationController _horseController;
   late Animation<double> _horseAnimation;
+  bool _imageLoadError = false;
 
   @override
   void initState() {
@@ -47,7 +47,14 @@ class _JtTradeCardState extends State<JtTradeCard> with SingleTickerProviderStat
   }
 
   void _updateHorseAnimation() {
+    // Fix: Handle negative values properly - use absolute value for animation
     double normalizedValue = (widget.value.abs() / 20).clamp(0.0, 1.0);
+
+    // If value is 0 or very close to 0, set minimum progress
+    if (widget.value.abs() < 0.01) {
+      normalizedValue = 0.05; // Show at least 5% progress for visibility
+    }
+
     _horseAnimation = Tween<double>(
       begin: 0,
       end: normalizedValue,
@@ -59,6 +66,14 @@ class _JtTradeCardState extends State<JtTradeCard> with SingleTickerProviderStat
   void dispose() {
     _horseController.dispose();
     super.dispose();
+  }
+
+  // Helper method to get fund initial letter
+  String _getFundInitial() {
+    if (widget.fundName.isNotEmpty) {
+      return widget.fundName.substring(0, 1).toUpperCase();
+    }
+    return 'F';
   }
 
   @override
@@ -115,14 +130,65 @@ class _JtTradeCardState extends State<JtTradeCard> with SingleTickerProviderStat
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(10.r),
-                        child: Image.network(
+                        child: _imageLoadError || widget.logo.isEmpty || widget.logo.contains('placeholder')
+                            ? Container(
+                          color: const Color(0xFFFFD700).withOpacity(0.15),
+                          child: Center(
+                            child: Text(
+                              _getFundInitial(),
+                              style: TextStyle(
+                                fontSize: 20.sp,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFFFFD700),
+                              ),
+                            ),
+                          ),
+                        )
+                            : Image.network(
                           widget.logo,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Icon(
-                            Icons.account_balance,
-                            color: const Color(0xFFFFD700),
-                            size: 22.sp,
-                          ),
+                          errorBuilder: (context, error, stackTrace) {
+                            // Set error flag and rebuild
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (mounted && !_imageLoadError) {
+                                setState(() {
+                                  _imageLoadError = true;
+                                });
+                              }
+                            });
+                            return Container(
+                              color: const Color(0xFFFFD700).withOpacity(0.15),
+                              child: Center(
+                                child: Text(
+                                  _getFundInitial(),
+                                  style: TextStyle(
+                                    fontSize: 20.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFFFFD700),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: SizedBox(
+                                width: 20.w,
+                                height: 20.h,
+                                child: CircularProgressIndicator(
+                                  value: loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                      : null,
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    const Color(0xFFFFD700),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -190,6 +256,7 @@ class _JtTradeCardState extends State<JtTradeCard> with SingleTickerProviderStat
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
+                    // Background track
                     Container(
                       width: cardWidth,
                       height: 5.h,
@@ -198,6 +265,7 @@ class _JtTradeCardState extends State<JtTradeCard> with SingleTickerProviderStat
                         color: const Color(0xFFFFD700).withOpacity(0.2),
                       ),
                     ),
+                    // Progress bar
                     AnimatedBuilder(
                       animation: _horseAnimation,
                       builder: (context, child) {
@@ -215,6 +283,7 @@ class _JtTradeCardState extends State<JtTradeCard> with SingleTickerProviderStat
                         );
                       },
                     ),
+                    // Horse/Icon animation
                     AnimatedBuilder(
                       animation: _horseAnimation,
                       builder: (context, child) {
@@ -222,12 +291,7 @@ class _JtTradeCardState extends State<JtTradeCard> with SingleTickerProviderStat
                         return Positioned(
                           left: (horsePosition - 18.w).clamp(0.0, cardWidth - 36.w),
                           top: -26.h,
-                          child: Image.asset(
-                            'assets/images/jt1.gif',
-                            height: 36.h,
-                            width: 40.w,
-                            fit: BoxFit.contain,
-                          ),
+                          child: _buildRaceIcon(isPositive),
                         );
                       },
                     ),
@@ -238,6 +302,34 @@ class _JtTradeCardState extends State<JtTradeCard> with SingleTickerProviderStat
           ),
         ),
       ),
+    );
+  }
+
+  // Build race icon - try to load GIF, fallback to icon
+  Widget _buildRaceIcon(bool isPositive) {
+    return Image.asset(
+      'assets/images/jt1.gif',
+      height: 36.h,
+      width: 40.w,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        // Fallback to animated icon if GIF not found
+        return Container(
+          height: 36.h,
+          width: 40.w,
+          decoration: BoxDecoration(
+            color: isPositive
+                ? const Color(0xFF4CAF50).withOpacity(0.2)
+                : const Color(0xFFE53935).withOpacity(0.2),
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+          child: Icon(
+            isPositive ? Icons.rocket_launch : Icons.trending_down,
+            color: isPositive ? const Color(0xFF4CAF50) : const Color(0xFFE53935),
+            size: 24.sp,
+          ),
+        );
+      },
     );
   }
 }

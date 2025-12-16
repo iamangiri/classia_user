@@ -1,10 +1,8 @@
-import 'dart:io';
 import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:classia_amc/widget/common_app_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:classia_amc/themes/app_colors.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -19,130 +17,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _isLoading = false;
 
   // Controllers for editable fields only
-  final TextEditingController _fullNameController = TextEditingController(text: UserConstants.NAME);
-  final TextEditingController _addressController = TextEditingController(text: UserConstants.ADDRESS);
-  final TextEditingController _cityController = TextEditingController(text: UserConstants.CITY);
-  final TextEditingController _stateController = TextEditingController(text: UserConstants.STATE);
-  final TextEditingController _pinCodeController = TextEditingController(text: UserConstants.PIN_CODE);
-
-  File? _profileImage;
-
-  @override
-  void initState() {
-    super.initState();
-    // Load profile image if exists
-    if (UserConstants.PROFILE_IMAGE.isNotEmpty) {
-      // If you have a local file path stored
-      // _profileImage = File(UserConstants.PROFILE_IMAGE);
-    }
-  }
-
-  Future<void> _pickImage(ImageSource source) async {
-    try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? pickedImage = await picker.pickImage(
-        source: source,
-        maxWidth: 1000,
-        maxHeight: 1000,
-        imageQuality: 80,
-      );
-
-      if (pickedImage != null) {
-        // Crop the image
-        final CroppedFile? croppedImage = await ImageCropper().cropImage(
-          sourcePath: pickedImage.path,
-          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-          uiSettings: [
-            AndroidUiSettings(
-              toolbarTitle: 'Crop Image',
-              toolbarColor: AppColors.primaryGold,
-              toolbarWidgetColor: AppColors.buttonText,
-              initAspectRatio: CropAspectRatioPreset.square,
-              lockAspectRatio: true,
-              hideBottomControls: false,
-              statusBarColor: AppColors.primaryGold,
-              activeControlsWidgetColor: AppColors.primaryGold,
-            ),
-            IOSUiSettings(
-              title: 'Crop Image',
-              minimumAspectRatio: 1.0,
-              aspectRatioLockEnabled: true,
-            ),
-          ],
-        );
-
-        if (croppedImage != null) {
-          setState(() {
-            _profileImage = File(croppedImage.path);
-          });
-        }
-      }
-    } catch (e) {
-      _showSnackBar("Failed to pick image: ${e.toString()}", isError: true);
-    }
-  }
-
-  void _showImageSourceDialog() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      builder: (context) => Container(
-        padding: EdgeInsets.all(20.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40.w,
-              height: 4.h,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2.r),
-              ),
-            ),
-            SizedBox(height: 20.h),
-            Text(
-              'Select Image Source',
-              style: TextStyle(
-                color: AppColors.primaryText,
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 20.h),
-            ListTile(
-              leading: Icon(Icons.camera_alt, color: AppColors.primaryGold, size: 24.sp),
-              title: Text('Camera', style: TextStyle(color: AppColors.primaryText, fontSize: 16.sp)),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.camera);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.photo_library, color: AppColors.primaryGold, size: 24.sp),
-              title: Text('Gallery', style: TextStyle(color: AppColors.primaryText, fontSize: 16.sp)),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.gallery);
-              },
-            ),
-            if (_profileImage != null)
-              ListTile(
-                leading: Icon(Icons.delete, color: AppColors.error, size: 24.sp),
-                title: Text('Remove Image', style: TextStyle(color: AppColors.error, fontSize: 16.sp)),
-                onTap: () {
-                  Navigator.pop(context);
-                  setState(() => _profileImage = null);
-                },
-              ),
-            SizedBox(height: 10.h),
-          ],
-        ),
-      ),
-    );
-  }
+  final TextEditingController _fullNameController =
+  TextEditingController(text: UserConstants.NAME);
+  final TextEditingController _addressController =
+  TextEditingController(text: UserConstants.ADDRESS);
+  final TextEditingController _cityController =
+  TextEditingController(text: UserConstants.CITY);
+  final TextEditingController _stateController =
+  TextEditingController(text: UserConstants.STATE);
+  final TextEditingController _pinCodeController =
+  TextEditingController(text: UserConstants.PIN_CODE);
 
   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
@@ -153,24 +37,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         await Future.delayed(const Duration(seconds: 2));
 
         // Update UserConstants
-        await UserConstants.updateField(UserConstants.NAME_KEY, _fullNameController.text);
-        await UserConstants.updateField(UserConstants.ADDRESS_KEY, _addressController.text);
-        await UserConstants.updateField(UserConstants.CITY_KEY, _cityController.text);
-        await UserConstants.updateField(UserConstants.STATE_KEY, _stateController.text);
-        await UserConstants.updateField(UserConstants.PIN_CODE_KEY, _pinCodeController.text);
-
-        // Upload profile image if changed
-        if (_profileImage != null) {
-          // TODO: Upload image to server and get URL
-          // await UserConstants.updateField(UserConstants.PROFILE_IMAGE_KEY, imageUrl);
-        }
+        await UserConstants.updateField(
+            UserConstants.NAME_KEY, _fullNameController.text.trim());
+        await UserConstants.updateField(
+            UserConstants.ADDRESS_KEY, _addressController.text.trim());
+        await UserConstants.updateField(
+            UserConstants.CITY_KEY, _cityController.text.trim());
+        await UserConstants.updateField(
+            UserConstants.STATE_KEY, _stateController.text.trim());
+        await UserConstants.updateField(
+            UserConstants.PIN_CODE_KEY, _pinCodeController.text.trim());
 
         setState(() => _isLoading = false);
         _showSnackBar("Profile updated successfully!", isError: false);
         Navigator.pop(context, true); // Return true to indicate success
       } catch (e) {
         setState(() => _isLoading = false);
-        _showSnackBar("Failed to update profile: ${e.toString()}", isError: true);
+        _showSnackBar("Failed to update profile: ${e.toString()}",
+            isError: true);
       }
     }
   }
@@ -181,7 +65,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         content: Text(message),
         backgroundColor: isError ? AppColors.error : AppColors.success,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+        shape:
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
       ),
     );
   }
@@ -208,75 +93,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Profile Image Section
-              Center(
-                child: Stack(
-                  children: [
-            Container(
-            decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.primaryGold, width: 3.w),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primaryGold.withOpacity(0.3),
-                blurRadius: 12.r,
-                spreadRadius: 2.r,
-              ),
-            ],
-          ),
-          child: CircleAvatar(
-            radius: 60.r,
-            backgroundColor: AppColors.border,
-
-            // If local picked image exists → show FileImage
-            // If network image exists → show NetworkImage
-            // Else → show icon
-            child: _profileImage == null && UserConstants.PROFILE_IMAGE.isEmpty
-                ? Icon(
-              Icons.person,
-              size: 55.r,
-              color: AppColors.primaryGold,
-            )
-                : null,
-
-            backgroundImage: _profileImage != null
-                ? FileImage(_profileImage!)
-                : (UserConstants.PROFILE_IMAGE.isNotEmpty
-                ? NetworkImage(UserConstants.PROFILE_IMAGE)
-                : null),
-          ),
-        ),
-
-        Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: GestureDetector(
-                        onTap: _showImageSourceDialog,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.primaryGold,
-                            border: Border.all(color: AppColors.screenBackground, width: 2.w),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 8.r,
-                              ),
-                            ],
-                          ),
-                          child: CircleAvatar(
-                            backgroundColor: AppColors.primaryGold,
-                            radius: 18.r,
-                            child: Icon(Icons.camera_alt, color: AppColors.buttonText, size: 18.sp),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 30.h),
-
               // Personal Information Section
               _buildSectionHeader('Personal Information'),
               SizedBox(height: 12.h),
@@ -287,7 +103,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 hint: "Enter your full name",
                 controller: _fullNameController,
                 icon: Icons.person_outline,
-                validator: (value) => value == null || value.isEmpty ? "Please enter your full name" : null,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                  LengthLimitingTextInputFormatter(50),
+                ],
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return "Please enter your full name";
+                  }
+                  if (value.trim().length < 3) {
+                    return "Name must be at least 3 characters";
+                  }
+                  if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value.trim())) {
+                    return "Name can only contain letters";
+                  }
+                  return null;
+                },
               ),
 
               // Email (Read-only)
@@ -319,6 +150,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 controller: _addressController,
                 icon: Icons.home_outlined,
                 maxLines: 2,
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(200),
+                ],
+                validator: (value) {
+                  if (value != null && value.trim().isNotEmpty) {
+                    if (value.trim().length < 10) {
+                      return "Address must be at least 10 characters";
+                    }
+                  }
+                  return null;
+                },
               ),
 
               // City (Editable)
@@ -327,6 +169,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 hint: "Enter your city",
                 controller: _cityController,
                 icon: Icons.location_city_outlined,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                  LengthLimitingTextInputFormatter(50),
+                ],
+                validator: (value) {
+                  if (value != null && value.trim().isNotEmpty) {
+                    if (value.trim().length < 2) {
+                      return "City name must be at least 2 characters";
+                    }
+                    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value.trim())) {
+                      return "City name can only contain letters";
+                    }
+                  }
+                  return null;
+                },
               ),
 
               // State (Editable)
@@ -335,18 +192,42 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 hint: "Enter your state",
                 controller: _stateController,
                 icon: Icons.map_outlined,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                  LengthLimitingTextInputFormatter(50),
+                ],
+                validator: (value) {
+                  if (value != null && value.trim().isNotEmpty) {
+                    if (value.trim().length < 2) {
+                      return "State name must be at least 2 characters";
+                    }
+                    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value.trim())) {
+                      return "State name can only contain letters";
+                    }
+                  }
+                  return null;
+                },
               ),
 
               // PIN Code (Editable)
               _buildEditableField(
                 label: "PIN Code",
-                hint: "Enter PIN code",
+                hint: "Enter 6-digit PIN code",
                 controller: _pinCodeController,
                 icon: Icons.pin_drop_outlined,
                 keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(6),
+                ],
                 validator: (value) {
-                  if (value != null && value.isNotEmpty && value.length != 6) {
-                    return "PIN code must be 6 digits";
+                  if (value != null && value.trim().isNotEmpty) {
+                    if (value.trim().length != 6) {
+                      return "PIN code must be exactly 6 digits";
+                    }
+                    if (!RegExp(r'^[1-9][0-9]{5}$').hasMatch(value.trim())) {
+                      return "Please enter a valid PIN code";
+                    }
                   }
                   return null;
                 },
@@ -372,7 +253,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 label: "PAN Verification",
                 isVerified: UserConstants.IS_PAN_VERIFIED ?? false,
                 icon: Icons.account_balance_wallet_outlined,
-                value: UserConstants.maskedPAN.isNotEmpty ? UserConstants.maskedPAN : null,
+                value: UserConstants.maskedPAN.isNotEmpty
+                    ? UserConstants.maskedPAN
+                    : null,
               ),
 
               SizedBox(height: 30.h),
@@ -385,7 +268,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryGold,
                     padding: EdgeInsets.symmetric(vertical: 16.h),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.r)),
                     elevation: 2,
                   ),
                   child: _isLoading
@@ -394,7 +278,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     height: 24.h,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.buttonText),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.buttonText),
                     ),
                   )
                       : Text(
@@ -417,7 +302,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   onPressed: () => Navigator.pop(context),
                   child: Text(
                     "Cancel",
-                    style: TextStyle(color: AppColors.secondaryText, fontSize: 16.sp),
+                    style: TextStyle(
+                        color: AppColors.secondaryText, fontSize: 16.sp),
                   ),
                 ),
               ),
@@ -449,6 +335,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
     int maxLines = 1,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Padding(
       padding: EdgeInsets.only(bottom: 16.h),
@@ -456,12 +343,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         controller: controller,
         keyboardType: keyboardType,
         maxLines: maxLines,
+        inputFormatters: inputFormatters,
         style: TextStyle(color: AppColors.primaryText, fontSize: 15.sp),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp),
+          labelStyle:
+          TextStyle(color: AppColors.secondaryText, fontSize: 14.sp),
           hintText: hint,
-          hintStyle: TextStyle(color: AppColors.secondaryText.withOpacity(0.5), fontSize: 14.sp),
+          hintStyle: TextStyle(
+              color: AppColors.secondaryText.withOpacity(0.5), fontSize: 14.sp),
           prefixIcon: Icon(icon, color: AppColors.primaryGold, size: 22.sp),
           filled: true,
           fillColor: AppColors.cardBackground,
@@ -481,7 +371,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             borderRadius: BorderRadius.circular(12.r),
             borderSide: BorderSide(color: AppColors.error, width: 2),
           ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+          contentPadding:
+          EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         ),
         validator: validator,
       ),
@@ -501,7 +392,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         decoration: BoxDecoration(
           color: AppColors.cardBackground.withOpacity(0.5),
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: AppColors.border.withOpacity(0.5), width: 1.5),
+          border:
+          Border.all(color: AppColors.border.withOpacity(0.5), width: 1.5),
         ),
         child: Row(
           children: [
@@ -590,7 +482,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             : AppColors.cardBackground.withOpacity(0.5),
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
-          color: isVerified ? AppColors.success.withOpacity(0.3) : AppColors.border.withOpacity(0.5),
+          color: isVerified
+              ? AppColors.success.withOpacity(0.3)
+              : AppColors.border.withOpacity(0.5),
           width: 1.5,
         ),
       ),

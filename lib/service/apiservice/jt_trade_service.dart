@@ -9,7 +9,7 @@ class JtTradeService {
   Future<List<dynamic>> fetchAmcList() async {
     try {
       final response = await http.get(
-        Uri.parse('${AppConstant.NODE_API_URL}/mutual-fund/list?page=1&sizePerPage=10&isProd=true'),
+        Uri.parse('${AppConstant.NODE_API_URL}/mutual-fund/list?page=1&sizePerPage=50&isProd=true'),
         headers: {
           'Authorization': 'Bearer ${UserConstants.TOKEN}',
           'Content-Type': 'application/json',
@@ -177,30 +177,38 @@ class JtTradeService {
           'id': amc['id'],
           'logo': getAmcLogo(amc['amc'] ?? 'Unknown'),
           'name': amc['amc'] ?? 'Unknown AMC',
-          'fundName': amc['scheamName'] ?? 'Unknown Fund', // API typo: 'scheamName'
+          'amc': amc['amc'] ?? 'Unknown AMC', // Add this for consistency
+          'fundName': amc['scheamName'] ?? 'Unknown Fund',
+          'scheamName': amc['scheamName'] ?? 'Unknown Fund', // Keep original field name
           'value': _parsePerformanceValue(amc[performanceField]),
-          'scheamCode': amc['scheamCode'], // Keep for reference
+          'scheamCode': amc['scheamCode'],
           'isDeleted': amc['isDeleted'] ?? false,
           'createdAt': amc['createdAt'],
           'updatedAt': amc['updatedAt'],
           'deletedAt': amc['deletedAt'],
           // Fields for JtTradeDeatilsScreen
-          'fundCode': prodMfData['fundCode'] ?? null, // rtaAmcCode
-          'schemeCode': prodMfData['schemeCode'] ?? null, // rtaSchCode
+          'fundCode': prodMfData['fundCode'] ?? null,
+          'schemeCode': prodMfData['schemeCode'] ?? null,
           'nav': amc['nav']?.toString() ?? prodMfData['nav']?.toString() ?? '0.00',
           'expenseRatio': prodMfData['expenseRatio']?.toString() ?? '1.5%',
           'exitLoad': prodMfData['exitLoad']?.toString() ?? 'Not Available',
           'planType': prodMfData['planType'] ?? 'Regular',
-          'category': _getCategoryName(prodMfData['catgId']),
+          'category': amc['category'] ?? _getCategoryName(prodMfData['catgId']),
           // Performance metrics
           'dayChange': amc['dayChange'] ?? '0.0%',
           'weekChange': amc['weekChange'] ?? '0.0%',
           'monthChange': amc['monthChange'] ?? '0.0%',
+          'threeMonthsChange': amc['threeMonthsChange'] ?? '0.0%',
           'sixMonthChange': amc['sixMonthChange'] ?? '0.0%',
           'oneYearChange': amc['oneYearChange'] ?? '0.0%',
           'threeYearsChange': amc['threeYearsChange'] ?? '0.0%',
           'fiveYearsChange': amc['fiveYearsChange'] ?? '0.0%',
           'allTime': amc['allTime'] ?? '0.0%',
+          // *** FIX: Include holdings and fundManagers from API ***
+          'holdings': amc['holdings'],
+          'fundManagers': amc['fundManagers'],
+          'analysis': amc['analysis'],
+          'prodMfData': prodMfData,
         };
       }).toList();
 
@@ -214,6 +222,15 @@ class JtTradeService {
       // Sort by performance value in descending order
       enrichedAmcList.sort((a, b) => b['value'].compareTo(a['value']));
       print('Processed ${enrichedAmcList.length} funds');
+
+      // Debug: Print first fund's data to verify holdings and fundManagers
+      if (enrichedAmcList.isNotEmpty) {
+        print('Sample fund data:');
+        print('Fund: ${enrichedAmcList[0]['fundName']}');
+        print('Holdings: ${enrichedAmcList[0]['holdings'] != null ? "Present" : "Missing"}');
+        print('Fund Managers: ${enrichedAmcList[0]['fundManagers'] != null ? "Present" : "Missing"}');
+      }
+
       return enrichedAmcList;
     } catch (e) {
       print('Error in loadAmcData: $e');

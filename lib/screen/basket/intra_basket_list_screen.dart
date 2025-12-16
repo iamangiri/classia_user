@@ -10,7 +10,6 @@ import 'intra_basket_card.dart';
 
 class IntraBasketListScreen extends StatefulWidget {
   const IntraBasketListScreen({super.key});
-
   @override
   State<IntraBasketListScreen> createState() => _IntraBasketListScreenState();
 }

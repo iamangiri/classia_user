@@ -352,7 +352,6 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen> with Single
       ],
     );
   }
-
   Widget _buildHoldingsTab() {
     var holdingsData = widget.fundData['holdings'];
     List<dynamic> holdings = [];
@@ -370,25 +369,74 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen> with Single
         child: Center(
           child: Padding(
             padding: EdgeInsets.all(20.w),
-            child: Text('Holdings data not available', style: TextStyle(color: AppColors.secondaryText, fontSize: 14.sp)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.folder_open_outlined,
+                  size: 48.sp,
+                  color: AppColors.secondaryText?.withOpacity(0.5),
+                ),
+                SizedBox(height: 12.h),
+                Text(
+                  'Holdings data not available',
+                  style: TextStyle(
+                    color: AppColors.secondaryText,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );
     }
 
-    List<dynamic> topHoldings = holdings.take(10).toList();
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Top Holdings'),
+        // Header with count
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildSectionTitle('Portfolio Holdings'),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: AppColors.primaryGold!.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Text(
+                '${holdings.length} Holdings',
+                style: TextStyle(
+                  color: AppColors.primaryGold,
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
         SizedBox(height: 8.h),
+
+        // Holdings list
         _buildSectionContainer(
-          child: Column(
-            children: topHoldings.map<Widget>((holding) {
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: holdings.length,
+            separatorBuilder: (context, index) => Divider(
+              height: 1,
+              thickness: 1,
+              color: AppColors.border.withOpacity(0.3),
+            ),
+            itemBuilder: (context, index) {
+              final holding = holdings[index];
               String name = holding['name']?.toString() ?? 'Unknown';
               double weight = 0.0;
 
+              // Try different field names for weight
               if (holding['weight_%'] != null) {
                 weight = double.tryParse(holding['weight_%'].toString()) ?? 0.0;
               } else if (holding['weight'] != null) {
@@ -399,11 +447,254 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen> with Single
               }
 
               String sector = holding['sector']?.toString() ?? 'Unknown';
-              return _buildHoldingItem(name, weight, sector);
-            }).toList(),
+              String instrument = holding['instrument']?.toString() ?? '';
+
+              return _buildHoldingItem(
+                name,
+                weight,
+                sector,
+                instrument: instrument,
+                index: index + 1,
+              );
+            },
           ),
         ),
+
+        SizedBox(height: 12.h),
+
+        // Summary section
+        if (holdings.length > 10)
+          _buildHoldingsSummary(holdings),
       ],
+    );
+  }
+
+  Widget _buildHoldingsSummary(List<dynamic> holdings) {
+    // Calculate top 5 and top 10 percentages
+    double top5Total = 0.0;
+    double top10Total = 0.0;
+
+    for (int i = 0; i < holdings.length && i < 10; i++) {
+      final holding = holdings[i];
+      double weight = 0.0;
+
+      if (holding['weight_%'] != null) {
+        weight = double.tryParse(holding['weight_%'].toString()) ?? 0.0;
+      } else if (holding['weight'] != null) {
+        weight = double.tryParse(holding['weight'].toString()) ?? 0.0;
+      } else if (holding['assets'] != null) {
+        String assets = holding['assets'].toString().replaceAll('%', '');
+        weight = double.tryParse(assets) ?? 0.0;
+      }
+
+      if (i < 5) top5Total += weight;
+      top10Total += weight;
+    }
+
+    return _buildSectionContainer(
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Top 5 Holdings',
+                style: TextStyle(
+                  color: AppColors.secondaryText,
+                  fontSize: 12.sp,
+                ),
+              ),
+              Text(
+                '${top5Total.toStringAsFixed(2)}%',
+                style: TextStyle(
+                  color: AppColors.primaryText,
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Top 10 Holdings',
+                style: TextStyle(
+                  color: AppColors.secondaryText,
+                  fontSize: 12.sp,
+                ),
+              ),
+              Text(
+                '${top10Total.toStringAsFixed(2)}%',
+                style: TextStyle(
+                  color: AppColors.primaryText,
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHoldingItem(
+      String name,
+      double percentage,
+      String sector, {
+        String instrument = '',
+        int index = 0,
+      }) {
+    String displayInitial = name.isNotEmpty ? name.substring(0, 1) : 'N';
+
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 8.w),
+      child: Row(
+        children: [
+          // Rank number
+          if (index > 0)
+            Container(
+              width: 24.w,
+              height: 24.w,
+              margin: EdgeInsets.only(right: 8.w),
+              decoration: BoxDecoration(
+                color: index <= 3
+                    ? AppColors.primaryGold!.withOpacity(0.2)
+                    : AppColors.screenBackground,
+                borderRadius: BorderRadius.circular(6.r),
+                border: Border.all(
+                  color: index <= 3
+                      ? AppColors.primaryGold!.withOpacity(0.4)
+                      : AppColors.border,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  '$index',
+                  style: TextStyle(
+                    fontSize: 10.sp,
+                    fontWeight: FontWeight.w700,
+                    color: index <= 3
+                        ? AppColors.primaryGold
+                        : AppColors.secondaryText,
+                  ),
+                ),
+              ),
+            ),
+
+          // Icon
+          Container(
+            width: 32.r,
+            height: 32.r,
+            decoration: BoxDecoration(
+              color: AppColors.primaryGold!.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Center(
+              child: Text(
+                displayInitial,
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primaryGold,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(width: 10.w),
+
+          // Name and details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: TextStyle(
+                    color: AppColors.primaryText,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 2.h),
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondaryText?.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                      child: Text(
+                        sector,
+                        style: TextStyle(
+                          color: AppColors.secondaryText,
+                          fontSize: 9.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    if (instrument.isNotEmpty) ...[
+                      SizedBox(width: 4.w),
+                      Text(
+                        '• $instrument',
+                        style: TextStyle(
+                          color: AppColors.secondaryText?.withOpacity(0.7),
+                          fontSize: 9.sp,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: 8.w),
+
+          // Percentage and bar
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${percentage.toStringAsFixed(2)}%',
+                style: TextStyle(
+                  color: AppColors.primaryText,
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              Container(
+                width: 50.w,
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryGold!.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(2.r),
+                ),
+                child: FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: (percentage / 10).clamp(0.0, 1.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primaryGold!,
+                          AppColors.primaryGold!.withOpacity(0.7),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(2.r),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -529,67 +820,70 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen> with Single
   }
 
   Widget _buildMetricRow(String label, String value) {
+    // Check if value has more than 5 words
+    int wordCount = value.trim().split(RegExp(r'\s+')).length;
+    bool shouldWrap = wordCount > 5;
+
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 6.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: shouldWrap
+          ? Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(color: AppColors.primaryText, fontSize: 13.sp)),
-          Text(value, style: TextStyle(color: AppColors.primaryText, fontSize: 13.sp, fontWeight: FontWeight.w600)),
+          // Label row
+          Text(
+            label,
+            style: TextStyle(
+              color: AppColors.primaryText,
+              fontSize: 13.sp,
+            ),
+          ),
+          SizedBox(height: 4.h),
+          // Value on next line
+          Text(
+            value,
+            style: TextStyle(
+              color: AppColors.primaryText,
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w600,
+              height: 1.4,
+            ),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      )
+          : Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: AppColors.primaryText,
+              fontSize: 13.sp,
+            ),
+          ),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                color: AppColors.primaryText,
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.right,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildHoldingItem(String name, double percentage, String sector) {
-    String displayInitial = name.isNotEmpty ? name.substring(0, 1) : 'N';
-    return Container(
-      margin: EdgeInsets.only(bottom: 8.h),
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(
-        color: AppColors.screenBackground,
-        borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: AppColors.primaryGold!.withOpacity(0.2)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32.r, height: 32.r,
-            decoration: BoxDecoration(color: AppColors.primaryGold!.withOpacity(0.1), borderRadius: BorderRadius.circular(8.r)),
-            child: Center(child: Text(displayInitial, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: AppColors.primaryGold))),
-          ),
-          SizedBox(width: 8.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: TextStyle(color: AppColors.primaryText, fontSize: 13.sp, fontWeight: FontWeight.w600),
-                    maxLines: 1, overflow: TextOverflow.ellipsis),
-                Text(sector, style: TextStyle(color: AppColors.secondaryText, fontSize: 11.sp)),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text('${percentage.toStringAsFixed(2)}%',
-                  style: TextStyle(color: AppColors.primaryText, fontSize: 12.sp, fontWeight: FontWeight.w600)),
-              SizedBox(height: 4.h),
-              Container(
-                width: 60.w, height: 4.h,
-                decoration: BoxDecoration(color: AppColors.primaryGold!.withOpacity(0.2), borderRadius: BorderRadius.circular(2.r)),
-                child: FractionallySizedBox(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: (percentage / 10).clamp(0.0, 1.0),
-                  child: Container(decoration: BoxDecoration(color: AppColors.primaryGold, borderRadius: BorderRadius.circular(2.r))),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildActionButtons() {
     return Container(
