@@ -7,6 +7,7 @@ import '../bajal-auth/bajal_login_screen.dart';
 import 'basket_invest_screen.dart';
 import 'basket_model.dart';
 import 'basket_api_service.dart';
+import 'my_basket_screen.dart';
 
 /// Bottom sheet widget that displays detailed information about a basket
 /// including price performance, holdings, and subscription/investment options
@@ -16,6 +17,7 @@ class BasketDetailSheet extends StatefulWidget {
   final double investedAmount;
   final VoidCallback onSubscribe;
   final Function(double) onInvest;
+  final bool navigateToInvest; // NEW: Controls whether to show invest button or message
 
   const BasketDetailSheet({
     super.key,
@@ -24,6 +26,7 @@ class BasketDetailSheet extends StatefulWidget {
     required this.investedAmount,
     required this.onSubscribe,
     required this.onInvest,
+    this.navigateToInvest = true, // Default to true (show invest button)
   });
 
   @override
@@ -69,31 +72,54 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
         if (token == null || token.isEmpty) {
           // User not authenticated - close sheet and navigate to login
           Navigator.pop(context);
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => BajalLoginScreen()),
-          );
 
-          // Show warning message after navigation
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  Icon(Icons.warning_amber_rounded, color: AppColors.onPrimaryColor),
-                  SizedBox(width: 8.w),
-                  Expanded(
-                    child: Text('Please login to Bajaj to proceed with investment'),
-                  ),
-                ],
+          // Navigate to login and wait for result
+          final loginSuccess = await Navigator.push<bool>(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BajalLoginScreen(
+                returnRoute: 'basket_invest',
+                returnArguments: {
+                  'basketId': widget.basket.id,
+                  'basket': widget.basket,
+                },
               ),
-              backgroundColor: AppColors.warning,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              duration: Duration(seconds: 3),
             ),
           );
+
+          // If login was successful, navigate to invest screen
+          if (mounted && loginSuccess == true) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => BasketInvestScreen(
+                  basketId: widget.basket.id,
+                  basket: widget.basket,
+                ),
+              ),
+            );
+          } else if (mounted && loginSuccess == false) {
+            // User skipped or cancelled login
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: AppColors.onPrimaryColor),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: Text('Login required to invest in baskets'),
+                    ),
+                  ],
+                ),
+                backgroundColor: AppColors.warning,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
         } else {
           // User is authenticated - navigate to investment screen
           Navigator.pop(context);
@@ -106,7 +132,6 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
               ),
             ),
           );
-
         }
       }
     } catch (e) {
@@ -133,7 +158,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
   }
 
   /// Handles basket subscription with improved message visibility
-  /// ✅ FIXED: Close sheet first, THEN show message to ensure visibility
+  /// Close sheet first, THEN show message to ensure visibility
   Future<void> _handleSubscribe() async {
     setState(() {
       _isLoading = true;
@@ -247,14 +272,14 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
     // Extract price data from basket model
     final double initialPrice = widget.basket.initialPriceValue;
     final double currentPrice = widget.basket.currentPriceValue;
-    final double performance = widget.basket.performanceValue; // Price change percentage
+    final double performance = widget.basket.performanceValue;
     final bool isPositive = performance >= 0;
     final bool hasPriceData = widget.basket.hasPriceData;
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.75,  // Initial height: 75% of screen
-      maxChildSize: 0.95,       // Max height: 95% of screen
-      minChildSize: 0.5,        // Min height: 50% of screen
+      initialChildSize: 0.75,
+      maxChildSize: 0.95,
+      minChildSize: 0.5,
       builder: (_, controller) {
         return Container(
           decoration: BoxDecoration(
@@ -281,7 +306,6 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
               ),
 
               // ========== HEADER SECTION ==========
-              // Displays basket name, subscription status, and price performance
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.all(20.w),
@@ -296,7 +320,6 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Basket name and subscription badge
                     Row(
                       children: [
                         Expanded(
@@ -309,7 +332,6 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                             ),
                           ),
                         ),
-                        // Show "Subscribed" badge if user is subscribed
                         if (widget.isSubscribed)
                           Container(
                             padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
@@ -343,10 +365,8 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
 
                     // ========== PRICE PERFORMANCE SECTION ==========
                     if (hasPriceData) ...[
-                      // Display initial and current price side by side
                       Row(
                         children: [
-                          // Initial Price Box
                           Expanded(
                             child: Container(
                               padding: EdgeInsets.all(12.w),
@@ -382,7 +402,6 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                             ),
                           ),
                           SizedBox(width: 12.w),
-                          // Current Price Box
                           Expanded(
                             child: Container(
                               padding: EdgeInsets.all(12.w),
@@ -410,7 +429,6 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                                     style: TextStyle(
                                       fontSize: 18.sp,
                                       fontWeight: FontWeight.bold,
-                                      // Green for profit, red for loss
                                       color: isPositive ? AppColors.success : AppColors.error,
                                     ),
                                   ),
@@ -421,8 +439,6 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                         ],
                       ),
                       SizedBox(height: 12.h),
-
-                      // Performance badge showing percentage change and amount
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                         decoration: BoxDecoration(
@@ -460,7 +476,6 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                         ),
                       ),
                     ] else ...[
-                      // Show placeholder when price data is not available
                       Container(
                         padding: EdgeInsets.all(12.w),
                         decoration: BoxDecoration(
@@ -489,8 +504,6 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                       ),
                     ],
 
-                    // ========== INVESTED AMOUNT SECTION ==========
-                    // Only shown if user is subscribed and has invested
                     if (widget.isSubscribed && widget.investedAmount > 0) ...[
                       SizedBox(height: 12.h),
                       Container(
@@ -552,7 +565,6 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                   controller: controller,
                   padding: EdgeInsets.all(20.w),
                   children: [
-                    // ========== BASKET INFORMATION SECTION ==========
                     _sectionTitle('Basket Information'),
                     SizedBox(height: 12.h),
                     _infoRow('Subscription Type', widget.basket.subscryptionType),
@@ -560,242 +572,232 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                     _infoRow('Subscription Amount', '₹${widget.basket.subscriptionAmount}'),
                     _infoRow('Research Analyst', widget.basket.raName),
 
-                    SizedBox(height: 24.h),
+                    // Only show holdings section if navigateToInvest is true
+                    if (widget.navigateToInvest) ...[
+                      SizedBox(height: 24.h),
 
-                    // ========== HOLDINGS SECTION ==========
-                    _sectionTitle('Holdings (${widget.basket.holdings.length})'),
-                    SizedBox(height: 12.h),
+                      _sectionTitle('Holdings (${widget.basket.holdings.length})'),
+                      SizedBox(height: 12.h),
 
-                    // Show message if no holdings
-                    if (widget.basket.holdings.isEmpty)
-                      Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(20.h),
-                          child: Text(
-                            'No holdings added yet',
-                            style: TextStyle(
-                              color: AppColors.secondaryText,
-                              fontSize: 14.sp,
+                      if (widget.basket.holdings.isEmpty)
+                        Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(20.h),
+                            child: Text(
+                              'No holdings added yet',
+                              style: TextStyle(
+                                color: AppColors.secondaryText,
+                                fontSize: 14.sp,
+                              ),
                             ),
                           ),
-                        ),
-                      )
-                    else
-                    // Display each holding as a card
-                      ...widget.basket.holdings.map((h) => Container(
-                        margin: EdgeInsets.only(bottom: 12.h),
-                        padding: EdgeInsets.all(14.w),
-                        decoration: BoxDecoration(
-                          color: AppColors.cardBackground,
-                          borderRadius: BorderRadius.circular(12.r),
-                          border: Border.all(
-                            color: AppColors.border,
-                            width: 1,
+                        )
+                      else
+                        ...widget.basket.holdings.map((h) => Container(
+                          margin: EdgeInsets.only(bottom: 12.h),
+                          padding: EdgeInsets.all(14.w),
+                          decoration: BoxDecoration(
+                            color: AppColors.cardBackground,
+                            borderRadius: BorderRadius.circular(12.r),
+                            border: Border.all(
+                              color: AppColors.border,
+                              width: 1,
+                            ),
                           ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Holding header with icon, name, symbol, and percentage
-                            Row(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(10.w),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primaryGold.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(10.r),
-                                  ),
-                                  child: Icon(
-                                    Icons.show_chart,
-                                    color: AppColors.primaryGold,
-                                    size: 24.sp,
-                                  ),
-                                ),
-                                SizedBox(width: 12.w),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        h.fullName,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14.sp,
-                                          color: AppColors.headingText,
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      SizedBox(height: 2.h),
-                                      Row(
-                                        children: [
-                                          // Stock symbol badge
-                                          Container(
-                                            padding: EdgeInsets.symmetric(
-                                              horizontal: 6.w,
-                                              vertical: 2.h,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.primaryColor.withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(4.r),
-                                            ),
-                                            child: Text(
-                                              h.symbol,
-                                              style: TextStyle(
-                                                fontSize: 11.sp,
-                                                fontWeight: FontWeight.w600,
-                                                color: AppColors.primaryColor,
-                                              ),
-                                            ),
-                                          ),
-                                          SizedBox(width: 6.w),
-                                          // Holding percentage
-                                          Text(
-                                            '${h.holdinPercentage}%',
-                                            style: TextStyle(
-                                              fontSize: 12.sp,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppColors.primaryGold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 12.h),
-
-                            // Units and Order Type
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _holdingDetailItem(
-                                    'Units',
-                                    h.units,
-                                    Icons.inventory_2_outlined,
-                                  ),
-                                ),
-                                SizedBox(width: 8.w),
-                                Expanded(
-                                  child: _holdingDetailItem(
-                                    'Order Type',
-                                    h.orderType,
-                                    Icons.assignment_outlined,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            // Target Price and Stop Loss (if available)
-                            if (h.tgtPrice != '0' || h.slPrice != '0') ...[
-                              SizedBox(height: 8.h),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                               Row(
                                 children: [
-                                  // Target Price
-                                  if (h.tgtPrice != '0')
-                                    Expanded(
-                                      child: Container(
-                                        padding: EdgeInsets.all(10.w),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.success.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(8.r),
-                                          border: Border.all(
-                                            color: AppColors.success.withOpacity(0.3),
-                                            width: 1,
+                                  Container(
+                                    padding: EdgeInsets.all(10.w),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primaryGold.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(10.r),
+                                    ),
+                                    child: Icon(
+                                      Icons.show_chart,
+                                      color: AppColors.primaryGold,
+                                      size: 24.sp,
+                                    ),
+                                  ),
+                                  SizedBox(width: 12.w),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          h.fullName,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14.sp,
+                                            color: AppColors.headingText,
                                           ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                        child: Column(
+                                        SizedBox(height: 2.h),
+                                        Row(
                                           children: [
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Icon(
-                                                  Icons.trending_up,
-                                                  size: 14.sp,
-                                                  color: AppColors.success,
+                                            Container(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 6.w,
+                                                vertical: 2.h,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.primaryColor.withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(4.r),
+                                              ),
+                                              child: Text(
+                                                h.symbol,
+                                                style: TextStyle(
+                                                  fontSize: 11.sp,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: AppColors.primaryColor,
                                                 ),
-                                                SizedBox(width: 4.w),
-                                                Text(
-                                                  'Target',
-                                                  style: TextStyle(
-                                                    fontSize: 10.sp,
-                                                    color: AppColors.secondaryText,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                              ],
+                                              ),
                                             ),
-                                            SizedBox(height: 4.h),
+                                            SizedBox(width: 6.w),
                                             Text(
-                                              '₹${h.tgtPrice}',
+                                              '${h.holdinPercentage}%',
                                               style: TextStyle(
-                                                fontSize: 15.sp,
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.success,
+                                                fontSize: 12.sp,
+                                                fontWeight: FontWeight.w600,
+                                                color: AppColors.primaryGold,
                                               ),
                                             ),
                                           ],
                                         ),
-                                      ),
+                                      ],
                                     ),
-                                  if (h.tgtPrice != '0' && h.slPrice != '0') SizedBox(width: 8.w),
-                                  // Stop Loss
-                                  if (h.slPrice != '0')
-                                    Expanded(
-                                      child: Container(
-                                        padding: EdgeInsets.all(10.w),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.error.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(8.r),
-                                          border: Border.all(
-                                            color: AppColors.error.withOpacity(0.3),
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Column(
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Icon(
-                                                  Icons.trending_down,
-                                                  size: 14.sp,
-                                                  color: AppColors.error,
-                                                ),
-                                                SizedBox(width: 4.w),
-                                                Text(
-                                                  'Stop Loss',
-                                                  style: TextStyle(
-                                                    fontSize: 10.sp,
-                                                    color: AppColors.secondaryText,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 4.h),
-                                            Text(
-                                              '₹${h.slPrice}',
-                                              style: TextStyle(
-                                                fontSize: 15.sp,
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.error,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
+                                  ),
                                 ],
                               ),
+                              SizedBox(height: 12.h),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _holdingDetailItem(
+                                      'Units',
+                                      h.units,
+                                      Icons.inventory_2_outlined,
+                                    ),
+                                  ),
+                                  SizedBox(width: 8.w),
+                                  Expanded(
+                                    child: _holdingDetailItem(
+                                      'Order Type',
+                                      h.orderType,
+                                      Icons.assignment_outlined,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (h.tgtPrice != '0' || h.slPrice != '0') ...[
+                                SizedBox(height: 8.h),
+                                Row(
+                                  children: [
+                                    if (h.tgtPrice != '0')
+                                      Expanded(
+                                        child: Container(
+                                          padding: EdgeInsets.all(10.w),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.success.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(8.r),
+                                            border: Border.all(
+                                              color: AppColors.success.withOpacity(0.3),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(
+                                                    Icons.trending_up,
+                                                    size: 14.sp,
+                                                    color: AppColors.success,
+                                                  ),
+                                                  SizedBox(width: 4.w),
+                                                  Text(
+                                                    'Target',
+                                                    style: TextStyle(
+                                                      fontSize: 10.sp,
+                                                      color: AppColors.secondaryText,
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              SizedBox(height: 4.h),
+                                              Text(
+                                                '₹${h.tgtPrice}',
+                                                style: TextStyle(
+                                                  fontSize: 15.sp,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.success,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    if (h.tgtPrice != '0' && h.slPrice != '0') SizedBox(width: 8.w),
+                                    if (h.slPrice != '0')
+                                      Expanded(
+                                        child: Container(
+                                          padding: EdgeInsets.all(10.w),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.error.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(8.r),
+                                            border: Border.all(
+                                              color: AppColors.error.withOpacity(0.3),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(
+                                                    Icons.trending_down,
+                                                    size: 14.sp,
+                                                    color: AppColors.error,
+                                                  ),
+                                                  SizedBox(width: 4.w),
+                                                  Text(
+                                                    'Stop Loss',
+                                                    style: TextStyle(
+                                                      fontSize: 10.sp,
+                                                      color: AppColors.secondaryText,
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              SizedBox(height: 4.h),
+                                              Text(
+                                                '₹${h.slPrice}',
+                                                style: TextStyle(
+                                                  fontSize: 15.sp,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.error,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ],
                             ],
-                          ],
-                        ),
-                      )),
+                          ),
+                        )),
+                    ],
 
-                    // Extra spacing for bottom button
                     SizedBox(height: 80.h),
                   ],
                 ),
@@ -814,7 +816,8 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                   ),
                 ),
                 child: widget.isSubscribed
-                    ? // If subscribed, show "Invest" button
+                    ? widget.navigateToInvest
+                    ? // Show "Invest" button if navigateToInvest is true
                 Row(
                   children: [
                     Expanded(
@@ -846,7 +849,81 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                     SizedBox(width: 12.w),
                   ],
                 )
-                    : // If not subscribed, show "Subscribe" button
+                    : // Show message card if navigateToInvest is false
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MyBasketScreen(
+                          showBackButton: true,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.success.withOpacity(0.1),
+                          AppColors.primaryGold.withOpacity(0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(
+                        color: AppColors.primaryGold.withOpacity(0.3),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(10.w),
+                          decoration: BoxDecoration(
+                            color: AppColors.success,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.check_circle,
+                            color: AppColors.onPrimaryColor,
+                            size: 24.sp,
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Basket Subscribed Successfully!',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.success,
+                                ),
+                              ),
+                              SizedBox(height: 4.h),
+                              Text(
+                                'Go to My Baskets to invest in this basket',
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: AppColors.secondaryText,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          color: AppColors.primaryGold,
+                          size: 18.sp,
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+                    : // Show "Subscribe" button if not subscribed
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -887,7 +964,6 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
     );
   }
 
-  /// Builds a section title widget
   Widget _sectionTitle(String title) {
     return Text(
       title,
@@ -899,7 +975,6 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
     );
   }
 
-  /// Builds an information row with label and value
   Widget _infoRow(String label, String value) {
     return Padding(
       padding: EdgeInsets.only(bottom: 8.h),
@@ -926,7 +1001,6 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
     );
   }
 
-  /// Builds a holding detail item with icon, label, and value
   Widget _holdingDetailItem(String label, String value, IconData icon) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),

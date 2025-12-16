@@ -2,31 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'basket_model.dart';
 
-// ============================================
-// MODERN COMPACT BasketRaceCard
-// ============================================
-
-class BasketRaceCard extends StatefulWidget {
+class MyBasketCard extends StatefulWidget {
   final Basket basket;
   final VoidCallback onTap;
   final bool isMarketOpen;
   final bool isSubscribed;
   final double investedAmount;
+  final String basketType;
 
-  const BasketRaceCard({
+  const MyBasketCard({
     super.key,
     required this.basket,
     required this.onTap,
     required this.isMarketOpen,
     required this.isSubscribed,
     required this.investedAmount,
+    required this.basketType,
   });
 
   @override
-  State<BasketRaceCard> createState() => _BasketRaceCardState();
+  State<MyBasketCard> createState() => _IntraBasketCardState();
 }
 
-class _BasketRaceCardState extends State<BasketRaceCard> with SingleTickerProviderStateMixin {
+class _IntraBasketCardState extends State<MyBasketCard> with SingleTickerProviderStateMixin {
   late AnimationController _horseController;
   late Animation<double> _horseAnimation;
 
@@ -57,7 +55,7 @@ class _BasketRaceCardState extends State<BasketRaceCard> with SingleTickerProvid
   }
 
   @override
-  void didUpdateWidget(BasketRaceCard oldWidget) {
+  void didUpdateWidget(MyBasketCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.basket.currentPriceValue != widget.basket.currentPriceValue ||
         oldWidget.basket.initialPriceValue != widget.basket.initialPriceValue) {
@@ -73,13 +71,18 @@ class _BasketRaceCardState extends State<BasketRaceCard> with SingleTickerProvid
     super.dispose();
   }
 
+  Color _getTypeColor() {
+    return widget.basketType == 'INTRADAY' ? const Color(0xFFFF9800) : const Color(0xFFE53935);
+  }
+
   @override
   Widget build(BuildContext context) {
     final double cardWidth = MediaQuery.of(context).size.width - 40.w;
     final String action = widget.basket.action;
     final double performance = widget.basket.performanceValue;
     final bool isPositive = performance >= 0;
-    final Color raceBarColor = isPositive ? const Color(0xFFFFD700) : const Color(0xFFE53935);
+    final Color typeColor = _getTypeColor();
+    final Color raceBarColor = isPositive ? typeColor : const Color(0xFFE53935);
 
     return Container(
       margin: EdgeInsets.symmetric(vertical: 8.h, horizontal: 4.w),
@@ -87,9 +90,7 @@ class _BasketRaceCardState extends State<BasketRaceCard> with SingleTickerProvid
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: widget.isSubscribed
-              ? const Color(0xFFFFD700)
-              : const Color(0xFFE0E0E0),
+          color: widget.isSubscribed ? typeColor : const Color(0xFFE0E0E0),
           width: widget.isSubscribed ? 2 : 1,
         ),
         boxShadow: [
@@ -110,9 +111,22 @@ class _BasketRaceCardState extends State<BasketRaceCard> with SingleTickerProvid
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header Row
+                // Header Row with Type Icon
                 Row(
                   children: [
+                    Container(
+                      padding: EdgeInsets.all(6.w),
+                      decoration: BoxDecoration(
+                        color: typeColor.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Icon(
+                        widget.basketType == 'INTRADAY' ? Icons.flash_on : Icons.speed,
+                        color: typeColor,
+                        size: 16.sp,
+                      ),
+                    ),
+                    SizedBox(width: 10.w),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,7 +147,7 @@ class _BasketRaceCardState extends State<BasketRaceCard> with SingleTickerProvid
                               ),
                               if (widget.isSubscribed) ...[
                                 SizedBox(width: 6.w),
-                                Icon(Icons.verified, color: const Color(0xFFFFD700), size: 16.sp),
+                                Icon(Icons.verified, color: typeColor, size: 16.sp),
                               ],
                             ],
                           ),
@@ -291,20 +305,20 @@ class _BasketRaceCardState extends State<BasketRaceCard> with SingleTickerProvid
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          const Color(0xFFFFD700).withOpacity(0.15),
-                          const Color(0xFFFFD700).withOpacity(0.05),
+                          typeColor.withOpacity(0.15),
+                          typeColor.withOpacity(0.05),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.account_balance_wallet, color: const Color(0xFFFFD700), size: 16.sp),
+                        Icon(Icons.account_balance_wallet, color: typeColor, size: 16.sp),
                         SizedBox(width: 8.w),
                         Text('Invested: ', style: TextStyle(fontSize: 11.sp, color: Colors.grey[600])),
                         Text(
                           '₹${widget.investedAmount.toStringAsFixed(0)}',
-                          style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFFFFD700)),
+                          style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.bold, color: typeColor),
                         ),
                       ],
                     ),
@@ -320,7 +334,7 @@ class _BasketRaceCardState extends State<BasketRaceCard> with SingleTickerProvid
                     _miniChip(widget.basket.subscryptionType, const Color(0xFF2196F3)),
                     _miniChip(widget.basket.volatility, _getVolatilityColor(widget.basket.volatility)),
                     if (!widget.basket.isFree)
-                      _miniChip('₹${widget.basket.subscriptionAmountValue}', const Color(0xFFFFD700)),
+                      _miniChip('₹${widget.basket.subscriptionAmountValue}', typeColor),
                     _miniChip('${widget.basket.holdingsCount} Holdings', const Color(0xFF9C27B0)),
                   ],
                 ),

@@ -884,7 +884,6 @@ class _TradingDetailsScreenState extends State<JtTradeDeatilsScreen> with Single
   }
 
 
-
   Widget _buildActionButtons() {
     return Container(
       padding: EdgeInsets.all(12.w),

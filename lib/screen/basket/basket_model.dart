@@ -122,37 +122,76 @@ class Basket extends Equatable {
   bool get isDeliveryType => type.toUpperCase() == 'DELIVERY';
   bool get isBuyAction => action.toUpperCase() == 'BUY';
 
-  // Price getters - ALWAYS return valid numbers, default to 0
-  double get initialPriceValue {
-    if (basketInitialPrice == null || basketInitialPrice == 'null' || basketInitialPrice == '') {
-      return 0.0;
-    }
-    return double.tryParse(basketInitialPrice!) ?? 0.0;
+  // ✅ Helper: Clean floating point errors and round to 2 decimals
+  double _cleanPrice(double value) {
+    // Round to 2 decimal places to remove floating point errors
+    return (value * 100).round() / 100;
   }
 
-  double get currentPriceValue {
-    if (basketCurrentPrice == null || basketCurrentPrice == 'null' || basketCurrentPrice == '') {
+  // ✅ FIXED: Price getters - Return RAW unrounded values for calculation
+  double get _rawInitialPrice {
+    if (basketInitialPrice == null ||
+        basketInitialPrice == 'null' ||
+        basketInitialPrice == '' ||
+        basketInitialPrice == 'NaN') {
       return 0.0;
     }
+    final parsed = double.tryParse(basketInitialPrice!.trim());
+    if (parsed == null || parsed.isNaN || parsed.isInfinite) {
+      return 0.0;
+    }
+    return _cleanPrice(parsed);
+  }
+
+  double get _rawCurrentPrice {
+    if (basketCurrentPrice == null ||
+        basketCurrentPrice == 'null' ||
+        basketCurrentPrice == '') {
+      return 0.0;
+    }
+    double parsed;
     if (basketCurrentPrice is num) {
-      return (basketCurrentPrice as num).toDouble();
+      parsed = (basketCurrentPrice as num).toDouble();
+    } else {
+      final temp = double.tryParse(basketCurrentPrice.toString().trim());
+      if (temp == null || temp.isNaN || temp.isInfinite) {
+        return 0.0;
+      }
+      parsed = temp;
     }
-    return double.tryParse(basketCurrentPrice.toString()) ?? 0.0;
+    return _cleanPrice(parsed);
   }
 
-  // ✅ FIXED: Calculate percentage change with proper validation
-  // Formula: ((Current - Initial) / Initial) × 100
+
+  double get initialPriceValue => _rawInitialPrice.roundToDouble();
+  double get currentPriceValue => _rawCurrentPrice.roundToDouble();
+
+
   double get priceChangePercentage {
-    // Return 0 if either price is invalid or zero
-    if (initialPriceValue <= 0 || currentPriceValue <= 0) {
+    final initial = initialPriceValue;
+    final current = currentPriceValue;
+
+    // 1. Handle Division by Zero (Critical)
+    // If we started at 0, we cannot calculate a percentage change.
+    // Returns 0.0 to show "0%" change (or you could handle this in UI to show "N/A")
+    if (initial <= 0) {
       return 0.0;
     }
 
-    // Calculate: (Current - Initial) / Initial * 100
-    final double change = currentPriceValue - initialPriceValue;
-    final double percentage = (change / initialPriceValue) * 100;
+    // 2. Handle Data Not Ready
+    // If current price is missing/zero, we might not want to show -100%.
+    // This check is optional: remove it if you WANT to show 100% loss when price is 0.
+    if (current <= 0) {
+      return 0.0;
+    }
 
-    // Return 0 if result is NaN or Infinite
+    // 3. The Math
+    // We use the VISIBLE integers to calculate.
+    // Formula: (Current - Initial) / Initial * 100
+    final double change = current - initial;
+    final double percentage = (change / initial) * 100;
+
+    // 4. Safety Check
     if (percentage.isNaN || percentage.isInfinite) {
       return 0.0;
     }
@@ -171,7 +210,7 @@ class Basket extends Equatable {
   // Check if we have valid price data (both must be greater than 0)
   bool get hasPriceData => initialPriceValue > 0 && currentPriceValue > 0;
 
-  // ✅ FIXED: Performance always uses actual price change, returns 0 if no data
+  // ✅ Performance uses the rounded percentage calculation
   double get performanceValue {
     if (!hasPriceData) {
       return 0.0;

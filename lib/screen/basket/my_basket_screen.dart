@@ -5,12 +5,16 @@ import 'basket_api_service.dart';
 import 'basket_details_sheet.dart';
 import 'basket_model.dart';
 import 'package:classia_amc/themes/app_colors.dart';
-import 'basket_race_card.dart';
-import 'intra_basket_card.dart';
 import 'basket_list_screen.dart';
+import 'my_basket_card.dart';
 
 class MyBasketScreen extends StatefulWidget {
-  const MyBasketScreen({super.key});
+  final bool showBackButton; // NEW: Parameter to show back button instead of profile icon
+
+  const MyBasketScreen({
+    super.key,
+    this.showBackButton = false, // Default to false (show profile icon)
+  });
 
   @override
   State<MyBasketScreen> createState() => _MyBasketScreenState();
@@ -55,6 +59,7 @@ class _MyBasketScreenState extends State<MyBasketScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => BasketDetailSheet(
         basket: basket,
+        navigateToInvest: true,
         isSubscribed: true,
         investedAmount: investedAmount,
         onSubscribe: () {
@@ -162,7 +167,13 @@ class _MyBasketScreenState extends State<MyBasketScreen> {
         title: const Text('My Baskets'),
         centerTitle: true,
         elevation: 0,
-        leading: IconButton(
+        // Conditionally show back button or profile icon
+        leading: widget.showBackButton
+            ? IconButton(
+          icon: Icon(Icons.arrow_back, color: AppColors.onPrimaryColor),
+          onPressed: () => Navigator.pop(context),
+        )
+            : IconButton(
           icon: Icon(Icons.person, color: AppColors.primaryGold),
           onPressed: () => Navigator.push(
             context,
@@ -587,15 +598,16 @@ class _MyBasketScreenState extends State<MyBasketScreen> {
                     final investedAmount = 0.0;
 
                     if (type == 'DELIVERY') {
-                      return BasketRaceCard(
+                      return MyBasketCard(
                         basket: basket,
                         onTap: () => _showDetails(basket),
                         isMarketOpen: _isMarketOpen,
                         isSubscribed: true,
                         investedAmount: investedAmount,
+                        basketType: type,
                       );
                     } else {
-                      return IntraBasketCard(
+                      return MyBasketCard(
                         basket: basket,
                         onTap: () => _showDetails(basket),
                         isMarketOpen: _isMarketOpen,

@@ -5,11 +5,10 @@ import 'basket_api_service.dart';
 import 'basket_details_sheet.dart';
 import 'basket_model.dart';
 import 'package:classia_amc/themes/app_colors.dart';
-import 'basket_race_card.dart';
-import 'intra_basket_card.dart';
+import 'basket_card.dart';
 
 class BasketListScreen extends StatefulWidget {
-  final bool showBackButton; // ✅ New parameter
+  final bool showBackButton;
 
   const BasketListScreen({
     super.key,
@@ -102,6 +101,7 @@ class _BasketListScreenState extends State<BasketListScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => BasketDetailSheet(
         basket: basket,
+        navigateToInvest: false,
         isSubscribed: isSubscribed,
         investedAmount: investedAmount,
         onSubscribe: () => _subscribeBasket(basket),
@@ -613,19 +613,20 @@ class _BasketListScreenState extends State<BasketListScreen> {
               final isSubscribed = _subscribedBasketIds.contains(basket.id);
               final investedAmount = 0.0;
 
-              // ✅ FIXED: Use correct card based on type
+
               if (_currentIndex == 2) {
                 // DELIVERY type - use BasketRaceCard
-                return BasketRaceCard(
+                return BasketCard(
                   basket: basket,
                   onTap: () => _showDetails(basket),
                   isMarketOpen: _isMarketOpen,
                   isSubscribed: isSubscribed,
                   investedAmount: investedAmount,
+                  basketType: _getCurrentTypeLabel(),
                 );
               } else {
                 // INTRADAY or INTRAHOUR - use IntraBasketCard
-                return IntraBasketCard(
+                return BasketCard(
                   basket: basket,
                   onTap: () => _showDetails(basket),
                   isMarketOpen: _isMarketOpen,

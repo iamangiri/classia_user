@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'basket_model.dart';
 
-class IntraBasketCard extends StatefulWidget {
+class BasketCard extends StatefulWidget {
   final Basket basket;
   final VoidCallback onTap;
   final bool isMarketOpen;
@@ -10,7 +10,7 @@ class IntraBasketCard extends StatefulWidget {
   final double investedAmount;
   final String basketType;
 
-  const IntraBasketCard({
+  const BasketCard({
     super.key,
     required this.basket,
     required this.onTap,
@@ -21,10 +21,10 @@ class IntraBasketCard extends StatefulWidget {
   });
 
   @override
-  State<IntraBasketCard> createState() => _IntraBasketCardState();
+  State<BasketCard> createState() => _IntraBasketCardState();
 }
 
-class _IntraBasketCardState extends State<IntraBasketCard> with SingleTickerProviderStateMixin {
+class _IntraBasketCardState extends State<BasketCard> with SingleTickerProviderStateMixin {
   late AnimationController _horseController;
   late Animation<double> _horseAnimation;
 
@@ -55,7 +55,7 @@ class _IntraBasketCardState extends State<IntraBasketCard> with SingleTickerProv
   }
 
   @override
-  void didUpdateWidget(IntraBasketCard oldWidget) {
+  void didUpdateWidget(BasketCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.basket.currentPriceValue != widget.basket.currentPriceValue ||
         oldWidget.basket.initialPriceValue != widget.basket.initialPriceValue) {
@@ -335,7 +335,7 @@ class _IntraBasketCardState extends State<IntraBasketCard> with SingleTickerProv
                     _miniChip(widget.basket.volatility, _getVolatilityColor(widget.basket.volatility)),
                     if (!widget.basket.isFree)
                       _miniChip('₹${widget.basket.subscriptionAmountValue}', typeColor),
-                    _miniChip('${widget.basket.holdingsCount} Holdings', const Color(0xFF9C27B0)),
+
                   ],
                 ),
               ],
