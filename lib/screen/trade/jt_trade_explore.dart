@@ -13,6 +13,23 @@ class JtTradeExplore extends StatelessWidget {
     required this.onBuy,
   }) : super(key: key);
 
+  // Helper to safely get value from map with default 0
+  double _getSafeValue(Map<String, dynamic> amc) {
+    var value = amc['value'];
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
+
+  // Helper to safely get string with default
+  String _getSafeString(Map<String, dynamic> amc, String key, String defaultValue) {
+    var value = amc[key];
+    if (value == null) return defaultValue;
+    return value.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -67,22 +84,25 @@ class JtTradeExplore extends StatelessWidget {
         itemCount: amcList.length,
         itemBuilder: (context, index) {
           var amc = amcList[index];
+
+          // Safely extract values with defaults
+          final safeLogo = _getSafeString(amc, 'logo', '');
+          final safeName = _getSafeString(amc, 'name', 'Unknown Fund');
+          final safeFundName = _getSafeString(amc, 'fundName', 'N/A');
+          final safeValue = _getSafeValue(amc);
+
           return Container(
             margin: EdgeInsets.only(bottom: 12.h),
-            child: Stack(
-              children: [
-                JtTradeCard(
-                  logo: amc['logo'],
-                  name: amc['name'],
-                  fundName: amc['fundName'],
-                  value: amc['value'],
-                  fundData: amc, // Pass the entire AMC data
-                ),
-              ],
+            child: JtTradeCard(
+              logo: safeLogo,
+              name: safeName,
+              fundName: safeFundName,
+              value: safeValue,
+              fundData: amc, // Pass the entire AMC data
             ),
           );
         },
-      )
+      ),
     );
   }
 }

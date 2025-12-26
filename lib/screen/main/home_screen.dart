@@ -13,17 +13,13 @@ import '../../themes/app_colors.dart';
 import '../../widget/custom_app_bar.dart';
 import '../home/home_certificate_section.dart';
 import '../home/home_features_widget.dart';
-import '../home/home_jockey_trading_section.dart';
 import '../home/home_learn_section.dart';
 import '../home/home_pending_kyc_dialog_box.dart';
 import '../home/home_sip_goal_section.dart';
 import '../home/home_slider.dart';
 import '../home/home_stock_market_section.dart';
-import '../home/home_top_mutual_funds_section.dart';
-import '../home/home_trending_fund_widget.dart';
 import '../homefetures/lunchpad_screen.dart';
 import '../homefetures/my_report_screen.dart';
-import '../homefetures/withdraw_screen.dart';
 import 'home_disclamer.dart';
 
 class HomeScreen extends StatefulWidget {

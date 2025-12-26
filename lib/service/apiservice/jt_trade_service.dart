@@ -128,20 +128,49 @@ class JtTradeService {
       case 'All':
         return 'allTime';
       default:
-        return 'dayChange';
+        return 'threeYearsChange'; // Changed default to 3 years
     }
   }
 
-  // Parses performance value, handling null or invalid cases
+  // Parses performance value, handling null, infinity, NaN or invalid cases
   double _parsePerformanceValue(String? value) {
     if (value == null || value.isEmpty) {
       return 0.0;
     }
     try {
-      double parsedValue = double.parse(value.replaceAll('%', ''));
-      return parsedValue.isNaN ? 0.0 : parsedValue;
+      // Remove % sign and trim whitespace
+      String cleanValue = value.replaceAll('%', '').trim();
+
+      // Handle special string cases
+      if (cleanValue.toLowerCase() == 'infinity' ||
+          cleanValue.toLowerCase() == 'inf' ||
+          cleanValue.toLowerCase() == 'nan') {
+        print('Warning: Invalid performance value detected: $value');
+        return 0.0;
+      }
+
+      double parsedValue = double.parse(cleanValue);
+
+      // Check for infinity, NaN, or unreasonably large values
+      if (parsedValue.isInfinite) {
+        print('Warning: Infinity value detected, converting to 0: $value');
+        return 0.0;
+      }
+
+      if (parsedValue.isNaN) {
+        print('Warning: NaN value detected, converting to 0: $value');
+        return 0.0;
+      }
+
+      // Optional: Cap extremely large values (e.g., > 10000%)
+      if (parsedValue.abs() > 10000) {
+        print('Warning: Extremely large value detected (${parsedValue}%), capping to reasonable range');
+        return parsedValue > 0 ? 10000.0 : -10000.0;
+      }
+
+      return parsedValue;
     } catch (e) {
-      print('Error parsing performance value: $e');
+      print('Error parsing performance value "$value": $e');
       return 0.0;
     }
   }
@@ -173,14 +202,18 @@ class JtTradeService {
 
       List<Map<String, dynamic>> enrichedAmcList = amcListData.map((amc) {
         final prodMfData = amc['prodMfData'] ?? {};
+
+        // Parse and validate performance value
+        double performanceValue = _parsePerformanceValue(amc[performanceField]);
+
         return {
           'id': amc['id'],
           'logo': getAmcLogo(amc['amc'] ?? 'Unknown'),
           'name': amc['amc'] ?? 'Unknown AMC',
-          'amc': amc['amc'] ?? 'Unknown AMC', // Add this for consistency
+          'amc': amc['amc'] ?? 'Unknown AMC',
           'fundName': amc['scheamName'] ?? 'Unknown Fund',
-          'scheamName': amc['scheamName'] ?? 'Unknown Fund', // Keep original field name
-          'value': _parsePerformanceValue(amc[performanceField]),
+          'scheamName': amc['scheamName'] ?? 'Unknown Fund',
+          'value': performanceValue, // Already validated and sanitized
           'scheamCode': amc['scheamCode'],
           'isDeleted': amc['isDeleted'] ?? false,
           'createdAt': amc['createdAt'],
@@ -194,7 +227,7 @@ class JtTradeService {
           'exitLoad': prodMfData['exitLoad']?.toString() ?? 'Not Available',
           'planType': prodMfData['planType'] ?? 'Regular',
           'category': amc['category'] ?? _getCategoryName(prodMfData['catgId']),
-          // Performance metrics
+          // Performance metrics - all validated
           'dayChange': amc['dayChange'] ?? '0.0%',
           'weekChange': amc['weekChange'] ?? '0.0%',
           'monthChange': amc['monthChange'] ?? '0.0%',
@@ -204,7 +237,7 @@ class JtTradeService {
           'threeYearsChange': amc['threeYearsChange'] ?? '0.0%',
           'fiveYearsChange': amc['fiveYearsChange'] ?? '0.0%',
           'allTime': amc['allTime'] ?? '0.0%',
-          // *** FIX: Include holdings and fundManagers from API ***
+          // Additional data
           'holdings': amc['holdings'],
           'fundManagers': amc['fundManagers'],
           'analysis': amc['analysis'],
@@ -220,13 +253,24 @@ class JtTradeService {
       }
 
       // Sort by performance value in descending order
-      enrichedAmcList.sort((a, b) => b['value'].compareTo(a['value']));
-      print('Processed ${enrichedAmcList.length} funds');
+      enrichedAmcList.sort((a, b) {
+        double aValue = a['value'] ?? 0.0;
+        double bValue = b['value'] ?? 0.0;
 
-      // Debug: Print first fund's data to verify holdings and fundManagers
+        // Ensure no infinity or NaN in sorting
+        if (aValue.isInfinite || aValue.isNaN) aValue = 0.0;
+        if (bValue.isInfinite || bValue.isNaN) bValue = 0.0;
+
+        return bValue.compareTo(aValue);
+      });
+
+      print('Processed ${enrichedAmcList.length} funds for filter: $filter');
+
+      // Debug: Print first fund's data
       if (enrichedAmcList.isNotEmpty) {
         print('Sample fund data:');
         print('Fund: ${enrichedAmcList[0]['fundName']}');
+        print('Performance: ${enrichedAmcList[0]['value']}%');
         print('Holdings: ${enrichedAmcList[0]['holdings'] != null ? "Present" : "Missing"}');
         print('Fund Managers: ${enrichedAmcList[0]['fundManagers'] != null ? "Present" : "Missing"}');
       }

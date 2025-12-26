@@ -2,10 +2,18 @@ import 'package:classia_amc/routes/route.dart';
 import 'package:classia_amc/screen/profile/learn_screen.dart';
 import 'package:classia_amc/service/WithoutLogin/auth_login_check_service.dart' hide UserPoints;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 🔒 Disable screen rotation (Portrait only)
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
+
   runApp(const MyApp());
 }
 
@@ -27,7 +35,6 @@ class MyApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             title: 'Classia Capital',
             routerConfig: router,
-
           );
         },
       ),

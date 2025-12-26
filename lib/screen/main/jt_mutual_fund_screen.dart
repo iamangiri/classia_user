@@ -19,8 +19,8 @@ class _JtMutualFundScreenState extends State<JtMutualFundScreen> with TickerProv
   List<Map<String, dynamic>> amcList = [];
   bool isLoading = true;
   String? errorMessage;
-  String selectedFilter = 'Live'; // Default filter
-  int _currentTabIndex = 1; // Default to Buy Trade
+  String selectedFilter = '3 Years';
+  int _currentTabIndex = 1;
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 

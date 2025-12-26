@@ -21,10 +21,10 @@ class BasketCard extends StatefulWidget {
   });
 
   @override
-  State<BasketCard> createState() => _IntraBasketCardState();
+  State<BasketCard> createState() => _BasketCardState();
 }
 
-class _IntraBasketCardState extends State<BasketCard> with SingleTickerProviderStateMixin {
+class _BasketCardState extends State<BasketCard> with SingleTickerProviderStateMixin {
   late AnimationController _horseController;
   late Animation<double> _horseAnimation;
 
@@ -42,12 +42,10 @@ class _IntraBasketCardState extends State<BasketCard> with SingleTickerProviderS
   void _updateHorseAnimation() {
     final double performance = widget.basket.performanceValue;
 
-    // ✅ FIXED: If performance is negative or zero, horse stays at position 0
-    double racePosition = 0.0;
-    if (performance > 0) {
-      // Only move forward if positive
-      racePosition = (performance / 10).clamp(0.0, 1.0);
-    }
+    // ✅ Calculate race position based on 100% scale
+    // Use absolute value so negative performance also shows movement
+    // 5% performance = 5% of track, 50% performance = 50% of track
+    double racePosition = (performance.abs() / 100).clamp(0.0, 1.0);
 
     _horseAnimation = Tween<double>(begin: 0, end: racePosition).animate(
       CurvedAnimation(parent: _horseController, curve: Curves.easeInOut),
@@ -72,20 +70,33 @@ class _IntraBasketCardState extends State<BasketCard> with SingleTickerProviderS
   }
 
   Color _getTypeColor() {
-    return widget.basketType == 'INTRADAY' ? const Color(0xFFFF9800) : const Color(0xFFE53935);
+    return widget.basketType == 'INTRADAY'
+        ? const Color(0xFFFF9800)
+        : const Color(0xFF9C27B0); // Changed to purple for SWING
+  }
+
+  // Always use green for race - positive color
+  Color _getRaceColor() {
+    return const Color(0xFF4CAF50); // Always green for race
   }
 
   @override
   Widget build(BuildContext context) {
-    final double cardWidth = MediaQuery.of(context).size.width - 40.w;
+    // Use MediaQuery for better responsiveness instead of hardcoded values
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cardWidth = screenWidth - 32; // 16px padding on each side
+
     final String action = widget.basket.action;
     final double performance = widget.basket.performanceValue;
     final bool isPositive = performance >= 0;
     final Color typeColor = _getTypeColor();
-    final Color raceBarColor = isPositive ? typeColor : const Color(0xFFE53935);
+    final Color raceBarColor = _getRaceColor(); // Always green
 
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 8.h, horizontal: 4.w),
+      margin: EdgeInsets.symmetric(
+        vertical: 8.h,
+        horizontal: 16.w, // Consistent margin
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),
@@ -107,7 +118,7 @@ class _IntraBasketCardState extends State<BasketCard> with SingleTickerProviderS
           onTap: widget.onTap,
           borderRadius: BorderRadius.circular(16.r),
           child: Padding(
-            padding: EdgeInsets.all(14.w),
+            padding: EdgeInsets.all(16.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -115,18 +126,20 @@ class _IntraBasketCardState extends State<BasketCard> with SingleTickerProviderS
                 Row(
                   children: [
                     Container(
-                      padding: EdgeInsets.all(6.w),
+                      padding: EdgeInsets.all(8.w),
                       decoration: BoxDecoration(
                         color: typeColor.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Icon(
-                        widget.basketType == 'INTRADAY' ? Icons.flash_on : Icons.speed,
+                        widget.basketType == 'INTRADAY'
+                            ? Icons.flash_on
+                            : Icons.speed,
                         color: typeColor,
-                        size: 16.sp,
+                        size: 18.sp,
                       ),
                     ),
-                    SizedBox(width: 10.w),
+                    SizedBox(width: 12.w),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,7 +150,7 @@ class _IntraBasketCardState extends State<BasketCard> with SingleTickerProviderS
                                 child: Text(
                                   widget.basket.basketName,
                                   style: TextStyle(
-                                    fontSize: 15.sp,
+                                    fontSize: 16.sp,
                                     fontWeight: FontWeight.bold,
                                     color: const Color(0xFF0A1F3A),
                                   ),
@@ -147,20 +160,32 @@ class _IntraBasketCardState extends State<BasketCard> with SingleTickerProviderS
                               ),
                               if (widget.isSubscribed) ...[
                                 SizedBox(width: 6.w),
-                                Icon(Icons.verified, color: typeColor, size: 16.sp),
+                                Icon(
+                                  Icons.verified,
+                                  color: typeColor,
+                                  size: 18.sp,
+                                ),
                               ],
                             ],
                           ),
-                          SizedBox(height: 2.h),
-                          Row(
+                          SizedBox(height: 4.h),
+                          Wrap(
+                            spacing: 8.w,
+                            runSpacing: 4.h,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               Text(
                                 'RA: ${widget.basket.raName}',
-                                style: TextStyle(fontSize: 11.sp, color: Colors.grey[600]),
+                                style: TextStyle(
+                                  fontSize: 11.sp,
+                                  color: Colors.grey[600],
+                                ),
                               ),
-                              SizedBox(width: 8.w),
                               Container(
-                                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8.w,
+                                  vertical: 3.h,
+                                ),
                                 decoration: BoxDecoration(
                                   color: action.toUpperCase() == 'BUY'
                                       ? const Color(0xFF4CAF50).withOpacity(0.15)
@@ -171,17 +196,19 @@ class _IntraBasketCardState extends State<BasketCard> with SingleTickerProviderS
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
-                                      action.toUpperCase() == 'BUY' ? Icons.arrow_upward : Icons.arrow_downward,
+                                      action.toUpperCase() == 'BUY'
+                                          ? Icons.arrow_upward
+                                          : Icons.arrow_downward,
                                       color: action.toUpperCase() == 'BUY'
                                           ? const Color(0xFF4CAF50)
                                           : const Color(0xFFE53935),
-                                      size: 10.sp,
+                                      size: 11.sp,
                                     ),
-                                    SizedBox(width: 2.w),
+                                    SizedBox(width: 3.w),
                                     Text(
                                       action.toUpperCase(),
                                       style: TextStyle(
-                                        fontSize: 9.sp,
+                                        fontSize: 10.sp,
                                         fontWeight: FontWeight.bold,
                                         color: action.toUpperCase() == 'BUY'
                                             ? const Color(0xFF4CAF50)
@@ -197,7 +224,10 @@ class _IntraBasketCardState extends State<BasketCard> with SingleTickerProviderS
                       ),
                     ),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10.w,
+                        vertical: 6.h,
+                      ),
                       decoration: BoxDecoration(
                         color: isPositive
                             ? const Color(0xFF4CAF50).withOpacity(0.1)
@@ -208,17 +238,23 @@ class _IntraBasketCardState extends State<BasketCard> with SingleTickerProviderS
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            isPositive ? Icons.trending_up : Icons.trending_down,
-                            color: isPositive ? const Color(0xFF4CAF50) : const Color(0xFFE53935),
-                            size: 14.sp,
+                            isPositive
+                                ? Icons.trending_up
+                                : Icons.trending_down,
+                            color: isPositive
+                                ? const Color(0xFF4CAF50)
+                                : const Color(0xFFE53935),
+                            size: 16.sp,
                           ),
                           SizedBox(width: 4.w),
                           Text(
                             '${performance.toStringAsFixed(2)}%',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 12.sp,
-                              color: isPositive ? const Color(0xFF4CAF50) : const Color(0xFFE53935),
+                              fontSize: 13.sp,
+                              color: isPositive
+                                  ? const Color(0xFF4CAF50)
+                                  : const Color(0xFFE53935),
                             ),
                           ),
                         ],
@@ -226,82 +262,107 @@ class _IntraBasketCardState extends State<BasketCard> with SingleTickerProviderS
                     ),
                   ],
                 ),
-                SizedBox(height: 12.h),
+                SizedBox(height: 14.h),
 
-                // Price Row
-                Row(
-                  children: [
-                    Expanded(
-                      child: _compactPriceBox(
-                        'Initial',
-                        '₹${widget.basket.initialPriceValue > 0 ? widget.basket.initialPriceValue.toStringAsFixed(0) : '0'}',
-                        const Color(0xFF2196F3),
-                      ),
-                    ),
-                    SizedBox(width: 8.w),
-                    Expanded(
-                      child: _compactPriceBox(
-                        'Current',
-                        '₹${widget.basket.currentPriceValue > 0 ? widget.basket.currentPriceValue.toStringAsFixed(0) : '0'}',
-                        isPositive ? const Color(0xFF4CAF50) : const Color(0xFFE53935),
-                      ),
-                    ),
-                  ],
+                // Price Row - Responsive
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: _compactPriceBox(
+                            'Initial',
+                            '₹${widget.basket.initialPriceValue > 0 ? widget.basket.initialPriceValue.toStringAsFixed(0) : '0'}',
+                            const Color(0xFF2196F3),
+                          ),
+                        ),
+                        SizedBox(width: 10.w),
+                        Expanded(
+                          child: _compactPriceBox(
+                            'Current',
+                            '₹${widget.basket.currentPriceValue > 0 ? widget.basket.currentPriceValue.toStringAsFixed(0) : '0'}',
+                            isPositive
+                                ? const Color(0xFF4CAF50)
+                                : const Color(0xFFE53935),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
-                SizedBox(height: 12.h),
+                SizedBox(height: 14.h),
 
-                // Horse Race Animation - Compact
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      width: cardWidth,
-                      height: 6.h,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(3.r),
-                        color: raceBarColor.withOpacity(0.2),
-                      ),
-                    ),
-                    AnimatedBuilder(
-                      animation: _horseAnimation,
-                      builder: (context, child) {
-                        return Container(
-                          width: _horseAnimation.value * cardWidth,
-                          height: 6.h,
+                // Horse Race Animation - Always Green (Positive Color)
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final availableWidth = constraints.maxWidth;
+
+                    return Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        // Background track
+                        Container(
+                          width: availableWidth,
+                          height: 8.h,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(3.r),
-                            gradient: LinearGradient(
-                              colors: [raceBarColor, raceBarColor.withOpacity(0.7)],
-                            ),
+                            borderRadius: BorderRadius.circular(4.r),
+                            color: raceBarColor.withOpacity(0.2),
                           ),
-                        );
-                      },
-                    ),
-                    AnimatedBuilder(
-                      animation: _horseAnimation,
-                      builder: (context, child) {
-                        final double horsePosition = _horseAnimation.value * cardWidth;
-                        return Positioned(
-                          left: (horsePosition - 20.w).clamp(0.0, cardWidth - 40.w),
-                          top: -28.h,
-                          child: Image.asset(
-                            'assets/images/jt1.gif',
-                            height: 40.h,
-                            width: 45.w,
-                            fit: BoxFit.contain,
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+                        ),
+                        // Animated progress bar - Always green
+                        AnimatedBuilder(
+                          animation: _horseAnimation,
+                          builder: (context, child) {
+                            return Container(
+                              width: _horseAnimation.value * availableWidth,
+                              height: 8.h,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(4.r),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    raceBarColor,
+                                    raceBarColor.withOpacity(0.7),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        // Horse GIF
+                        AnimatedBuilder(
+                          animation: _horseAnimation,
+                          builder: (context, child) {
+                            final double horsePosition =
+                                _horseAnimation.value * availableWidth;
+                            final double horseWidth = 50.w;
+
+                            return Positioned(
+                              left: (horsePosition - horseWidth / 2)
+                                  .clamp(0.0, availableWidth - horseWidth),
+                              top: -32.h,
+                              child: Image.asset(
+                                'assets/images/jt1.gif',
+                                height: 45.h,
+                                width: horseWidth,
+                                fit: BoxFit.contain,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  },
                 ),
-                SizedBox(height: 20.h),
+                SizedBox(height: 24.h),
 
                 // Invested Amount (if subscribed)
                 if (widget.isSubscribed && widget.investedAmount > 0) ...[
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 10.w),
+                    padding: EdgeInsets.symmetric(
+                      vertical: 10.h,
+                      horizontal: 12.w,
+                    ),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
@@ -313,29 +374,51 @@ class _IntraBasketCardState extends State<BasketCard> with SingleTickerProviderS
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.account_balance_wallet, color: typeColor, size: 16.sp),
+                        Icon(
+                          Icons.account_balance_wallet,
+                          color: typeColor,
+                          size: 18.sp,
+                        ),
                         SizedBox(width: 8.w),
-                        Text('Invested: ', style: TextStyle(fontSize: 11.sp, color: Colors.grey[600])),
+                        Text(
+                          'Invested: ',
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: Colors.grey[600],
+                          ),
+                        ),
                         Text(
                           '₹${widget.investedAmount.toStringAsFixed(0)}',
-                          style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.bold, color: typeColor),
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.bold,
+                            color: typeColor,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 10.h),
+                  SizedBox(height: 12.h),
                 ],
 
-                // Chips - Compact
+                // Chips - Responsive Wrap
                 Wrap(
-                  spacing: 6.w,
-                  runSpacing: 6.h,
+                  spacing: 8.w,
+                  runSpacing: 8.h,
                   children: [
-                    _miniChip(widget.basket.subscryptionType, const Color(0xFF2196F3)),
-                    _miniChip(widget.basket.volatility, _getVolatilityColor(widget.basket.volatility)),
+                    _miniChip(
+                      widget.basket.subscryptionType,
+                      const Color(0xFF2196F3),
+                    ),
+                    _miniChip(
+                      widget.basket.volatility,
+                      _getVolatilityColor(widget.basket.volatility),
+                    ),
                     if (!widget.basket.isFree)
-                      _miniChip('₹${widget.basket.subscriptionAmountValue}', typeColor),
-
+                      _miniChip(
+                        '₹${widget.basket.subscriptionAmountValue}',
+                        typeColor,
+                      ),
                   ],
                 ),
               ],
@@ -348,7 +431,7 @@ class _IntraBasketCardState extends State<BasketCard> with SingleTickerProviderS
 
   Widget _compactPriceBox(String label, String value, Color color) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 8.w),
+      padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 10.w),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8.r),
@@ -357,9 +440,22 @@ class _IntraBasketCardState extends State<BasketCard> with SingleTickerProviderS
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: 9.sp, color: Colors.grey[600])),
-          SizedBox(height: 2.h),
-          Text(value, style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold, color: color)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10.sp,
+              color: Colors.grey[600],
+            ),
+          ),
+          SizedBox(height: 3.h),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 13.sp,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
         ],
       ),
     );
@@ -367,13 +463,20 @@ class _IntraBasketCardState extends State<BasketCard> with SingleTickerProviderS
 
   Widget _miniChip(String label, Color color) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: color.withOpacity(0.3)),
       ),
-      child: Text(label, style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.w600, color: color)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11.sp,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
     );
   }
 

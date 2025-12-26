@@ -269,6 +269,10 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
 
   @override
   Widget build(BuildContext context) {
+    // Get screen dimensions for responsive design
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     // Extract price data from basket model
     final double initialPrice = widget.basket.initialPriceValue;
     final double currentPrice = widget.basket.currentPriceValue;
@@ -308,7 +312,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
               // ========== HEADER SECTION ==========
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(20.w),
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -320,21 +324,28 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Basket Name and Subscribed Badge
                     Row(
                       children: [
                         Expanded(
                           child: Text(
                             widget.basket.basketName,
                             style: TextStyle(
-                              fontSize: 20.sp,
+                              fontSize: 18.sp,
                               fontWeight: FontWeight.bold,
                               color: AppColors.onPrimaryColor,
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (widget.isSubscribed)
+                        if (widget.isSubscribed) ...[
+                          SizedBox(width: 8.w),
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 10.w,
+                              vertical: 6.h,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.primaryGold,
                               borderRadius: BorderRadius.circular(20.r),
@@ -345,100 +356,120 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                                 Icon(
                                   Icons.verified,
                                   color: AppColors.onPrimaryColor,
-                                  size: 16.sp,
+                                  size: 14.sp,
                                 ),
                                 SizedBox(width: 4.w),
                                 Text(
                                   'Subscribed',
                                   style: TextStyle(
                                     color: AppColors.onPrimaryColor,
-                                    fontSize: 11.sp,
+                                    fontSize: 10.sp,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ],
                             ),
                           ),
+                        ],
                       ],
                     ),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 14.h),
 
                     // ========== PRICE PERFORMANCE SECTION ==========
                     if (hasPriceData) ...[
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              padding: EdgeInsets.all(12.w),
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryColor.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(12.r),
-                                border: Border.all(
-                                  color: AppColors.onPrimaryColor.withOpacity(0.3),
-                                  width: 1,
+                      // Price boxes with LayoutBuilder for responsiveness
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: EdgeInsets.all(12.w),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryColor.withOpacity(0.3),
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    border: Border.all(
+                                      color: AppColors.onPrimaryColor.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Initial Price',
+                                        style: TextStyle(
+                                          fontSize: 10.sp,
+                                          color: AppColors.onPrimaryColor.withOpacity(0.7),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      SizedBox(height: 4.h),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          '₹${initialPrice.toStringAsFixed(2)}',
+                                          style: TextStyle(
+                                            fontSize: 16.sp,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.onPrimaryColor,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Initial Price',
-                                    style: TextStyle(
-                                      fontSize: 11.sp,
-                                      color: AppColors.onPrimaryColor.withOpacity(0.7),
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: Container(
+                                  padding: EdgeInsets.all(12.w),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryColor.withOpacity(0.3),
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    border: Border.all(
+                                      color: AppColors.onPrimaryColor.withOpacity(0.3),
+                                      width: 1,
                                     ),
                                   ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    '₹${initialPrice.toStringAsFixed(2)}',
-                                    style: TextStyle(
-                                      fontSize: 18.sp,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.onPrimaryColor,
-                                    ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Current Price',
+                                        style: TextStyle(
+                                          fontSize: 10.sp,
+                                          color: AppColors.onPrimaryColor.withOpacity(0.7),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      SizedBox(height: 4.h),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          '₹${currentPrice.toStringAsFixed(2)}',
+                                          style: TextStyle(
+                                            fontSize: 16.sp,
+                                            fontWeight: FontWeight.bold,
+                                            color: isPositive ? AppColors.success : AppColors.error,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 12.w),
-                          Expanded(
-                            child: Container(
-                              padding: EdgeInsets.all(12.w),
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryColor.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(12.r),
-                                border: Border.all(
-                                  color: AppColors.onPrimaryColor.withOpacity(0.3),
-                                  width: 1,
                                 ),
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Current Price',
-                                    style: TextStyle(
-                                      fontSize: 11.sp,
-                                      color: AppColors.onPrimaryColor.withOpacity(0.7),
-                                    ),
-                                  ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    '₹${currentPrice.toStringAsFixed(2)}',
-                                    style: TextStyle(
-                                      fontSize: 18.sp,
-                                      fontWeight: FontWeight.bold,
-                                      color: isPositive ? AppColors.success : AppColors.error,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+                            ],
+                          );
+                        },
                       ),
                       SizedBox(height: 12.h),
+
+                      // Performance indicator
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                         decoration: BoxDecoration(
@@ -453,23 +484,28 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                             Icon(
                               isPositive ? Icons.trending_up : Icons.trending_down,
                               color: isPositive ? AppColors.success : AppColors.error,
-                              size: 20.sp,
+                              size: 18.sp,
                             ),
-                            SizedBox(width: 8.w),
-                            Text(
-                              '${isPositive ? '+' : ''}${performance.toStringAsFixed(2)}%',
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.bold,
-                                color: isPositive ? AppColors.success : AppColors.error,
+                            SizedBox(width: 6.w),
+                            Flexible(
+                              child: Text(
+                                '${isPositive ? '+' : ''}${performance.toStringAsFixed(2)}%',
+                                style: TextStyle(
+                                  fontSize: 15.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: isPositive ? AppColors.success : AppColors.error,
+                                ),
                               ),
                             ),
                             SizedBox(width: 4.w),
-                            Text(
-                              '(₹${widget.basket.priceChangeAmount.toStringAsFixed(2)})',
-                              style: TextStyle(
-                                fontSize: 13.sp,
-                                color: (isPositive ? AppColors.success : AppColors.error).withOpacity(0.8),
+                            Flexible(
+                              child: Text(
+                                '(₹${widget.basket.priceChangeAmount.toStringAsFixed(2)})',
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: (isPositive ? AppColors.success : AppColors.error).withOpacity(0.8),
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
@@ -487,14 +523,14 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                             Icon(
                               Icons.info_outline,
                               color: AppColors.secondaryText,
-                              size: 20.sp,
+                              size: 18.sp,
                             ),
                             SizedBox(width: 8.w),
                             Expanded(
                               child: Text(
                                 'Price data not available yet',
                                 style: TextStyle(
-                                  fontSize: 13.sp,
+                                  fontSize: 12.sp,
                                   color: AppColors.secondaryText,
                                 ),
                               ),
@@ -504,6 +540,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                       ),
                     ],
 
+                    // Invested amount section
                     if (widget.isSubscribed && widget.investedAmount > 0) ...[
                       SizedBox(height: 12.h),
                       Container(
@@ -527,29 +564,36 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                               child: Icon(
                                 Icons.account_balance_wallet,
                                 color: AppColors.onPrimaryColor,
-                                size: 20.sp,
+                                size: 18.sp,
                               ),
                             ),
                             SizedBox(width: 12.w),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Total Invested',
-                                  style: TextStyle(
-                                    fontSize: 11.sp,
-                                    color: AppColors.onPrimaryColor.withOpacity(0.7),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Total Invested',
+                                    style: TextStyle(
+                                      fontSize: 10.sp,
+                                      color: AppColors.onPrimaryColor.withOpacity(0.7),
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  '₹${widget.investedAmount.toStringAsFixed(0)}',
-                                  style: TextStyle(
-                                    fontSize: 18.sp,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.onPrimaryColor,
+                                  SizedBox(height: 2.h),
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      '₹${widget.investedAmount.toStringAsFixed(0)}',
+                                      style: TextStyle(
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.onPrimaryColor,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -563,7 +607,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
               Expanded(
                 child: ListView(
                   controller: controller,
-                  padding: EdgeInsets.all(20.w),
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
                   children: [
                     _sectionTitle('Basket Information'),
                     SizedBox(height: 12.h),
@@ -574,7 +618,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
 
                     // Only show holdings section if navigateToInvest is true
                     if (widget.navigateToInvest) ...[
-                      SizedBox(height: 24.h),
+                      SizedBox(height: 20.h),
 
                       _sectionTitle('Holdings (${widget.basket.holdings.length})'),
                       SizedBox(height: 12.h),
@@ -587,7 +631,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                               'No holdings added yet',
                               style: TextStyle(
                                 color: AppColors.secondaryText,
-                                fontSize: 14.sp,
+                                fontSize: 13.sp,
                               ),
                             ),
                           ),
@@ -618,7 +662,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                                     child: Icon(
                                       Icons.show_chart,
                                       color: AppColors.primaryGold,
-                                      size: 24.sp,
+                                      size: 22.sp,
                                     ),
                                   ),
                                   SizedBox(width: 12.w),
@@ -630,14 +674,17 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                                           h.fullName,
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 14.sp,
+                                            fontSize: 13.sp,
                                             color: AppColors.headingText,
                                           ),
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                         ),
-                                        SizedBox(height: 2.h),
-                                        Row(
+                                        SizedBox(height: 4.h),
+                                        Wrap(
+                                          spacing: 6.w,
+                                          runSpacing: 4.h,
+                                          crossAxisAlignment: WrapCrossAlignment.center,
                                           children: [
                                             Container(
                                               padding: EdgeInsets.symmetric(
@@ -651,17 +698,16 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                                               child: Text(
                                                 h.symbol,
                                                 style: TextStyle(
-                                                  fontSize: 11.sp,
+                                                  fontSize: 10.sp,
                                                   fontWeight: FontWeight.w600,
                                                   color: AppColors.primaryColor,
                                                 ),
                                               ),
                                             ),
-                                            SizedBox(width: 6.w),
                                             Text(
                                               '${h.holdinPercentage}%',
                                               style: TextStyle(
-                                                fontSize: 12.sp,
+                                                fontSize: 11.sp,
                                                 fontWeight: FontWeight.w600,
                                                 color: AppColors.primaryGold,
                                               ),
@@ -716,14 +762,14 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                                                 children: [
                                                   Icon(
                                                     Icons.trending_up,
-                                                    size: 14.sp,
+                                                    size: 13.sp,
                                                     color: AppColors.success,
                                                   ),
                                                   SizedBox(width: 4.w),
                                                   Text(
                                                     'Target',
                                                     style: TextStyle(
-                                                      fontSize: 10.sp,
+                                                      fontSize: 9.sp,
                                                       color: AppColors.secondaryText,
                                                       fontWeight: FontWeight.w500,
                                                     ),
@@ -731,12 +777,15 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                                                 ],
                                               ),
                                               SizedBox(height: 4.h),
-                                              Text(
-                                                '₹${h.tgtPrice}',
-                                                style: TextStyle(
-                                                  fontSize: 15.sp,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: AppColors.success,
+                                              FittedBox(
+                                                fit: BoxFit.scaleDown,
+                                                child: Text(
+                                                  '₹${h.tgtPrice}',
+                                                  style: TextStyle(
+                                                    fontSize: 14.sp,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: AppColors.success,
+                                                  ),
                                                 ),
                                               ),
                                             ],
@@ -763,14 +812,14 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                                                 children: [
                                                   Icon(
                                                     Icons.trending_down,
-                                                    size: 14.sp,
+                                                    size: 13.sp,
                                                     color: AppColors.error,
                                                   ),
                                                   SizedBox(width: 4.w),
                                                   Text(
                                                     'Stop Loss',
                                                     style: TextStyle(
-                                                      fontSize: 10.sp,
+                                                      fontSize: 9.sp,
                                                       color: AppColors.secondaryText,
                                                       fontWeight: FontWeight.w500,
                                                     ),
@@ -778,12 +827,15 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                                                 ],
                                               ),
                                               SizedBox(height: 4.h),
-                                              Text(
-                                                '₹${h.slPrice}',
-                                                style: TextStyle(
-                                                  fontSize: 15.sp,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: AppColors.error,
+                                              FittedBox(
+                                                fit: BoxFit.scaleDown,
+                                                child: Text(
+                                                  '₹${h.slPrice}',
+                                                  style: TextStyle(
+                                                    fontSize: 14.sp,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: AppColors.error,
+                                                  ),
                                                 ),
                                               ),
                                             ],
@@ -805,7 +857,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
 
               // ========== BOTTOM ACTION BUTTON ==========
               Container(
-                padding: EdgeInsets.all(20.w),
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
                 decoration: BoxDecoration(
                   color: AppColors.cardBackground,
                   border: Border(
@@ -815,144 +867,150 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                     ),
                   ),
                 ),
-                child: widget.isSubscribed
-                    ? widget.navigateToInvest
-                    ? // Show "Invest" button if navigateToInvest is true
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: ElevatedButton.icon(
-                        onPressed: _isLoading ? null : _navigateToInvestScreen,
-                        icon: _isLoading
-                            ? SizedBox(
-                          width: 18.w,
-                          height: 18.h,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.onPrimaryColor,
+                child: SafeArea(
+                  top: false,
+                  child: widget.isSubscribed
+                      ? widget.navigateToInvest
+                      ? // Show "Invest" button if navigateToInvest is true
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton.icon(
+                          onPressed: _isLoading ? null : _navigateToInvestScreen,
+                          icon: _isLoading
+                              ? SizedBox(
+                            width: 18.w,
+                            height: 18.h,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.onPrimaryColor,
+                            ),
+                          )
+                              : Icon(Icons.add_circle_outline, size: 18.sp),
+                          label: Text(
+                            _isLoading ? 'Checking...' : 'Invest',
+                            style: TextStyle(fontSize: 14.sp),
                           ),
-                        )
-                            : Icon(Icons.add_circle_outline, size: 20.sp),
-                        label: Text(_isLoading ? 'Checking...' : 'Invest'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryGold,
-                          foregroundColor: AppColors.onPrimaryColor,
-                          padding: EdgeInsets.symmetric(vertical: 16.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryGold,
+                            foregroundColor: AppColors.onPrimaryColor,
+                            padding: EdgeInsets.symmetric(vertical: 14.h),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            elevation: 2,
                           ),
-                          elevation: 2,
                         ),
                       ),
-                    ),
-                    SizedBox(width: 12.w),
-                  ],
-                )
-                    : // Show message card if navigateToInvest is false
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MyBasketScreen(
-                          showBackButton: true,
+                      SizedBox(width: 12.w),
+                    ],
+                  )
+                      : // Show message card if navigateToInvest is false
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MyBasketScreen(
+                            showBackButton: true,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: EdgeInsets.all(14.w),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.success.withOpacity(0.1),
+                            AppColors.primaryGold.withOpacity(0.1),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: AppColors.primaryGold.withOpacity(0.3),
+                          width: 1.5,
                         ),
                       ),
-                    );
-                  },
-                  child: Container(
-                    padding: EdgeInsets.all(16.w),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.success.withOpacity(0.1),
-                          AppColors.primaryGold.withOpacity(0.1),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(8.w),
+                            decoration: BoxDecoration(
+                              color: AppColors.success,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.check_circle,
+                              color: AppColors.onPrimaryColor,
+                              size: 20.sp,
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Basket Subscribed Successfully!',
+                                  style: TextStyle(
+                                    fontSize: 13.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.success,
+                                  ),
+                                ),
+                                SizedBox(height: 3.h),
+                                Text(
+                                  'Go to My Baskets to invest in this basket',
+                                  style: TextStyle(
+                                    fontSize: 11.sp,
+                                    color: AppColors.secondaryText,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            color: AppColors.primaryGold,
+                            size: 16.sp,
+                          ),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(
-                        color: AppColors.primaryGold.withOpacity(0.3),
-                        width: 1.5,
-                      ),
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(10.w),
-                          decoration: BoxDecoration(
-                            color: AppColors.success,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.check_circle,
-                            color: AppColors.onPrimaryColor,
-                            size: 24.sp,
-                          ),
+                  )
+                      : // Show "Subscribe" button if not subscribed
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _isLoading ? null : _handleSubscribe,
+                      icon: _isLoading
+                          ? SizedBox(
+                        width: 20.w,
+                        height: 20.h,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.onPrimaryColor,
                         ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Basket Subscribed Successfully!',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.success,
-                                ),
-                              ),
-                              SizedBox(height: 4.h),
-                              Text(
-                                'Go to My Baskets to invest in this basket',
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  color: AppColors.secondaryText,
-                                ),
-                              ),
-                            ],
-                          ),
+                      )
+                          : Icon(Icons.check_circle, size: 20.sp),
+                      label: Text(
+                        _isLoading ? 'Subscribing...' : 'Subscribe to Basket',
+                        style: TextStyle(
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.bold,
                         ),
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          color: AppColors.primaryGold,
-                          size: 18.sp,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryGold,
+                        foregroundColor: AppColors.onPrimaryColor,
+                        padding: EdgeInsets.symmetric(vertical: 16.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
                         ),
-                      ],
-                    ),
-                  ),
-                )
-                    : // Show "Subscribe" button if not subscribed
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _isLoading ? null : _handleSubscribe,
-                    icon: _isLoading
-                        ? SizedBox(
-                      width: 20.w,
-                      height: 20.h,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.onPrimaryColor,
+                        elevation: 4,
                       ),
-                    )
-                        : Icon(Icons.check_circle, size: 22.sp),
-                    label: Text(
-                      _isLoading ? 'Subscribing...' : 'Subscribe to Basket',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryGold,
-                      foregroundColor: AppColors.onPrimaryColor,
-                      padding: EdgeInsets.symmetric(vertical: 18.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      elevation: 4,
                     ),
                   ),
                 ),
@@ -968,7 +1026,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
     return Text(
       title,
       style: TextStyle(
-        fontSize: 16.sp,
+        fontSize: 15.sp,
         fontWeight: FontWeight.bold,
         color: AppColors.headingText,
       ),
@@ -980,20 +1038,29 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
       padding: EdgeInsets.only(bottom: 8.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 13.sp,
-              color: AppColors.secondaryText,
+          Expanded(
+            flex: 3,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: AppColors.secondaryText,
+              ),
             ),
           ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 13.sp,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primaryText,
+          SizedBox(width: 8.w),
+          Expanded(
+            flex: 2,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primaryText,
+              ),
+              textAlign: TextAlign.right,
             ),
           ),
         ],
@@ -1017,7 +1084,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
         children: [
           Icon(
             icon,
-            size: 14.sp,
+            size: 13.sp,
             color: AppColors.secondaryText,
           ),
           SizedBox(width: 6.w),
@@ -1031,11 +1098,14 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                     fontSize: 9.sp,
                     color: AppColors.secondaryText,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
+                SizedBox(height: 2.h),
                 Text(
                   value,
                   style: TextStyle(
-                    fontSize: 11.sp,
+                    fontSize: 10.sp,
                     fontWeight: FontWeight.w600,
                     color: AppColors.primaryText,
                   ),

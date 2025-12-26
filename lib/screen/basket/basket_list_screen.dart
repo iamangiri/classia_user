@@ -12,7 +12,7 @@ class BasketListScreen extends StatefulWidget {
 
   const BasketListScreen({
     super.key,
-    this.showBackButton = false, // Default to false
+    this.showBackButton = false,
   });
 
   @override
@@ -25,7 +25,7 @@ class _BasketListScreenState extends State<BasketListScreen> {
   Future<List<Basket>>? _futureMyBaskets;
   final bool _isMarketOpen = true;
 
-  // ✅ FIXED: Tab order changed - 0=INTRAHOUR, 1=INTRADAY, 2=DELIVERY
+
   int _currentIndex = 0;
   Set<int> _subscribedBasketIds = {};
 

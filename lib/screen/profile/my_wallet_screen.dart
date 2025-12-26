@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:classia_amc/themes/app_colors.dart';
 import 'package:classia_amc/widget/common_app_bar.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../service/apiservice/wallet_service.dart';
+import 'transaction_details_screen.dart'; // ✅ Import transaction details screen
 
 class MyWalletScreen extends StatefulWidget {
   const MyWalletScreen({Key? key}) : super(key: key);
@@ -68,7 +68,6 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
 
       if (result['status'] == true && result['data'] != null) {
         final data = result['data'];
-        // Use mainBalance from the API response
         final balance = data['mainBalance'];
         setState(() {
           walletBalance = double.tryParse(balance?.toString() ?? '0') ?? 0.0;
@@ -157,7 +156,6 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
     } else {
       filteredTransactions = transactions.where((txn) {
         final type = txn['transactionType']?.toString().toUpperCase() ?? '';
-        // Map "Withdraw" filter to "SUBSCRIPTION" type from API
         if (selectedFilter.toUpperCase() == "WITHDRAW") {
           return type == "SUBSCRIPTION";
         }
@@ -190,8 +188,6 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
       print('Basket Deposit API Response: $depositResponse');
 
       _amountController.clear();
-
-      // Reload wallet data (balance + transactions)
       await _loadWalletData();
 
       if (mounted) {
@@ -675,7 +671,6 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
         final isDeposit = type == 'DEPOSIT';
         final amount = double.tryParse(txn['amount']?.toString() ?? '0') ?? 0.0;
 
-        // Handle transactionData - it can be a Map or contain nested data
         final transactionData = txn['transactionData'];
         String paymentId = 'N/A';
         String method = 'WALLET';
@@ -684,11 +679,9 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
           paymentId = transactionData['paymentId']?.toString() ?? 'N/A';
           method = transactionData['method']?.toString() ?? 'WALLET';
 
-          // If amount is 0, try to get it from transactionData
           if (amount == 0.0 && transactionData['amount'] != null) {
             final dataAmount = double.tryParse(transactionData['amount']?.toString() ?? '0') ?? 0.0;
             if (dataAmount > 0) {
-              // Update the amount variable for display
               txn['amount'] = dataAmount.toString();
             }
           }
@@ -703,108 +696,125 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
           date = DateTime.now();
         }
 
-        // Get the final amount for display
         final displayAmount = double.tryParse(txn['amount']?.toString() ?? '0') ?? 0.0;
 
-        return Container(
-          margin: EdgeInsets.only(bottom: 12.h),
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(
-              color: isDeposit ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(10.w),
-                decoration: BoxDecoration(
-                  color: (isDeposit ? Colors.green : Colors.red).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
-                child: Icon(
-                  isDeposit ? Icons.add_circle : Icons.remove_circle,
-                  color: isDeposit ? Colors.green : Colors.red,
-                  size: 24.sp,
-                ),
+        return InkWell(
+          // ✅ Added onTap to navigate to transaction details
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TransactionDetailsScreen(transaction: txn),
               ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isDeposit ? 'Wallet Deposit' : 'Basket Subscription',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15.sp,
-                        color: AppColors.primaryText,
+            );
+          },
+          child: Container(
+            margin: EdgeInsets.only(bottom: 12.h),
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: AppColors.cardBackground,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(
+                color: isDeposit ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(10.w),
+                  decoration: BoxDecoration(
+                    color: (isDeposit ? Colors.green : Colors.red).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                  child: Icon(
+                    isDeposit ? Icons.add_circle : Icons.remove_circle,
+                    color: isDeposit ? Colors.green : Colors.red,
+                    size: 24.sp,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isDeposit ? 'Wallet Deposit' : 'Basket Subscription',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15.sp,
+                          color: AppColors.primaryText,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      DateFormat('dd MMM yyyy, hh:mm a').format(date),
-                      style: TextStyle(fontSize: 12.sp, color: AppColors.secondaryText),
-                    ),
-                    SizedBox(height: 2.h),
-                    Row(
-                      children: [
-                        Icon(Icons.payment, size: 10.sp, color: AppColors.secondaryText),
-                        SizedBox(width: 4.w),
-                        Text(
-                          method.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 10.sp,
-                            color: AppColors.secondaryText,
-                            fontWeight: FontWeight.w500,
+                      SizedBox(height: 4.h),
+                      Text(
+                        DateFormat('dd MMM yyyy, hh:mm a').format(date),
+                        style: TextStyle(fontSize: 12.sp, color: AppColors.secondaryText),
+                      ),
+                      SizedBox(height: 2.h),
+                      Row(
+                        children: [
+                          Icon(Icons.payment, size: 10.sp, color: AppColors.secondaryText),
+                          SizedBox(width: 4.w),
+                          Text(
+                            method.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 10.sp,
+                              color: AppColors.secondaryText,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
+                        ],
+                      ),
+                      if (paymentId != 'N/A' && paymentId != 'null') ...[
+                        SizedBox(height: 2.h),
+                        Text(
+                          'Payment ID: $paymentId',
+                          style: TextStyle(fontSize: 9.sp, color: AppColors.secondaryText),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
-                    ),
-                    if (paymentId != 'N/A' && paymentId != 'null') ...[
-                      SizedBox(height: 2.h),
-                      Text(
-                        'Payment ID: $paymentId',
-                        style: TextStyle(fontSize: 9.sp, color: AppColors.secondaryText),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
                     ],
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${isDeposit ? '+' : '-'}₹${displayAmount.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16.sp,
-                      color: isDeposit ? Colors.green : Colors.red,
-                    ),
                   ),
-                  SizedBox(height: 4.h),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-                    decoration: BoxDecoration(
-                      color: (isDeposit ? Colors.green : Colors.red).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(4.r),
-                    ),
-                    child: Text(
-                      type,
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${isDeposit ? '+' : '-'}₹${displayAmount.toStringAsFixed(2)}',
                       style: TextStyle(
-                        fontSize: 10.sp,
                         fontWeight: FontWeight.bold,
+                        fontSize: 16.sp,
                         color: isDeposit ? Colors.green : Colors.red,
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                    SizedBox(height: 4.h),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                      decoration: BoxDecoration(
+                        color: (isDeposit ? Colors.green : Colors.red).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                      child: Text(
+                        type,
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.bold,
+                          color: isDeposit ? Colors.green : Colors.red,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(width: 8.w),
+                // ✅ Added arrow icon to indicate it's clickable
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 14.sp,
+                  color: AppColors.secondaryText,
+                ),
+              ],
+            ),
           ),
         );
       },

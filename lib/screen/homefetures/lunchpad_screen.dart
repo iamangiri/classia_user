@@ -11,158 +11,110 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
   final ScrollController _scrollController = ScrollController();
   String _sortBy = 'title';
   bool _showFavoritesOnly = false;
+  bool _isLoading = false;
 
-  // F&O Data for Mutual Funds
-  final List<Map<String, dynamic>> foMutualFunds = [
-    {
-      'fundName': 'HDFC Nifty 50 ETF',
-      'symbol': 'HDFCNIFTY',
-      'premium': 2.5,
-      'strikePrice': 185.50,
-      'expiry': '25 Dec 2025',
-      'volume': 15420,
-      'openInterest': 8250,
-      'changePercent': 3.2,
-      'type': 'CALL',
-      'color': Colors.green,
-      'category': 'ETF',
-    },
-    {
-      'fundName': 'SBI Banking ETF',
-      'symbol': 'SBIBANK',
-      'premium': 1.8,
-      'strikePrice': 45.25,
-      'expiry': '30 Dec 2025',
-      'volume': 12300,
-      'openInterest': 6500,
-      'changePercent': -1.5,
-      'type': 'PUT',
-      'color': Colors.red,
-      'category': 'ETF',
-    },
-    {
-      'fundName': 'ICICI Prudential Nifty Next 50',
-      'symbol': 'ICICIN50',
-      'premium': 3.1,
-      'strikePrice': 78.90,
-      'expiry': '28 Dec 2025',
-      'volume': 18750,
-      'openInterest': 9800,
-      'changePercent': 2.8,
-      'type': 'CALL',
-      'color': Colors.green,
-      'category': 'ETF',
-    },
-  ];
-
-  // Recent Launched Funds
-  final List<Map<String, dynamic>> recentLaunchedFunds = [
-    {
-      'fundName': 'Axis ESG Equity Fund',
-      'launchDate': '15 Dec 2024',
-      'category': 'ESG Equity',
-      'minSip': 500,
-      'minInvestment': 5000,
-      'expenseRatio': 1.25,
-      'fundManager': 'Rahul Baijal',
-      'aum': 150.5,
-      'rating': 4,
-      'nav': 10.0,
-      'description': 'Invests in companies following ESG principles with strong sustainability practices',
-      'keyFeatures': ['ESG Focused', 'Long-term Growth', 'Sustainable Investing'],
-      'color': const Color(0xFF10B981),
-      'icon': Icons.eco_outlined,
-    },
-    {
-      'fundName': 'HDFC Technology Fund',
-      'launchDate': '20 Nov 2024',
-      'category': 'Sectoral Equity',
-      'minSip': 1000,
-      'minInvestment': 10000,
-      'expenseRatio': 1.50,
-      'fundManager': 'Chirag Setalvad',
-      'aum': 250.8,
-      'rating': 5,
-      'nav': 10.0,
-      'description': 'Focused on technology and innovation sector companies with high growth potential',
-      'keyFeatures': ['Tech Focus', 'Innovation', 'High Growth'],
-      'color': const Color(0xFF6366F1),
-      'icon': Icons.computer_outlined,
-    },
-    {
-      'fundName': 'SBI Healthcare Fund',
-      'launchDate': '10 Jan 2025',
-      'category': 'Sectoral Equity',
-      'minSip': 500,
-      'minInvestment': 5000,
-      'expenseRatio': 1.35,
-      'fundManager': 'Dinesh Ahuja',
-      'aum': 85.2,
-      'rating': 4,
-      'nav': 10.0,
-      'description': 'Invests in pharmaceutical and healthcare sector companies',
-      'keyFeatures': ['Healthcare Focus', 'Defensive Play', 'Demographic Advantage'],
-      'color': const Color(0xFFEF4444),
-      'icon': Icons.medical_services_outlined,
-    },
-  ];
-
-  final List<Map<String, dynamic>> upcomingFeatures = [
-    {
-      'title': 'AI-Powered Portfolio Advisory',
-      'progress': 0.85,
-      'color': const Color(0xFF8B5CF6),
-      'details': {
-        'description': 'Get personalized investment recommendations powered by artificial intelligence and machine learning.',
-        'keyPoints': ['Smart Recommendations', 'Risk Assessment', 'Goal-based Planning'],
-        'releaseDate': 'Q1 2025',
-        'strategies': ['Portfolio optimization', 'Risk diversification', 'Goal alignment'],
-        'videoUrl': 'https://example.com/ai-advisory-video',
-        'resources': [
-          {'title': 'AI in Finance Guide', 'url': 'https://www.investopedia.com'},
-          {'title': 'Robo Advisory Benefits', 'url': 'https://www.morningstar.com'},
-        ],
-      },
-    },
-    {
-      'title': 'Real-time Market Alerts',
-      'progress': 0.6,
-      'color': const Color(0xFFF59E0B),
-      'details': {
-        'description': 'Get instant notifications about market movements, fund performance changes, and investment opportunities.',
-        'keyPoints': ['Smart Alerts', 'Custom Triggers', 'Multi-channel Notifications'],
-        'releaseDate': 'Q2 2025',
-        'strategies': ['Set price alerts', 'Monitor volatility', 'Track performance'],
-        'videoUrl': 'https://example.com/alerts-video',
-        'resources': [
-          {'title': 'Market Alert Strategies', 'url': 'https://www.valueresearchonline.com'},
-          {'title': 'Investment Monitoring', 'url': 'https://www.moneycontrol.com'},
-        ],
-      },
-    },
-    {
-      'title': 'Social Investment Community',
-      'progress': 0.4,
-      'color': const Color(0xFF10B981),
-      'details': {
-        'description': 'Connect with fellow investors, share insights, and learn from experienced mutual fund investors.',
-        'keyPoints': ['Investor Forums', 'Strategy Sharing', 'Expert Insights'],
-        'releaseDate': 'Q3 2025',
-        'strategies': ['Join discussions', 'Follow experts', 'Share experiences'],
-        'videoUrl': 'https://example.com/community-video',
-        'resources': [
-          {'title': 'Investment Communities', 'url': 'https://www.reddit.com/r/investing'},
-          {'title': 'Social Trading Guide', 'url': 'https://www.investopedia.com'},
-        ],
-      },
-    },
-  ];
+  // Real features data
+  List<Map<String, dynamic>> foMutualFunds = [];
+  List<Map<String, dynamic>> recentLaunchedFunds = [];
+  List<Map<String, dynamic>> upcomingFeatures = [];
 
   Map<String, bool> _favorites = {};
 
   @override
   void initState() {
     super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      // Load real features
+      _loadUpcomingFeatures();
+      _initializeFavorites();
+
+      // TODO: Load F&O data from API
+      // await _loadFOData();
+
+      // TODO: Load recent funds from API
+      // await _loadRecentFunds();
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _loadUpcomingFeatures() {
+    upcomingFeatures = [
+
+
+      {
+        'title': 'Profit in Hours',
+        'progress': 0.90,
+        'color': const Color(0xFFF59E0B),
+        'details': {
+          'description': 'Execute quick trades and capture market movements within hours. Perfect for active traders looking for short-term opportunities.',
+          'keyPoints': ['Fast Execution', 'Real-time Analytics', 'Smart Alerts'],
+          'releaseDate': 'Q1 2025',
+          'strategies': ['Scalping strategies', 'News-based trading', 'Technical analysis'],
+          'videoUrl': '',
+          'resources': [
+            {'title': 'Short-term Trading', 'url': 'https://www.zerodha.com'},
+            {'title': 'Market Timing Guide', 'url': 'https://www.upstox.com'},
+          ],
+        },
+      },
+      {
+        'title': 'Smart Portfolio Rebalancing',
+        'progress': 0.75,
+        'color': const Color(0xFF8B5CF6),
+        'details': {
+          'description': 'Automatically rebalance your portfolio based on market conditions and your investment goals. Keep your portfolio optimized.',
+          'keyPoints': ['Auto-Rebalancing', 'Tax Optimization', 'Goal Alignment'],
+          'releaseDate': 'Q2 2025',
+          'strategies': ['Threshold rebalancing', 'Periodic rebalancing', 'Tax-loss harvesting'],
+          'videoUrl': '',
+          'resources': [
+            {'title': 'Portfolio Rebalancing', 'url': 'https://www.morningstar.com'},
+            {'title': 'Tax-efficient Investing', 'url': 'https://www.valueresearchonline.com'},
+          ],
+        },
+      },
+      {
+        'title': 'AI-Powered Recommendations',
+        'progress': 0.60,
+        'color': const Color(0xFF6366F1),
+        'details': {
+          'description': 'Get personalized investment recommendations powered by artificial intelligence. Smart suggestions based on your risk profile and goals.',
+          'keyPoints': ['Personalized Insights', 'Risk Assessment', 'Goal Planning'],
+          'releaseDate': 'Q2 2025',
+          'strategies': ['AI fund selection', 'Risk profiling', 'Performance prediction'],
+          'videoUrl': '',
+          'resources': [
+            {'title': 'AI in Finance', 'url': 'https://www.investopedia.com'},
+            {'title': 'Robo Advisory Guide', 'url': 'https://www.moneycontrol.com'},
+          ],
+        },
+      },
+      {
+        'title': 'Social Investment Community',
+        'progress': 0.40,
+        'color': const Color(0xFF14B8A6),
+        'details': {
+          'description': 'Connect with fellow investors, share insights, and learn from experienced traders. Join discussion forums and follow top performers.',
+          'keyPoints': ['Community Forums', 'Expert Insights', 'Strategy Sharing'],
+          'releaseDate': 'Q3 2025',
+          'strategies': ['Follow leaders', 'Discussion boards', 'Portfolio sharing'],
+          'videoUrl': '',
+          'resources': [
+            {'title': 'Investment Communities', 'url': 'https://www.reddit.com/r/investing'},
+            {'title': 'Social Trading', 'url': 'https://www.etoro.com'},
+          ],
+        },
+      },
+    ];
+  }
+
+  void _initializeFavorites() {
     for (var feature in upcomingFeatures) {
       _favorites[feature['title']] = false;
     }
@@ -179,37 +131,45 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
 
   List<Map<String, dynamic>> get _filteredFeatures {
     var filtered = upcomingFeatures.where((feature) {
-      final matchesFavorite = !_showFavoritesOnly || _favorites[feature['title']]!;
+      final matchesFavorite = !_showFavoritesOnly || (_favorites[feature['title']] ?? false);
       return matchesFavorite;
     }).toList();
 
     filtered.sort((a, b) {
       if (_sortBy == 'progress') {
-        return b['progress'].compareTo(a['progress']);
+        return (b['progress'] ?? 0).compareTo(a['progress'] ?? 0);
       } else if (_sortBy == 'releaseDate') {
-        return a['details']['releaseDate'].compareTo(b['details']['releaseDate']);
+        return (a['details']['releaseDate'] ?? '').compareTo(b['details']['releaseDate'] ?? '');
       }
-      return a['title'].compareTo(b['title']);
+      return (a['title'] ?? '').compareTo(b['title'] ?? '');
     });
 
     return filtered;
   }
+
+  bool get _isLandscape => MediaQuery.of(context).orientation == Orientation.landscape;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: _buildModernAppBar(),
-      body: SingleChildScrollView(
-        controller: _scrollController,
-        child: Column(
-          children: [
-            _buildHeroSection(),
-            _buildFOSection(),
-            _buildRecentLaunchedFunds(),
-            _buildUpcomingFeaturesSection(),
-            SizedBox(height: 24.h),
-          ],
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+        onRefresh: _loadData,
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          physics: AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              _buildHeroSection(),
+              if (foMutualFunds.isNotEmpty) _buildFOSection(),
+              if (recentLaunchedFunds.isNotEmpty) _buildRecentLaunchedFunds(),
+              _buildUpcomingFeaturesSection(),
+              SizedBox(height: 24.h),
+            ],
+          ),
         ),
       ),
       floatingActionButton: _buildModernFab(),
@@ -221,20 +181,20 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
       title: Text(
         'Investment Launchpad',
         style: TextStyle(
-          fontSize: 19.sp,
+          fontSize: _isLandscape ? 16.sp : 19.sp,
           fontWeight: FontWeight.bold,
-          color: AppColors.primaryGold,
+          color: Colors.white,
         ),
       ),
       backgroundColor: Colors.transparent,
       elevation: 0,
-      iconTheme: IconThemeData(color: AppColors.primaryGold, size: 24.sp), // 👈 sets back icon color & size
+      iconTheme: IconThemeData(color: Colors.white, size: 24.sp),
       flexibleSpace: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
               AppColors.primaryColor ?? Colors.blue,
-              AppColors.primaryColor ?? const Color(0xFFDAA520),
+              AppColors.primaryGold ?? const Color(0xFFDAA520),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -243,22 +203,23 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
       ),
       actions: [
         IconButton(
-          icon: Icon(Icons.notifications_outlined, color: AppColors.primaryGold, size: 24.sp),
+          icon: Icon(Icons.notifications_outlined, color: Colors.white, size: 22.sp),
           onPressed: _showNotifications,
+          tooltip: 'Notifications',
         ),
         IconButton(
-          icon: Icon(Icons.filter_list_alt, color: AppColors.primaryGold, size: 24.sp),
+          icon: Icon(Icons.filter_list_alt, color: Colors.white, size: 22.sp),
           onPressed: _showFilterModal,
+          tooltip: 'Filter',
         ),
       ],
     );
   }
 
-
   Widget _buildHeroSection() {
     return Container(
-      margin: EdgeInsets.all(20.w),
-      padding: EdgeInsets.all(24.w),
+      margin: EdgeInsets.all(_isLandscape ? 16.w : 20.w),
+      padding: EdgeInsets.all(_isLandscape ? 20.w : 24.w),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -268,99 +229,121 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24.r),
+        borderRadius: BorderRadius.circular(20.r),
         border: Border.all(
           color: AppColors.primaryColor?.withOpacity(0.2) ?? Colors.blue.withOpacity(0.2),
           width: 1,
         ),
       ),
-      child: Column(
-        children: [
-          Container(
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              color: AppColors.primaryColor?.withOpacity(0.1) ?? Colors.blue.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.rocket_launch_outlined,
-              size: 40.sp,
-              color: AppColors.primaryColor ?? Colors.blue,
-            ),
+      child: _isLandscape ? _buildHeroLandscape() : _buildHeroPortrait(),
+    );
+  }
+
+  Widget _buildHeroPortrait() {
+    return Column(
+      children: [
+        Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: AppColors.primaryColor?.withOpacity(0.1) ?? Colors.blue.withOpacity(0.1),
+            shape: BoxShape.circle,
           ),
-          SizedBox(height: 16.h),
-          Text(
-            'Welcome to Investment Hub',
-            style: TextStyle(
-              fontSize: 26.sp,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primaryColor ?? Colors.blue[900],
-            ),
+          child: Icon(
+            Icons.rocket_launch_outlined,
+            size: 40.sp,
+            color: AppColors.primaryColor ?? Colors.blue,
           ),
-          SizedBox(height: 8.h),
-          Text(
-            'Explore F&O opportunities, discover new funds, and stay ahead with upcoming features',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: AppColors.secondaryText ?? Colors.grey[600],
-              height: 1.4,
-            ),
-            textAlign: TextAlign.center,
+        ),
+        SizedBox(height: 16.h),
+        Text(
+          'Welcome to Investment Hub',
+          style: TextStyle(
+            fontSize: 24.sp,
+            fontWeight: FontWeight.bold,
+            color: AppColors.primaryColor ?? Colors.blue[900],
           ),
-        ],
-      ),
+          textAlign: TextAlign.center,
+        ),
+        SizedBox(height: 8.h),
+        Text(
+          'Trade smart with basket investing, make profits in hours with intraday strategies',
+          style: TextStyle(
+            fontSize: 14.sp,
+            color: AppColors.secondaryText ?? Colors.grey[600],
+            height: 1.4,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeroLandscape() {
+    return Row(
+      children: [
+        Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: AppColors.primaryColor?.withOpacity(0.1) ?? Colors.blue.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.rocket_launch_outlined,
+            size: 32.sp,
+            color: AppColors.primaryColor ?? Colors.blue,
+          ),
+        ),
+        SizedBox(width: 20.w),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Welcome to Investment Hub',
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryColor ?? Colors.blue[900],
+                ),
+              ),
+              SizedBox(height: 6.h),
+              Text(
+                'Trade smart with basket investing, make profits in hours with intraday strategies',
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: AppColors.secondaryText ?? Colors.grey[600],
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildFOSection() {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 20.w),
+      margin: EdgeInsets.symmetric(horizontal: _isLandscape ? 16.w : 20.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(8.w),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEF4444).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Icon(
-                  Icons.trending_up,
-                  size: 24.sp,
-                  color: const Color(0xFFEF4444),
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Text(
-                'F&O on Mutual Funds',
-                style: TextStyle(
-                  fontSize: 22.sp,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryColor ?? Colors.blue[900],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 4.h),
-          Text(
+          _buildSectionHeader(
+            'F&O on Mutual Funds',
             'Trade futures and options on ETFs and mutual fund schemes',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: AppColors.secondaryText ?? Colors.grey[600],
-            ),
+            Icons.trending_up,
+            const Color(0xFFEF4444),
           ),
           SizedBox(height: 16.h),
-          Container(
-            height: 195.h,
+          SizedBox(
+            height: _isLandscape ? 160.h : 195.h,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: foMutualFunds.length,
               itemBuilder: (context, index) => _buildFOCard(foMutualFunds[index]),
             ),
           ),
-
+          SizedBox(height: 20.h),
         ],
       ),
     );
@@ -368,32 +351,33 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
 
   Widget _buildFOCard(Map<String, dynamic> foData) {
     return Container(
-      width: 280.w,
+      width: _isLandscape ? 240.w : 280.w,
       margin: EdgeInsets.only(right: 16.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20.r),
+        borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 20.r,
-            offset: Offset(0, 8.h),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12.r,
+            offset: Offset(0, 4.h),
           ),
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(20.w),
+        padding: EdgeInsets.all(_isLandscape ? 16.w : 20.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: Text(
-                    foData['fundName'],
+                    foData['fundName'] ?? '',
                     style: TextStyle(
-                      fontSize: 16.sp,
+                      fontSize: _isLandscape ? 14.sp : 16.sp,
                       fontWeight: FontWeight.bold,
                       color: AppColors.primaryColor ?? Colors.blue[900],
                     ),
@@ -401,16 +385,17 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                SizedBox(width: 8.w),
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
                     color: foData['type'] == 'CALL' ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12.r),
+                    borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Text(
-                    foData['type'],
+                    foData['type'] ?? '',
                     style: TextStyle(
-                      fontSize: 12.sp,
+                      fontSize: 10.sp,
                       fontWeight: FontWeight.bold,
                       color: foData['type'] == 'CALL' ? Colors.green : Colors.red,
                     ),
@@ -428,16 +413,16 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
                     Text(
                       'Premium',
                       style: TextStyle(
-                        fontSize: 12.sp,
+                        fontSize: 11.sp,
                         color: AppColors.secondaryText ?? Colors.grey[600],
                       ),
                     ),
                     Text(
-                      '₹${foData['premium'].toStringAsFixed(2)}',
+                      '₹${(foData['premium'] ?? 0).toStringAsFixed(2)}',
                       style: TextStyle(
-                        fontSize: 18.sp,
+                        fontSize: _isLandscape ? 16.sp : 18.sp,
                         fontWeight: FontWeight.bold,
-                        color: foData['color'],
+                        color: foData['color'] ?? Colors.green,
                       ),
                     ),
                   ],
@@ -448,14 +433,14 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
                     Text(
                       'Strike',
                       style: TextStyle(
-                        fontSize: 12.sp,
+                        fontSize: 11.sp,
                         color: AppColors.secondaryText ?? Colors.grey[600],
                       ),
                     ),
                     Text(
-                      '₹${foData['strikePrice'].toStringAsFixed(2)}',
+                      '₹${(foData['strikePrice'] ?? 0).toStringAsFixed(2)}',
                       style: TextStyle(
-                        fontSize: 16.sp,
+                        fontSize: _isLandscape ? 14.sp : 16.sp,
                         fontWeight: FontWeight.w600,
                         color: AppColors.primaryColor ?? Colors.blue[900],
                       ),
@@ -464,37 +449,40 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
                 ),
               ],
             ),
-            SizedBox(height: 12.h),
+            Spacer(),
             Row(
               children: [
-                Icon(Icons.access_time, size: 14.sp, color: AppColors.secondaryText),
+                Icon(Icons.access_time, size: 12.sp, color: AppColors.secondaryText),
                 SizedBox(width: 4.w),
-                Text(
-                  'Expiry: ${foData['expiry']}',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: AppColors.secondaryText ?? Colors.grey[600],
+                Expanded(
+                  child: Text(
+                    'Expiry: ${foData['expiry'] ?? 'N/A'}',
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      color: AppColors.secondaryText ?? Colors.grey[600],
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 8.h),
+            SizedBox(height: 6.h),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Vol: ${(foData['volume'] / 1000).toStringAsFixed(1)}K',
+                  'Vol: ${((foData['volume'] ?? 0) / 1000).toStringAsFixed(1)}K',
                   style: TextStyle(
-                    fontSize: 12.sp,
+                    fontSize: 11.sp,
                     color: AppColors.secondaryText ?? Colors.grey[600],
                   ),
                 ),
                 Text(
-                  '${foData['changePercent'] > 0 ? '+' : ''}${foData['changePercent'].toStringAsFixed(1)}%',
+                  '${(foData['changePercent'] ?? 0) > 0 ? '+' : ''}${(foData['changePercent'] ?? 0).toStringAsFixed(1)}%',
                   style: TextStyle(
-                    fontSize: 12.sp,
+                    fontSize: 11.sp,
                     fontWeight: FontWeight.bold,
-                    color: foData['color'],
+                    color: foData['color'] ?? Colors.grey,
                   ),
                 ),
               ],
@@ -507,208 +495,194 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
 
   Widget _buildRecentLaunchedFunds() {
     return Container(
-      margin: EdgeInsets.all(20.w),
+      margin: EdgeInsets.all(_isLandscape ? 16.w : 20.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(8.w),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Icon(
-                  Icons.new_releases_outlined,
-                  size: 24.sp,
-                  color: const Color(0xFF10B981),
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Text(
-                'Recently Launched Funds',
-                style: TextStyle(
-                  fontSize: 22.sp,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryColor ?? Colors.blue[900],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 4.h),
-          Text(
+          _buildSectionHeader(
+            'Recently Launched Funds',
             'Discover new investment opportunities with fresh fund launches',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: AppColors.secondaryText ?? Colors.grey[600],
-            ),
+            Icons.new_releases_outlined,
+            const Color(0xFF10B981),
           ),
           SizedBox(height: 16.h),
-          ...recentLaunchedFunds.asMap().entries.map((entry) {
-            return _buildRecentFundCard(entry.value, entry.key);
-          }),
+          if (_isLandscape)
+            _buildFundsGrid()
+          else
+            ...recentLaunchedFunds.asMap().entries.map((entry) {
+              return _buildRecentFundCard(entry.value, entry.key);
+            }),
         ],
       ),
     );
   }
 
+  Widget _buildFundsGrid() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16.w,
+        mainAxisSpacing: 16.h,
+        childAspectRatio: 0.8,
+      ),
+      itemCount: recentLaunchedFunds.length,
+      itemBuilder: (context, index) => _buildRecentFundCard(recentLaunchedFunds[index], index),
+    );
+  }
+
   Widget _buildRecentFundCard(Map<String, dynamic> fund, int index) {
     return Container(
-      margin: EdgeInsets.only(bottom: 16.h),
+      margin: EdgeInsets.only(bottom: _isLandscape ? 0 : 16.h),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20.r),
+        borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 20.r,
-            offset: Offset(0, 8.h),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12.r,
+            offset: Offset(0, 4.h),
           ),
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(20.w),
+        padding: EdgeInsets.all(_isLandscape ? 16.w : 20.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Container(
-                  width: 56.w,
-                  height: 56.w,
+                  width: _isLandscape ? 48.w : 56.w,
+                  height: _isLandscape ? 48.w : 56.w,
                   decoration: BoxDecoration(
-                    color: fund['color'].withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16.r),
+                    color: (fund['color'] as Color?)?.withOpacity(0.1) ?? Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12.r),
                   ),
                   child: Icon(
-                    fund['icon'],
-                    size: 28.sp,
-                    color: fund['color'],
+                    fund['icon'] ?? Icons.account_balance,
+                    size: _isLandscape ? 24.sp : 28.sp,
+                    color: fund['color'] ?? Colors.blue,
                   ),
                 ),
-                SizedBox(width: 16.w),
+                SizedBox(width: 12.w),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              fund['fundName'],
-                              style: TextStyle(
-                                fontSize: 18.sp,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primaryColor ?? Colors.blue[900],
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              _favorites[fund['fundName']]! ? Icons.favorite : Icons.favorite_border,
-                              color: AppColors.primaryGold ?? const Color(0xFFDAA520),
-                              size: 20.sp,
-                            ),
-                            onPressed: () => setState(() => _favorites[fund['fundName']] = !_favorites[fund['fundName']]!),
-                          ),
-                        ],
-                      ),
                       Text(
-                        fund['category'],
+                        fund['fundName'] ?? '',
                         style: TextStyle(
-                          fontSize: 14.sp,
-                          color: fund['color'],
+                          fontSize: _isLandscape ? 14.sp : 16.sp,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primaryColor ?? Colors.blue[900],
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        fund['category'] ?? '',
+                        style: TextStyle(
+                          fontSize: _isLandscape ? 11.sp : 13.sp,
+                          color: fund['color'] ?? Colors.blue,
                           fontWeight: FontWeight.w600,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
+                ),
+                IconButton(
+                  icon: Icon(
+                    (_favorites[fund['fundName']] ?? false) ? Icons.favorite : Icons.favorite_border,
+                    color: AppColors.primaryGold ?? const Color(0xFFDAA520),
+                    size: 20.sp,
+                  ),
+                  onPressed: () => setState(() => _favorites[fund['fundName']] = !(_favorites[fund['fundName']] ?? false)),
                 ),
               ],
             ),
             SizedBox(height: 12.h),
             Text(
-              fund['description'],
+              fund['description'] ?? '',
               style: TextStyle(
-                fontSize: 14.sp,
+                fontSize: _isLandscape ? 11.sp : 13.sp,
                 color: AppColors.secondaryText ?? Colors.grey[600],
                 height: 1.4,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-            SizedBox(height: 16.h),
+            SizedBox(height: 12.h),
             Wrap(
               spacing: 6.w,
               runSpacing: 6.h,
-              children: fund['keyFeatures'].map<Widget>((feature) => Container(
+              children: ((fund['keyFeatures'] as List?) ?? []).take(3).map<Widget>((feature) => Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: fund['color'].withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12.r),
+                  color: (fund['color'] as Color?)?.withOpacity(0.1) ?? Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Text(
-                  feature,
+                  feature.toString(),
                   style: TextStyle(
-                    fontSize: 10.sp,
-                    color: fund['color'],
+                    fontSize: 9.sp,
+                    color: fund['color'] ?? Colors.blue,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               )).toList(),
             ),
-            SizedBox(height: 16.h),
+            SizedBox(height: 12.h),
             Container(
-              padding: EdgeInsets.all(16.w),
+              padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
                 color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(12.r),
+                borderRadius: BorderRadius.circular(10.r),
               ),
               child: Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildFundStat('NAV', '₹${fund['nav'].toString()}'),
-                      _buildFundStat('Min SIP', '₹${fund['minSip']}'),
-                      _buildFundStat('AUM', '₹${fund['aum']}Cr'),
-                      _buildFundStat('Rating', '${fund['rating']}⭐'),
+                      _buildFundStat('NAV', '₹${fund['nav']?.toString() ?? '0'}'),
+                      _buildFundStat('Min SIP', '₹${fund['minSip']?.toString() ?? '0'}'),
+                      _buildFundStat('AUM', '₹${fund['aum']?.toString() ?? '0'}Cr'),
+                      _buildFundStat('Rating', '${fund['rating']?.toString() ?? '0'}⭐'),
                     ],
                   ),
-                  SizedBox(height: 12.h),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-
-                      Text(
-                        'Launched: ${fund['launchDate']}',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: AppColors.primaryColor ?? Colors.blue,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+                  SizedBox(height: 8.h),
+                  Text(
+                    'Launched: ${fund['launchDate'] ?? 'N/A'}',
+                    style: TextStyle(
+                      fontSize: 10.sp,
+                      color: AppColors.primaryColor ?? Colors.blue,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
             ),
-            SizedBox(height: 16.h),
+            SizedBox(height: 12.h),
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => _showFundDetails(fund),
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 12.h),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                      side: BorderSide(color: fund['color']),
+                      padding: EdgeInsets.symmetric(vertical: 10.h),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                      side: BorderSide(color: fund['color'] ?? Colors.blue),
                     ),
                     child: Text(
-                      'View Details',
+                      'Details',
                       style: TextStyle(
-                        fontSize: 14.sp,
+                        fontSize: _isLandscape ? 11.sp : 13.sp,
                         fontWeight: FontWeight.w600,
-                        color: fund['color'],
+                        color: fund['color'] ?? Colors.blue,
                       ),
                     ),
                   ),
@@ -718,15 +692,15 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
                   child: ElevatedButton(
                     onPressed: () => _investInFund(fund),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: fund['color'],
-                      padding: EdgeInsets.symmetric(vertical: 12.h),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                      backgroundColor: fund['color'] ?? Colors.blue,
+                      padding: EdgeInsets.symmetric(vertical: 10.h),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
                       elevation: 2,
                     ),
                     child: Text(
-                      'Invest Now',
+                      'Invest',
                       style: TextStyle(
-                        fontSize: 14.sp,
+                        fontSize: _isLandscape ? 11.sp : 13.sp,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
                       ),
@@ -747,7 +721,7 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
         Text(
           value,
           style: TextStyle(
-            fontSize: 14.sp,
+            fontSize: _isLandscape ? 11.sp : 13.sp,
             fontWeight: FontWeight.bold,
             color: AppColors.primaryColor ?? Colors.blue[900],
           ),
@@ -755,7 +729,7 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
         Text(
           label,
           style: TextStyle(
-            fontSize: 10.sp,
+            fontSize: 8.sp,
             color: AppColors.secondaryText ?? Colors.grey[600],
           ),
         ),
@@ -765,46 +739,21 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
 
   Widget _buildUpcomingFeaturesSection() {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 20.w),
+      margin: EdgeInsets.symmetric(horizontal: _isLandscape ? 16.w : 20.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(8.w),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF8B5CF6).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Icon(
-                  Icons.upcoming_outlined,
-                  size: 24.sp,
-                  color: const Color(0xFF8B5CF6),
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Text(
-                'Upcoming Features',
-                style: TextStyle(
-                  fontSize: 22.sp,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryColor ?? Colors.blue[900],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            'Exciting new features coming to enhance your investment experience',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: AppColors.secondaryText ?? Colors.grey[600],
-            ),
+          _buildSectionHeader(
+            'Upcoming Features',
+            'Revolutionary features to transform your investment experience',
+            Icons.upcoming_outlined,
+            const Color(0xFF8B5CF6),
           ),
           SizedBox(height: 16.h),
           _filteredFeatures.isEmpty
-              ? _buildEmptyState()
+              ? _buildEmptyFilterState()
+              : _isLandscape
+              ? _buildFeaturesGrid()
               : Column(
             children: _filteredFeatures
                 .asMap()
@@ -817,17 +766,78 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildFeaturesGrid() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16.w,
+        mainAxisSpacing: 16.h,
+        childAspectRatio: 1.2,
+      ),
+      itemCount: _filteredFeatures.length,
+      itemBuilder: (context, index) => _buildFeatureCard(_filteredFeatures[index], index),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, String subtitle, IconData icon, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(8.w),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              child: Icon(
+                icon,
+                size: _isLandscape ? 20.sp : 24.sp,
+                color: color,
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: _isLandscape ? 18.sp : 22.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryColor ?? Colors.blue[900],
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 4.h),
+        Padding(
+          padding: EdgeInsets.only(left: _isLandscape ? 40.w : 48.w),
+          child: Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: _isLandscape ? 11.sp : 13.sp,
+              color: AppColors.secondaryText ?? Colors.grey[600],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyFilterState() {
     return Container(
       padding: EdgeInsets.all(40.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20.r),
+        borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 20.r,
-            offset: Offset(0, 8.h),
+            blurRadius: 12.r,
+            offset: Offset(0, 4.h),
           ),
         ],
       ),
@@ -857,24 +867,27 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
   }
 
   Widget _buildFeatureCard(Map<String, dynamic> feature, int index) {
+    final isReady = (feature['progress'] ?? 0) >= 0.95;
+
     return Container(
-      margin: EdgeInsets.only(bottom: 16.h),
+      margin: EdgeInsets.only(bottom: _isLandscape ? 0 : 16.h),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20.r),
+        borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 20.r,
-            offset: Offset(0, 8.h),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12.r,
+            offset: Offset(0, 4.h),
           ),
         ],
+        border: isReady ? Border.all(color: Colors.green.withOpacity(0.3), width: 2) : null,
       ),
       child: InkWell(
-        onTap: () => _navigateToDetail(feature),
-        borderRadius: BorderRadius.circular(20.r),
+        onTap: (){},
+        borderRadius: BorderRadius.circular(16.r),
         child: Padding(
-          padding: EdgeInsets.all(20.w),
+          padding: EdgeInsets.all(_isLandscape ? 16.w : 20.w),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -884,51 +897,55 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
                     alignment: Alignment.center,
                     children: [
                       SizedBox(
-                        width: 50.w,
-                        height: 50.h,
+                        width: _isLandscape ? 40.w : 50.w,
+                        height: _isLandscape ? 40.h : 50.h,
                         child: CircularProgressIndicator(
-                          value: feature['progress'],
-                          strokeWidth: 4,
+                          value: feature['progress'] ?? 0,
+                          strokeWidth: 3,
                           backgroundColor: Colors.grey[200],
-                          valueColor: AlwaysStoppedAnimation<Color>(feature['color']),
+                          valueColor: AlwaysStoppedAnimation<Color>(feature['color'] ?? Colors.blue),
                         ),
                       ),
                       Text(
-                        '${(feature['progress'] * 100).toInt()}%',
+                        '${((feature['progress'] ?? 0) * 100).toInt()}%',
                         style: TextStyle(
-                          fontSize: 12.sp,
+                          fontSize: _isLandscape ? 10.sp : 12.sp,
                           fontWeight: FontWeight.bold,
                           color: AppColors.primaryColor ?? Colors.blue[900],
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(width: 16.w),
+                  SizedBox(width: 12.w),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          feature['title'],
+                          feature['title'] ?? '',
                           style: TextStyle(
-                            fontSize: 18.sp,
+                            fontSize: _isLandscape ? 14.sp : 16.sp,
                             fontWeight: FontWeight.bold,
                             color: AppColors.primaryColor ?? Colors.blue[900],
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         SizedBox(height: 4.h),
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                           decoration: BoxDecoration(
-                            color: feature['color'].withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8.r),
+                            color: isReady
+                                ? Colors.green.withOpacity(0.1)
+                                : (feature['color'] as Color?)?.withOpacity(0.1) ?? Colors.blue.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6.r),
                           ),
                           child: Text(
-                            'Coming ${feature['details']['releaseDate']}',
+                            isReady ? 'Almost Ready!' : 'Coming ${feature['details']?['releaseDate'] ?? 'Soon'}',
                             style: TextStyle(
-                              fontSize: 12.sp,
+                              fontSize: 10.sp,
                               fontWeight: FontWeight.w600,
-                              color: feature['color'],
+                              color: isReady ? Colors.green : feature['color'] ?? Colors.blue,
                             ),
                           ),
                         ),
@@ -937,19 +954,19 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
                   ),
                   IconButton(
                     icon: Icon(
-                      _favorites[feature['title']]! ? Icons.favorite : Icons.favorite_border,
+                      (_favorites[feature['title']] ?? false) ? Icons.favorite : Icons.favorite_border,
                       color: AppColors.primaryGold ?? const Color(0xFFDAA520),
                       size: 20.sp,
                     ),
-                    onPressed: () => setState(() => _favorites[feature['title']] = !_favorites[feature['title']]!),
+                    onPressed: () => setState(() => _favorites[feature['title']] = !(_favorites[feature['title']] ?? false)),
                   ),
                 ],
               ),
               SizedBox(height: 12.h),
               Text(
-                feature['details']['description'],
+                feature['details']?['description'] ?? '',
                 style: TextStyle(
-                  fontSize: 14.sp,
+                  fontSize: _isLandscape ? 11.sp : 13.sp,
                   color: AppColors.secondaryText ?? Colors.grey[600],
                   height: 1.4,
                 ),
@@ -960,33 +977,33 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
               Wrap(
                 spacing: 6.w,
                 runSpacing: 6.h,
-                children: feature['details']['keyPoints'].take(3).map<Widget>((point) => Container(
+                children: ((feature['details']?['keyPoints'] as List?) ?? []).take(3).map<Widget>((point) => Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: feature['color'].withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12.r),
+                    color: (feature['color'] as Color?)?.withOpacity(0.1) ?? Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Text(
-                    point,
+                    point.toString(),
                     style: TextStyle(
-                      fontSize: 10.sp,
-                      color: feature['color'],
+                      fontSize: 9.sp,
+                      color: feature['color'] ?? Colors.blue,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 )).toList(),
               ),
-              if (feature['progress'] >= 1.0)
+              if (isReady)
                 Padding(
                   padding: EdgeInsets.only(top: 12.h),
                   child: Row(
                     children: [
-                      Icon(Icons.check_circle, color: Colors.green, size: 16.sp),
+                      Icon(Icons.rocket_launch, color: Colors.green, size: 14.sp),
                       SizedBox(width: 4.w),
                       Text(
-                        'Ready to Launch',
+                        'Launching Soon',
                         style: TextStyle(
-                          fontSize: 12.sp,
+                          fontSize: 11.sp,
                           color: Colors.green,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1002,22 +1019,10 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
   }
 
   Widget _buildModernFab() {
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: (AppColors.primaryGold ?? const Color(0xFFDAA520)).withOpacity(0.3),
-            blurRadius: 12.r,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: FloatingActionButton(
-        backgroundColor: AppColors.primaryGold ?? const Color(0xFFDAA520),
-        child: Icon(Icons.auto_awesome, color: Colors.white, size: 24.sp),
-        onPressed: () => _showNewsletterSignup(),
-      ),
+    return FloatingActionButton(
+      backgroundColor: AppColors.primaryGold ?? const Color(0xFFDAA520),
+      child: Icon(Icons.auto_awesome, color: Colors.white, size: 24.sp),
+      onPressed: () => _showNewsletterSignup(),
     );
   }
 
@@ -1030,7 +1035,7 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
         height: MediaQuery.of(context).size.height * 0.7,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         ),
         padding: EdgeInsets.all(20.w),
         child: Column(
@@ -1052,89 +1057,34 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
             ),
             SizedBox(height: 20.h),
             Expanded(
-              child: ListView(
-                children: [
-                  _buildNotificationItem(
-                    'New F&O Contract Available',
-                    'HDFC Nifty 50 ETF options now available for trading',
-                    Icons.trending_up,
-                    Colors.green,
-                    '2 min ago',
-                  ),
-                  _buildNotificationItem(
-                    'Fund Performance Alert',
-                    'SBI Healthcare Fund up 15% this month',
-                    Icons.show_chart,
-                    Colors.blue,
-                    '1 hour ago',
-                  ),
-                  _buildNotificationItem(
-                    'New Fund Launch',
-                    'Axis ESG Equity Fund is now open for investment',
-                    Icons.new_releases,
-                    Colors.orange,
-                    '3 hours ago',
-                  ),
-                ],
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.notifications_none, size: 60.sp, color: Colors.grey[300]),
+                    SizedBox(height: 16.h),
+                    Text(
+                      'No new notifications',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      'We\'ll notify you about new features',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildNotificationItem(String title, String subtitle, IconData icon, Color color, String time) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(8.w),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Icon(icon, size: 20.sp, color: color),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primaryColor ?? Colors.blue[900],
-                  ),
-                ),
-                SizedBox(height: 2.h),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: AppColors.secondaryText ?? Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            time,
-            style: TextStyle(
-              fontSize: 10.sp,
-              color: AppColors.secondaryText ?? Colors.grey[500],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -1148,7 +1098,7 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
         height: MediaQuery.of(context).size.height * 0.8,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         ),
         padding: EdgeInsets.all(20.w),
         child: Column(
@@ -1160,17 +1110,17 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
                   width: 40.w,
                   height: 40.w,
                   decoration: BoxDecoration(
-                    color: fund['color'].withOpacity(0.1),
+                    color: (fund['color'] as Color?)?.withOpacity(0.1) ?? Colors.blue.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12.r),
                   ),
-                  child: Icon(fund['icon'], size: 20.sp, color: fund['color']),
+                  child: Icon(fund['icon'] ?? Icons.account_balance, size: 20.sp, color: fund['color'] ?? Colors.blue),
                 ),
                 SizedBox(width: 12.w),
                 Expanded(
                   child: Text(
-                    fund['fundName'],
+                    fund['fundName'] ?? '',
                     style: TextStyle(
-                      fontSize: 20.sp,
+                      fontSize: 18.sp,
                       fontWeight: FontWeight.bold,
                       color: AppColors.primaryColor ?? Colors.blue[900],
                     ),
@@ -1187,33 +1137,33 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
                     Text(
                       'Fund Details',
                       style: TextStyle(
-                        fontSize: 18.sp,
+                        fontSize: 16.sp,
                         fontWeight: FontWeight.bold,
                         color: AppColors.primaryColor ?? Colors.blue[900],
                       ),
                     ),
                     SizedBox(height: 12.h),
-                    _buildDetailRow('Category', fund['category']),
-                    _buildDetailRow('Fund Manager', fund['fundManager']),
-                    _buildDetailRow('Launch Date', fund['launchDate']),
-                    _buildDetailRow('Minimum SIP', '₹${fund['minSip']}'),
-                    _buildDetailRow('Minimum Investment', '₹${fund['minInvestment']}'),
-                    _buildDetailRow('Expense Ratio', '${fund['expenseRatio']}%'),
-                    _buildDetailRow('AUM', '₹${fund['aum']} Crores'),
+                    _buildDetailRow('Category', fund['category']?.toString() ?? 'N/A'),
+                    _buildDetailRow('Fund Manager', fund['fundManager']?.toString() ?? 'N/A'),
+                    _buildDetailRow('Launch Date', fund['launchDate']?.toString() ?? 'N/A'),
+                    _buildDetailRow('Minimum SIP', '₹${fund['minSip']?.toString() ?? '0'}'),
+                    _buildDetailRow('Minimum Investment', '₹${fund['minInvestment']?.toString() ?? '0'}'),
+                    _buildDetailRow('Expense Ratio', '${fund['expenseRatio']?.toString() ?? '0'}%'),
+                    _buildDetailRow('AUM', '₹${fund['aum']?.toString() ?? '0'} Crores'),
                     SizedBox(height: 20.h),
                     Text(
                       'Description',
                       style: TextStyle(
-                        fontSize: 16.sp,
+                        fontSize: 14.sp,
                         fontWeight: FontWeight.bold,
                         color: AppColors.primaryColor ?? Colors.blue[900],
                       ),
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      fund['description'],
+                      fund['description']?.toString() ?? 'No description available',
                       style: TextStyle(
-                        fontSize: 14.sp,
+                        fontSize: 13.sp,
                         color: AppColors.secondaryText ?? Colors.grey[600],
                         height: 1.5,
                       ),
@@ -1237,14 +1187,14 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
           Text(
             label,
             style: TextStyle(
-              fontSize: 14.sp,
+              fontSize: 13.sp,
               color: AppColors.secondaryText ?? Colors.grey[600],
             ),
           ),
           Text(
             value,
             style: TextStyle(
-              fontSize: 14.sp,
+              fontSize: 13.sp,
               fontWeight: FontWeight.w600,
               color: AppColors.primaryColor ?? Colors.blue[900],
             ),
@@ -1259,14 +1209,19 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.rocket_launch, color: Colors.white, size: 20.sp),
+            Icon(Icons.rocket_launch, color: Colors.white, size: 18.sp),
             SizedBox(width: 8.w),
-            Text('Starting investment in ${fund['fundName']}'),
+            Expanded(
+              child: Text(
+                'Starting investment in ${fund['fundName'] ?? 'fund'}',
+                style: TextStyle(fontSize: 13.sp),
+              ),
+            ),
           ],
         ),
-        backgroundColor: fund['color'],
+        backgroundColor: fund['color'] ?? Colors.blue,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
       ),
     );
   }
@@ -1278,7 +1233,7 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
       builder: (context) => Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         ),
         padding: EdgeInsets.all(20.w),
         child: Column(
@@ -1300,16 +1255,16 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
             Text(
               'Stay Updated',
               style: TextStyle(
-                fontSize: 22.sp,
+                fontSize: 20.sp,
                 fontWeight: FontWeight.bold,
                 color: AppColors.primaryColor ?? Colors.blue[900],
               ),
             ),
             SizedBox(height: 8.h),
             Text(
-              'Get notified about new fund launches, F&O opportunities, and feature updates',
+              'Get notified when basket investing and intraday trading features launch',
               style: TextStyle(
-                fontSize: 14.sp,
+                fontSize: 13.sp,
                 color: AppColors.secondaryText ?? Colors.grey[600],
                 height: 1.4,
               ),
@@ -1339,7 +1294,7 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryGold ?? const Color(0xFFDAA520),
-                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                  padding: EdgeInsets.symmetric(vertical: 14.h),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
                   elevation: 2,
                 ),
@@ -1349,21 +1304,21 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
                     SnackBar(
                       content: Row(
                         children: [
-                          Icon(Icons.check_circle, color: Colors.white, size: 20.sp),
+                          Icon(Icons.check_circle, color: Colors.white, size: 18.sp),
                           SizedBox(width: 8.w),
                           Text('Successfully subscribed to updates!'),
                         ],
                       ),
                       backgroundColor: Colors.green,
                       behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
                     ),
                   );
                 },
                 child: Text(
                   'Subscribe to Updates',
                   style: TextStyle(
-                    fontSize: 16.sp,
+                    fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
@@ -1381,558 +1336,100 @@ class _LaunchpadScreenState extends State<LaunchpadScreen> with SingleTickerProv
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-        ),
-        padding: EdgeInsets.all(20.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Filter & Sort Options',
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primaryColor ?? Colors.blue[900],
-              ),
-            ),
-            SizedBox(height: 20.h),
-            Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Sort By',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primaryColor ?? Colors.blue[900],
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  DropdownButton<String>(
-                    value: _sortBy,
-                    isExpanded: true,
-                    items: [
-                      DropdownMenuItem(value: 'title', child: Text('Sort by Title')),
-                      DropdownMenuItem(value: 'progress', child: Text('Sort by Progress')),
-                      DropdownMenuItem(value: 'releaseDate', child: Text('Sort by Release Date')),
-                    ],
-                    onChanged: (value) => setState(() => _sortBy = value!),
-                    style: TextStyle(color: AppColors.primaryColor, fontSize: 14.sp),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 16.h),
-            CheckboxListTile(
-              title: Text(
-                'Show Favorites Only',
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+          ),
+          padding: EdgeInsets.all(20.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Filter & Sort Options',
                 style: TextStyle(
-                  fontSize: 16.sp,
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
                   color: AppColors.primaryColor ?? Colors.blue[900],
                 ),
               ),
-              value: _showFavoritesOnly,
-              onChanged: (value) => setState(() => _showFavoritesOnly = value!),
-              activeColor: AppColors.primaryGold ?? const Color(0xFFDAA520),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-            ),
-            SizedBox(height: 16.h),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _scrollToFeature(int index) {
-    final offset = (index * (200.h + 16.h)) + 600.h; // Account for F&O and recent funds sections
-    _scrollController.animateTo(
-      offset,
-      duration: Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
-    );
-  }
-
-  void _navigateToDetail(Map<String, dynamic> feature) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => LaunchpadDetailsScreen(
-          feature: feature,
-          isFavorite: _favorites[feature['title']]!,
-          onFavoriteToggle: () => setState(() => _favorites[feature['title']] = !_favorites[feature['title']]!),
-          onShare: () => _shareFeature(feature),
-        ),
-      ),
-    );
-  }
-
-  void _shareFeature(Map<String, dynamic> feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.share, color: Colors.white, size: 20.sp),
-            SizedBox(width: 8.w),
-            Text('Sharing ${feature['title']}'),
-          ],
-        ),
-        backgroundColor: AppColors.primaryGold ?? const Color(0xFFDAA520),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-      ),
-    );
-  }
-}
-
-// Details Screen
-class LaunchpadDetailsScreen extends StatelessWidget {
-  final Map<String, dynamic> feature;
-  final bool isFavorite;
-  final Function() onFavoriteToggle;
-  final Function() onShare;
-
-  const LaunchpadDetailsScreen({
-    Key? key,
-    required this.feature,
-    required this.isFavorite,
-    required this.onFavoriteToggle,
-    required this.onShare,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final details = feature['details'];
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Text(
-          'Feature Details',
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: AppColors.primaryColor ?? Colors.blue,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.primaryColor ?? Colors.blue,
-                AppColors.primaryGold ?? const Color(0xFFDAA520),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: Colors.white,
-            ),
-            onPressed: onFavoriteToggle,
-          ),
-          IconButton(
-            icon: Icon(Icons.share, color: Colors.white),
-            onPressed: onShare,
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(20.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: EdgeInsets.all(24.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 20.r,
-                    offset: Offset(0, 8.h),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(12.w),
-                        decoration: BoxDecoration(
-                          color: feature['color'].withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(16.r),
-                        ),
-                        child: Icon(
-                          Icons.auto_awesome,
-                          size: 32.sp,
-                          color: feature['color'],
-                        ),
-                      ),
-                      SizedBox(width: 16.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              feature['title'],
-                              style: TextStyle(
-                                fontSize: 24.sp,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primaryColor ?? Colors.blue[900],
-                              ),
-                            ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              'Coming ${details['releaseDate']}',
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                color: feature['color'],
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20.h),
-                  Text(
-                    'Development Progress',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryColor ?? Colors.blue[900],
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  LinearProgressIndicator(
-                    value: feature['progress'],
-                    backgroundColor: Colors.grey[200],
-                    valueColor: AlwaysStoppedAnimation<Color>(feature['color']),
-                    minHeight: 8.h,
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    '${(feature['progress'] * 100).toInt()}% Complete',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: AppColors.secondaryText ?? Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 24.h),
-            Container(
-              padding: EdgeInsets.all(24.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10.r,
-                    offset: Offset(0, 4.h),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Overview',
-                    style: TextStyle(
-                      fontSize: 20.sp,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryColor ?? Colors.blue[900],
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  Text(
-                    details['description'],
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      color: AppColors.secondaryText ?? Colors.grey[600],
-                      height: 1.6,
-                    ),
-                  ),
-                  SizedBox(height: 20.h),
-                  Text(
-                    'Key Features',
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryColor ?? Colors.blue[900],
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  ...details['keyPoints'].map<Widget>((point) => Padding(
-                    padding: EdgeInsets.symmetric(vertical: 4.h),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 6.w,
-                          height: 6.w,
-                          decoration: BoxDecoration(
-                            color: feature['color'],
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: Text(
-                            point,
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: AppColors.secondaryText ?? Colors.grey[600],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )).toList(),
-                  SizedBox(height: 20.h),
-                  Text(
-                    'Investment Strategies',
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryColor ?? Colors.blue[900],
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  Wrap(
-                    spacing: 8.w,
-                    runSpacing: 8.h,
-                    children: details['strategies'].map<Widget>((strategy) => Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                      decoration: BoxDecoration(
-                        color: feature['color'].withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20.r),
-                        border: Border.all(color: feature['color'].withOpacity(0.3)),
-                      ),
-                      child: Text(
-                        strategy,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: feature['color'],
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    )).toList(),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 24.h),
-            Container(
-              padding: EdgeInsets.all(24.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10.r,
-                    offset: Offset(0, 4.h),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Learning Resources',
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryColor ?? Colors.blue[900],
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  ...details['resources'].map<Widget>((resource) => ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Container(
-                      padding: EdgeInsets.all(8.w),
-                      decoration: BoxDecoration(
-                        color: feature['color'].withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Icon(
-                        Icons.library_books,
-                        size: 20.sp,
-                        color: feature['color'],
-                      ),
-                    ),
-                    title: Text(
-                      resource['title'],
+              SizedBox(height: 20.h),
+              Container(
+                padding: EdgeInsets.all(16.w),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Sort By',
                       style: TextStyle(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w600,
                         color: AppColors.primaryColor ?? Colors.blue[900],
                       ),
                     ),
-                    subtitle: Text(
-                      resource['url'],
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: AppColors.secondaryText ?? Colors.grey[600],
-                      ),
-                    ),
-                    trailing: Icon(
-                      Icons.open_in_new,
-                      size: 16.sp,
-                      color: feature['color'],
-                    ),
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Opening ${resource['title']}'),
-                          backgroundColor: feature['color'],
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                        ),
-                      );
-                    },
-                  )).toList(),
-                ],
-              ),
-            ),
-            SizedBox(height: 24.h),
-            if (feature['progress'] >= 1.0)
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(24.w),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.green.withOpacity(0.1),
-                      Colors.green.withOpacity(0.05),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(color: Colors.green.withOpacity(0.3)),
-                ),
-                child: Column(
-                  children: [
-                    Icon(Icons.check_circle, size: 48.sp, color: Colors.green),
-                    SizedBox(height: 12.h),
-                    Text(
-                      'Ready to Launch!',
-                      style: TextStyle(
-                        fontSize: 20.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green,
-                      ),
-                    ),
                     SizedBox(height: 8.h),
-                    Text(
-                      'This feature is complete and ready for release',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: Colors.green[700],
+                    DropdownButtonFormField<String>(
+                      value: _sortBy,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
-                      textAlign: TextAlign.center,
+                      items: [
+                        DropdownMenuItem(value: 'title', child: Text('Sort by Title')),
+                        DropdownMenuItem(value: 'progress', child: Text('Sort by Progress')),
+                        DropdownMenuItem(value: 'releaseDate', child: Text('Sort by Release Date')),
+                      ],
+                      onChanged: (value) {
+                        setState(() => _sortBy = value!);
+                        setModalState(() {});
+                      },
+                      style: TextStyle(color: AppColors.primaryColor, fontSize: 13.sp),
                     ),
                   ],
                 ),
               ),
-            SizedBox(height: 24.h),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Row(
-                            children: [
-                              Icon(Icons.notifications_active, color: Colors.white, size: 20.sp),
-                              SizedBox(width: 8.w),
-                              Text('You\'ll be notified when this feature launches'),
-                            ],
-                          ),
-                          backgroundColor: feature['color'],
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                        ),
-                      );
-                    },
-                    icon: Icon(Icons.notifications_outlined, size: 20.sp),
-                    label: Text(
-                      'Notify Me',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 12.h),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                      side: BorderSide(color: feature['color']),
-                      foregroundColor: feature['color'],
-                    ),
+              SizedBox(height: 16.h),
+              CheckboxListTile(
+                title: Text(
+                  'Show Favorites Only',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: AppColors.primaryColor ?? Colors.blue[900],
                   ),
                 ),
-                SizedBox(width: 16.w),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Row(
-                            children: [
-                              Icon(Icons.info, color: Colors.white, size: 20.sp),
-                              SizedBox(width: 8.w),
-                              Text('More details coming soon!'),
-                            ],
-                          ),
-                          backgroundColor: AppColors.primaryGold ?? const Color(0xFFDAA520),
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                        ),
-                      );
-                    },
-                    icon: Icon(Icons.info_outline, size: 20.sp),
-                    label: Text(
-                      'Learn More',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: feature['color'],
-                      padding: EdgeInsets.symmetric(vertical: 12.h),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                      elevation: 2,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+                value: _showFavoritesOnly,
+                onChanged: (value) {
+                  setState(() => _showFavoritesOnly = value!);
+                  setModalState(() {});
+                },
+                activeColor: AppColors.primaryGold ?? const Color(0xFFDAA520),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+              ),
+              SizedBox(height: 16.h),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  void _navigateToDetail(Map<String, dynamic> feature) {
+    // TODO: Implement navigation to detail screen
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Opening ${feature['title'] ?? 'feature'} details...'),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: feature['color'] ?? Colors.blue,
       ),
     );
   }

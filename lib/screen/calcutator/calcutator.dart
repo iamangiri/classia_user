@@ -28,13 +28,18 @@ class _SIPCalculatorScreenState extends State<SIPCalculatorScreen> {
   late TextEditingController _durationController;
   late TextEditingController _returnsController;
 
+  // Focus nodes
+  late FocusNode _investmentFocus;
+  late FocusNode _durationFocus;
+  late FocusNode _returnsFocus;
+
   // Constraints
   static const double MIN_INVESTMENT = 500;
-  static const double MAX_INVESTMENT = 100000;
+  static const double MAX_INVESTMENT = 200000;
   static const double MIN_DURATION = 1;
-  static const double MAX_DURATION = 30;
+  static const double MAX_DURATION = 50;
   static const double MIN_RETURNS = 1;
-  static const double MAX_RETURNS = 30;
+  static const double MAX_RETURNS = 50;
 
   @override
   void initState() {
@@ -48,6 +53,11 @@ class _SIPCalculatorScreenState extends State<SIPCalculatorScreen> {
     _returnsController = TextEditingController(
       text: expectedReturns.toStringAsFixed(1),
     );
+
+    _investmentFocus = FocusNode();
+    _durationFocus = FocusNode();
+    _returnsFocus = FocusNode();
+
     calculateSIP();
   }
 
@@ -56,11 +66,15 @@ class _SIPCalculatorScreenState extends State<SIPCalculatorScreen> {
     _investmentController.dispose();
     _durationController.dispose();
     _returnsController.dispose();
+    _investmentFocus.dispose();
+    _durationFocus.dispose();
+    _returnsFocus.dispose();
     super.dispose();
   }
 
   // Validate and update investment amount
   void _updateInvestment(String text) {
+    if (text.isEmpty) return;
     final newValue = double.tryParse(text);
     if (newValue != null) {
       final clampedValue = newValue.clamp(MIN_INVESTMENT, MAX_INVESTMENT);
@@ -80,6 +94,7 @@ class _SIPCalculatorScreenState extends State<SIPCalculatorScreen> {
 
   // Validate and update duration
   void _updateDuration(String text) {
+    if (text.isEmpty) return;
     final newValue = double.tryParse(text);
     if (newValue != null) {
       final clampedValue = newValue.clamp(MIN_DURATION, MAX_DURATION);
@@ -99,6 +114,7 @@ class _SIPCalculatorScreenState extends State<SIPCalculatorScreen> {
 
   // Validate and update expected returns
   void _updateReturns(String text) {
+    if (text.isEmpty) return;
     final newValue = double.tryParse(text);
     if (newValue != null) {
       final clampedValue = newValue.clamp(MIN_RETURNS, MAX_RETURNS);
@@ -182,49 +198,64 @@ class _SIPCalculatorScreenState extends State<SIPCalculatorScreen> {
                     ),
                   ),
                   SizedBox(height: 20.h),
-                  _buildSlider(
+                  _buildSliderWithInput(
                     'Monthly Investment',
-                    '₹${_formatNumber(investmentAmount)}',
                     investmentAmount,
                     MIN_INVESTMENT,
                     MAX_INVESTMENT,
+                    _investmentController,
+                    _investmentFocus,
                         (value) {
                       setState(() {
                         investmentAmount = value;
+                        _investmentController.text = value.toStringAsFixed(0);
                         calculateSIP();
                       });
                     },
+                    _updateInvestment,
                     step: 500,
+                    prefix: '₹',
+                    isDecimal: false,
                   ),
                   SizedBox(height: 24.h),
-                  _buildSlider(
+                  _buildSliderWithInput(
                     'Investment Period',
-                    '${duration.toInt()} years',
                     duration,
                     MIN_DURATION,
                     MAX_DURATION,
+                    _durationController,
+                    _durationFocus,
                         (value) {
                       setState(() {
                         duration = value;
+                        _durationController.text = value.toStringAsFixed(0);
                         calculateSIP();
                       });
                     },
+                    _updateDuration,
                     step: 1,
+                    suffix: 'years',
+                    isDecimal: false,
                   ),
                   SizedBox(height: 24.h),
-                  _buildSlider(
+                  _buildSliderWithInput(
                     'Expected Return (p.a.)',
-                    '${expectedReturns.toStringAsFixed(1)}%',
                     expectedReturns,
                     MIN_RETURNS,
                     MAX_RETURNS,
+                    _returnsController,
+                    _returnsFocus,
                         (value) {
                       setState(() {
                         expectedReturns = value;
+                        _returnsController.text = value.toStringAsFixed(1);
                         calculateSIP();
                       });
                     },
+                    _updateReturns,
                     step: 0.5,
+                    suffix: '%',
+                    isDecimal: true,
                   ),
                 ],
               ),
@@ -350,6 +381,80 @@ class _SIPCalculatorScreenState extends State<SIPCalculatorScreen> {
 
             SizedBox(height: 24.h),
 
+            // Formula Card
+            Container(
+              padding: EdgeInsets.all(16.w),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(
+                  color: Color(0xFFDAA520).withOpacity(0.3),
+                  width: 1.5,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calculate_outlined,
+                        color: Color(0xFFDAA520),
+                        size: 20.sp,
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        'SIP Formula',
+                        style: TextStyle(
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0A1F3A),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12.h),
+                  Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFDAA520).withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'FV = P × [((1 + r)ⁿ - 1) / r] × (1 + r)',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0A1F3A),
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          'Where:',
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        SizedBox(height: 6.h),
+                        _buildFormulaRow('FV', 'Future Value (Maturity Amount)'),
+                        _buildFormulaRow('P', 'Monthly Investment Amount'),
+                        _buildFormulaRow('r', 'Monthly Rate of Return (Annual Rate / 12)'),
+                        _buildFormulaRow('n', 'Total Number of Months (Years × 12)'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 16.h),
+
             // Disclaimer
             Container(
               padding: EdgeInsets.all(16.w),
@@ -387,16 +492,28 @@ class _SIPCalculatorScreenState extends State<SIPCalculatorScreen> {
     );
   }
 
-  Widget _buildSlider(
+  Widget _buildSliderWithInput(
       String title,
-      String value,
       double currentValue,
       double min,
       double max,
-      Function(double) onChanged, {
+      TextEditingController controller,
+      FocusNode focusNode,
+      Function(double) onSliderChanged,
+      Function(String) onTextChanged, {
         required double step,
+        String? prefix,
+        String? suffix,
+        required bool isDecimal,
       }) {
     int divisions = ((max - min) / step).round();
+
+    String displayValue = '';
+    if (prefix != null) displayValue += prefix;
+    displayValue += isDecimal
+        ? currentValue.toStringAsFixed(1)
+        : currentValue.toStringAsFixed(0);
+    if (suffix != null) displayValue += ' $suffix';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -412,25 +529,94 @@ class _SIPCalculatorScreenState extends State<SIPCalculatorScreen> {
                 color: Colors.grey[700],
               ),
             ),
+            // Editable Input Box
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+              width: 140.w,
+              height: 40.h,
               decoration: BoxDecoration(
-                color: Color(0xFFDAA520).withOpacity(0.1),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(8.r),
                 border: Border.all(
-                  color: Color(0xFFDAA520).withOpacity(0.3),
+                  color: Color(0xFFDAA520).withOpacity(0.5),
+                  width: 1.5,
                 ),
               ),
-              child: Text(
-                value,
-                style: TextStyle(
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0A1F3A),
-                ),
+              child: Row(
+                children: [
+                  if (prefix != null)
+                    Padding(
+                      padding: EdgeInsets.only(left: 12.w),
+                      child: Text(
+                        prefix,
+                        style: TextStyle(
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF0A1F3A),
+                        ),
+                      ),
+                    ),
+                  Expanded(
+                    child: TextField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: isDecimal,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          isDecimal
+                              ? RegExp(r'^\d+\.?\d{0,1}')
+                              : RegExp(r'^\d+'),
+                        ),
+                      ],
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0A1F3A),
+                      ),
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 4.w),
+                        hintText: isDecimal ? '0.0' : '0',
+                        hintStyle: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: 15.sp,
+                        ),
+                      ),
+                      onChanged: onTextChanged,
+                      onSubmitted: (value) {
+                        onTextChanged(value);
+                        focusNode.unfocus();
+                      },
+                    ),
+                  ),
+                  if (suffix != null)
+                    Padding(
+                      padding: EdgeInsets.only(right: 12.w),
+                      child: Text(
+                        suffix,
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ],
+        ),
+        SizedBox(height: 8.h),
+        // Range hint
+        Text(
+          'Range: ${_formatRangeValue(min, prefix, suffix, isDecimal)} - ${_formatRangeValue(max, prefix, suffix, isDecimal)}',
+          style: TextStyle(
+            fontSize: 11.sp,
+            color: Colors.grey[500],
+            fontStyle: FontStyle.italic,
+          ),
         ),
         SizedBox(height: 12.h),
         SliderTheme(
@@ -453,39 +639,52 @@ class _SIPCalculatorScreenState extends State<SIPCalculatorScreen> {
             min: min,
             max: max,
             divisions: divisions > 0 ? divisions : null,
-            label: value,
-            onChanged: onChanged,
+            label: displayValue,
+            onChanged: onSliderChanged,
           ),
         ),
-        // Min-Max labels
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title.contains('Investment')
-                  ? '${_formatNumber(min)}'
-                  : title.contains('Period')
-                  ? '${min.toInt()}Y'
-                  : '${min.toInt()}%',
-              style: TextStyle(
-                fontSize: 11.sp,
-                color: Colors.grey[500],
-              ),
-            ),
-            Text(
-              title.contains('Investment')
-                  ? '${_formatNumber(max)}'
-                  : title.contains('Period')
-                  ? '${max.toInt()}Y'
-                  : '${max.toInt()}%',
-              style: TextStyle(
-                fontSize: 11.sp,
-                color: Colors.grey[500],
-              ),
-            ),
-          ],
-        ),
       ],
+    );
+  }
+
+  String _formatRangeValue(double value, String? prefix, String? suffix, bool isDecimal) {
+    String result = '';
+    if (prefix != null) result += prefix;
+    result += isDecimal ? value.toStringAsFixed(1) : value.toStringAsFixed(0);
+    if (suffix != null) result += ' $suffix';
+    return result;
+  }
+
+  Widget _buildFormulaRow(String symbol, String description) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 4.h, left: 8.w),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 30.w,
+            child: Text(
+              '$symbol =',
+              style: TextStyle(
+                fontSize: 12.sp,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFDAA520),
+                fontFamily: 'monospace',
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              description,
+              style: TextStyle(
+                fontSize: 11.sp,
+                color: Colors.grey[700],
+                height: 1.3,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

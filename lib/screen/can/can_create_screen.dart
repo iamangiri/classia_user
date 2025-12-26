@@ -32,7 +32,6 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
 
   // Form field controllers
   final _nameController = TextEditingController();
-  final _dobController = TextEditingController();
   final _panController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
@@ -45,7 +44,6 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
   final _bankAccountController = TextEditingController();
   final _ifscController = TextEditingController();
   final _nomineeNameController = TextEditingController();
-  final _nomineeDobController = TextEditingController();
   final _nomineePiNoController = TextEditingController();
   final _nomineeMobileController = TextEditingController();
   final _nomineeEmailController = TextEditingController();
@@ -55,271 +53,26 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
   final _nomineeCityController = TextEditingController();
   final _nomineePincodeController = TextEditingController();
   final _netWorthController = TextEditingController();
-  final _netDateController = TextEditingController();
+
+  // Date fields
+  DateTime? _dob;
+  DateTime? _nomineeDob;
+  DateTime? _netDate;
 
   // Dropdown selections
-  String? _birthCountry;
-  String? _citizenship;
-  String? _nationality;
   String? _taxResFlag;
   String? _resState;
-  String? _resCountry;
   String? _grossIncome;
   String? _sourceOfWealth;
   String? _occupation;
   String? _pep;
-  String? _resIsd;
-  String? _resStd; // Changed to dropdown
+  String? _resStd;
 
   late CamService _camService;
 
-  // Comprehensive country options
-  final Map<String, String> countryOptions = {
-    '004': 'Afghanistan',
-    '008': 'Albania',
-    '012': 'Algeria',
-    '016': 'American Samoa',
-    '020': 'Andorra',
-    '024': 'Angola',
-    '660': 'Anguilla',
-    '010': 'Antarctica',
-    '028': 'Antigua and Barbuda',
-    '032': 'Argentina',
-    '051': 'Armenia',
-    '533': 'Aruba',
-    '036': 'Australia',
-    '040': 'Austria',
-    '031': 'Azerbaijan',
-    '044': 'Bahamas',
-    '048': 'Bahrain',
-    '050': 'Bangladesh',
-    '052': 'Barbados',
-    '112': 'Belarus',
-    '056': 'Belgium',
-    '084': 'Belize',
-    '204': 'Benin',
-    '060': 'Bermuda',
-    '064': 'Bhutan',
-    '068': 'Bolivia',
-    '535': 'Bonaire, Sint Eustatius and Saba',
-    '070': 'Bosnia and Herzegovina',
-    '072': 'Botswana',
-    '076': 'Brazil',
-    '092': 'British Virgin Islands',
-    '096': 'Brunei',
-    '100': 'Bulgaria',
-    '854': 'Burkina Faso',
-    '108': 'Burundi',
-    '116': 'Cambodia',
-    '120': 'Cameroon',
-    '124': 'Canada',
-    '132': 'Cape Verde',
-    '136': 'Cayman Islands',
-    '140': 'Central African Republic',
-    '148': 'Chad',
-    '152': 'Chile',
-    '156': 'China',
-    '162': 'Christmas Island',
-    '166': 'Cocos Islands',
-    '170': 'Colombia',
-    '174': 'Comoros',
-    '178': 'Congo',
-    '180': 'Congo (DRC)',
-    '184': 'Cook Islands',
-    '188': 'Costa Rica',
-    '384': 'Côte d\'Ivoire',
-    '191': 'Croatia',
-    '192': 'Cuba',
-    '531': 'Curaçao',
-    '196': 'Cyprus',
-    '203': 'Czech Republic',
-    '208': 'Denmark',
-    '262': 'Djibouti',
-    '212': 'Dominica',
-    '214': 'Dominican Republic',
-    '218': 'Ecuador',
-    '818': 'Egypt',
-    '222': 'El Salvador',
-    '226': 'Equatorial Guinea',
-    '232': 'Eritrea',
-    '233': 'Estonia',
-    '748': 'Eswatini',
-    '231': 'Ethiopia',
-    '238': 'Falkland Islands',
-    '234': 'Faroe Islands',
-    '242': 'Fiji',
-    '246': 'Finland',
-    '250': 'France',
-    '254': 'French Guiana',
-    '258': 'French Polynesia',
-    '266': 'Gabon',
-    '270': 'Gambia',
-    '268': 'Georgia',
-    '276': 'Germany',
-    '288': 'Ghana',
-    '292': 'Gibraltar',
-    '300': 'Greece',
-    '304': 'Greenland',
-    '308': 'Grenada',
-    '312': 'Guadeloupe',
-    '316': 'Guam',
-    '320': 'Guatemala',
-    '831': 'Guernsey',
-    '324': 'Guinea',
-    '624': 'Guinea-Bissau',
-    '328': 'Guyana',
-    '332': 'Haiti',
-    '340': 'Honduras',
-    '344': 'Hong Kong',
-    '348': 'Hungary',
-    '352': 'Iceland',
-    '101': 'India',
-    '360': 'Indonesia',
-    '364': 'Iran',
-    '368': 'Iraq',
-    '372': 'Ireland',
-    '833': 'Isle of Man',
-    '376': 'Israel',
-    '380': 'Italy',
-    '388': 'Jamaica',
-    '392': 'Japan',
-    '832': 'Jersey',
-    '400': 'Jordan',
-    '398': 'Kazakhstan',
-    '404': 'Kenya',
-    '296': 'Kiribati',
-    '383': 'Kosovo',
-    '414': 'Kuwait',
-    '417': 'Kyrgyzstan',
-    '418': 'Laos',
-    '428': 'Latvia',
-    '422': 'Lebanon',
-    '426': 'Lesotho',
-    '430': 'Liberia',
-    '434': 'Libya',
-    '438': 'Liechtenstein',
-    '440': 'Lithuania',
-    '442': 'Luxembourg',
-    '446': 'Macao',
-    '450': 'Madagascar',
-    '454': 'Malawi',
-    '458': 'Malaysia',
-    '462': 'Maldives',
-    '466': 'Mali',
-    '470': 'Malta',
-    '584': 'Marshall Islands',
-    '474': 'Martinique',
-    '478': 'Mauritania',
-    '480': 'Mauritius',
-    '175': 'Mayotte',
-    '484': 'Mexico',
-    '583': 'Micronesia',
-    '498': 'Moldova',
-    '492': 'Monaco',
-    '496': 'Mongolia',
-    '499': 'Montenegro',
-    '500': 'Montserrat',
-    '504': 'Morocco',
-    '508': 'Mozambique',
-    '104': 'Myanmar',
-    '516': 'Namibia',
-    '520': 'Nauru',
-    '524': 'Nepal',
-    '528': 'Netherlands',
-    '540': 'New Caledonia',
-    '554': 'New Zealand',
-    '558': 'Nicaragua',
-    '562': 'Niger',
-    '566': 'Nigeria',
-    '570': 'Niue',
-    '574': 'Norfolk Island',
-    '408': 'North Korea',
-    '807': 'North Macedonia',
-    '580': 'Northern Mariana Islands',
-    '578': 'Norway',
-    '512': 'Oman',
-    '586': 'Pakistan',
-    '585': 'Palau',
-    '275': 'Palestine',
-    '591': 'Panama',
-    '598': 'Papua New Guinea',
-    '600': 'Paraguay',
-    '604': 'Peru',
-    '608': 'Philippines',
-    '612': 'Pitcairn Islands',
-    '616': 'Poland',
-    '620': 'Portugal',
-    '630': 'Puerto Rico',
-    '634': 'Qatar',
-    '638': 'Réunion',
-    '642': 'Romania',
-    '643': 'Russia',
-    '646': 'Rwanda',
-    '652': 'Saint Barthélemy',
-    '654': 'Saint Helena',
-    '659': 'Saint Kitts and Nevis',
-    '662': 'Saint Lucia',
-    '663': 'Saint Martin',
-    '666': 'Saint Pierre and Miquelon',
-    '670': 'Saint Vincent and the Grenadines',
-    '882': 'Samoa',
-    '674': 'San Marino',
-    '678': 'São Tomé and Príncipe',
-    '682': 'Saudi Arabia',
-    '686': 'Senegal',
-    '688': 'Serbia',
-    '690': 'Seychelles',
-    '694': 'Sierra Leone',
-    '702': 'Singapore',
-    '534': 'Sint Maarten',
-    '703': 'Slovakia',
-    '705': 'Slovenia',
-    '090': 'Solomon Islands',
-    '706': 'Somalia',
-    '710': 'South Africa',
-    '239': 'South Georgia',
-    '410': 'South Korea',
-    '728': 'South Sudan',
-    '724': 'Spain',
-    '144': 'Sri Lanka',
-    '729': 'Sudan',
-    '740': 'Suriname',
-    '744': 'Svalbard and Jan Mayen',
-    '752': 'Sweden',
-    '756': 'Switzerland',
-    '760': 'Syria',
-    '158': 'Taiwan',
-    '762': 'Tajikistan',
-    '834': 'Tanzania',
-    '764': 'Thailand',
-    '626': 'Timor-Leste',
-    '768': 'Togo',
-    '772': 'Tokelau',
-    '776': 'Tonga',
-    '780': 'Trinidad and Tobago',
-    '788': 'Tunisia',
-    '792': 'Turkey',
-    '795': 'Turkmenistan',
-    '796': 'Turks and Caicos Islands',
-    '798': 'Tuvalu',
-    '800': 'Uganda',
-    '804': 'Ukraine',
-    '784': 'United Arab Emirates',
-    '826': 'United Kingdom',
-    '840': 'United States',
-    '858': 'Uruguay',
-    '850': 'US Virgin Islands',
-    '860': 'Uzbekistan',
-    '548': 'Vanuatu',
-    '336': 'Vatican City',
-    '862': 'Venezuela',
-    '704': 'Vietnam',
-    '876': 'Wallis and Futuna',
-    '732': 'Western Sahara',
-    '887': 'Yemen',
-    '894': 'Zambia',
-    '716': 'Zimbabwe',
-  };
+  // India country/citizenship defaults
+  static const String _indiaCountryCode = '101';
+  static const String _indiaIsdCode = '91';
 
   final Map<String, String> stateOptions = {
     '001': 'Andhra Pradesh',
@@ -393,64 +146,10 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
   };
 
   final Map<String, String> taxResFlagOptions = {
-    'Y': 'Yes',
     'N': 'No',
+    'Y': 'Yes',
   };
 
-  final Map<String, String> isdOptions = {
-    '91': '+91 (India)',
-    '1': '+1 (US/Canada)',
-    '7': '+7 (Russia)',
-    '20': '+20 (Egypt)',
-    '27': '+27 (South Africa)',
-    '30': '+30 (Greece)',
-    '31': '+31 (Netherlands)',
-    '32': '+32 (Belgium)',
-    '33': '+33 (France)',
-    '34': '+34 (Spain)',
-    '36': '+36 (Hungary)',
-    '39': '+39 (Italy)',
-    '40': '+40 (Romania)',
-    '41': '+41 (Switzerland)',
-    '43': '+43 (Austria)',
-    '44': '+44 (UK)',
-    '45': '+45 (Denmark)',
-    '46': '+46 (Sweden)',
-    '47': '+47 (Norway)',
-    '48': '+48 (Poland)',
-    '49': '+49 (Germany)',
-    '52': '+52 (Mexico)',
-    '53': '+53 (Cuba)',
-    '54': '+54 (Argentina)',
-    '55': '+55 (Brazil)',
-    '60': '+60 (Malaysia)',
-    '61': '+61 (Australia)',
-    '62': '+62 (Indonesia)',
-    '63': '+63 (Philippines)',
-    '64': '+64 (New Zealand)',
-    '65': '+65 (Singapore)',
-    '66': '+66 (Thailand)',
-    '81': '+81 (Japan)',
-    '82': '+82 (South Korea)',
-    '84': '+84 (Vietnam)',
-    '86': '+86 (China)',
-    '90': '+90 (Turkey)',
-    '92': '+92 (Pakistan)',
-    '93': '+93 (Afghanistan)',
-    '94': '+94 (Sri Lanka)',
-    '95': '+95 (Myanmar)',
-    '98': '+98 (Iran)',
-    '212': '+212 (Morocco)',
-    '213': '+213 (Algeria)',
-    '216': '+216 (Tunisia)',
-    '966': '+966 (Saudi Arabia)',
-    '971': '+971 (UAE)',
-    '972': '+972 (Israel)',
-    '973': '+973 (Bahrain)',
-    '974': '+974 (Qatar)',
-  };
-
-  // STD Code dropdown options (Indian STD codes)
   final Map<String, String> stdOptions = {
     '011': '011 (Delhi)',
     '020': '020 (Pune)',
@@ -535,7 +234,6 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
   void dispose() {
     _animationController.dispose();
     _nameController.dispose();
-    _dobController.dispose();
     _panController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
@@ -548,7 +246,6 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
     _bankAccountController.dispose();
     _ifscController.dispose();
     _nomineeNameController.dispose();
-    _nomineeDobController.dispose();
     _nomineePiNoController.dispose();
     _nomineeMobileController.dispose();
     _nomineeEmailController.dispose();
@@ -558,7 +255,6 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
     _nomineeCityController.dispose();
     _nomineePincodeController.dispose();
     _netWorthController.dispose();
-    _netDateController.dispose();
     super.dispose();
   }
 
@@ -566,15 +262,11 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
     switch (_currentStep) {
       case 0:
         return _stepFormKeys[0].currentState?.validate() ?? false &&
-            _birthCountry != null &&
-            _citizenship != null &&
-            _nationality != null &&
-            _taxResFlag != null &&
-            _resIsd != null;
+            _dob != null &&
+            _taxResFlag != null;
       case 1:
         return _stepFormKeys[1].currentState?.validate() ?? false &&
             _resState != null &&
-            _resCountry != null &&
             _resStd != null;
       case 2:
         return _stepFormKeys[2].currentState?.validate() ?? false;
@@ -583,9 +275,11 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
             _grossIncome != null &&
             _sourceOfWealth != null &&
             _occupation != null &&
-            _pep != null;
+            _pep != null &&
+            _netDate != null;
       case 4:
-        return _stepFormKeys[4].currentState?.validate() ?? false;
+        return _stepFormKeys[4].currentState?.validate() ?? false &&
+            _nomineeDob != null;
       default:
         return false;
     }
@@ -623,7 +317,7 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
         content: Row(
           children: [
             Icon(Icons.error_outline, color: Colors.white),
-            SizedBox(),
+            SizedBox(width: 8.w),
             Expanded(
               child: Text(
                 'Please fill all required fields correctly',
@@ -642,6 +336,35 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
     );
   }
 
+  String _formatDate(DateTime date) {
+    return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _selectDate(BuildContext context, DateTime? currentDate, Function(DateTime) onDateSelected) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: currentDate ?? DateTime.now().subtract(Duration(days: 365 * 25)),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppColors.buttonBackground,
+              onPrimary: AppColors.buttonText,
+              surface: AppColors.cardBackground,
+              onSurface: AppColors.primaryText,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      onDateSelected(picked);
+    }
+  }
+
   Future<void> _submitForm() async {
     setState(() => _isLoading = true);
 
@@ -654,14 +377,14 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
           {
             "type": "PR",
             "name": _nameController.text,
-            "dob": _dobController.text,
+            "dob": _formatDate(_dob!),
             "panExemptFlag": "N",
             "panPekrnNo": _panController.text,
             "contactDetail": {
-              "resIsd": _resIsd ?? "",
+              "resIsd": _indiaIsdCode,
               "resStd": _resStd ?? "",
               "resPhoneNo": "",
-              "mobIsdCode": _resIsd ?? "",
+              "mobIsdCode": _indiaIsdCode,
               "priMobNo": _phoneController.text,
               "altMobNo": "",
               "offIsd": "",
@@ -680,7 +403,7 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
                 "city": _resCityController.text,
                 "pincode": _resPincodeController.text,
                 "state": _resState,
-                "country": _resCountry,
+                "country": _indiaCountryCode,
               },
               "perAddrDetail": {
                 "addr1": _resAddr1Controller.text,
@@ -689,13 +412,13 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
                 "city": _resCityController.text,
                 "pincode": _resPincodeController.text,
                 "state": _resState,
-                "country": _resCountry,
+                "country": _indiaCountryCode,
               },
             },
             "otherDetail": {
               "grossIncome": _grossIncome,
               "netWorth": _netWorthController.text,
-              "netDate": _netDateController.text,
+              "netDate": _formatDate(_netDate!),
               "sourceOfWealth": _sourceOfWealth,
               "kraAddrType": "1",
               "occupation": _occupation,
@@ -703,9 +426,9 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
             },
             "fatcaDetail": {
               "birthCity": _birthCityController.text,
-              "birthCountry": _birthCountry,
-              "citizenship": _citizenship,
-              "nationality": _nationality,
+              "birthCountry": _indiaCountryCode,
+              "citizenship": _indiaCountryCode,
+              "nationality": _indiaCountryCode,
               "taxResFlag": _taxResFlag,
               "taxRecords": [{"seqNum": "1"}],
             },
@@ -733,7 +456,7 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
               "nomineeName": _nomineeNameController.text,
               "relation": "MFU01",
               "percentage": "100",
-              "dob": _nomineeDobController.text,
+              "dob": _formatDate(_nomineeDob!),
               "nomPiType": "DL",
               "nomPiNo": _nomineePiNoController.text,
               "nomMobile": _nomineeMobileController.text,
@@ -743,7 +466,7 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
               "nomAddr3": _nomineeAddr3Controller.text,
               "nomPincode": _nomineePincodeController.text,
               "nomCity": _nomineeCityController.text,
-              "nomCountry": "101",
+              "nomCountry": _indiaCountryCode,
             },
           ],
         },
@@ -1174,15 +897,17 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
     }
   }
 
-
   Widget _buildPersonalDetails() {
     return Column(
       children: [
         _buildTextField(_nameController, 'Full Name', 'Enter your full name', Icons.person_outline,
             validator: (v) => v!.isEmpty ? 'Required' : null),
         SizedBox(height: 16.h),
-        _buildTextField(_dobController, 'Date of Birth', 'YYYY-MM-DD', Icons.calendar_today_outlined,
-            validator: _validateDateOfBirth),
+        _buildDateField(
+          label: 'Date of Birth',
+          selectedDate: _dob,
+          onTap: () => _selectDate(context, _dob, (date) => setState(() => _dob = date)),
+        ),
         SizedBox(height: 16.h),
         _buildTextField(_panController, 'PAN Number', 'e.g. ABCDE1234F', Icons.credit_card_outlined,
             validator: (v) => v!.isEmpty
@@ -1195,9 +920,6 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
             keyboardType: TextInputType.phone,
             validator: (v) => RegExp(r'^\d{10}$').hasMatch(v!) ? null : 'Invalid mobile'),
         SizedBox(height: 16.h),
-        _buildDropdownField('Residence ISD Code', _resIsd, isdOptions, Icons.phone_outlined,
-                (v) => setState(() => _resIsd = v)),
-        SizedBox(height: 16.h),
         _buildTextField(_emailController, 'Email', 'your@email.com', Icons.email_outlined,
             validator: (v) => RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v!)
                 ? null
@@ -1206,16 +928,7 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
         _buildTextField(_birthCityController, 'Birth City', 'City of birth', Icons.location_city_outlined,
             validator: (v) => v!.isEmpty ? 'Required' : null),
         SizedBox(height: 16.h),
-        _buildDropdownField('Birth Country', _birthCountry, countryOptions, Icons.flag_outlined,
-                (v) => setState(() => _birthCountry = v)),
-        SizedBox(height: 16.h),
-        _buildDropdownField('Citizenship', _citizenship, countryOptions, Icons.password_outlined,
-                (v) => setState(() => _citizenship = v)),
-        SizedBox(height: 16.h),
-        _buildDropdownField('Nationality', _nationality, countryOptions, Icons.public_outlined,
-                (v) => setState(() => _nationality = v)),
-        SizedBox(height: 16.h),
-        _buildDropdownField('Tax Residency (Outside India?)', _taxResFlag, taxResFlagOptions,
+        _buildDropdownField('Tax Residency Outside India?', _taxResFlag, taxResFlagOptions,
             Icons.receipt_long_outlined, (v) => setState(() => _taxResFlag = v)),
       ],
     );
@@ -1240,9 +953,6 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
         SizedBox(height: 16.h),
         _buildDropdownField('State', _resState, stateOptions, Icons.map_outlined,
                 (v) => setState(() => _resState = v)),
-        SizedBox(height: 16.h),
-        _buildDropdownField('Country', _resCountry, countryOptions, Icons.flag_outlined,
-                (v) => setState(() => _resCountry = v)),
         SizedBox(height: 16.h),
         _buildDropdownField('STD Code', _resStd, stdOptions, Icons.dialpad_outlined,
                 (v) => setState(() => _resStd = v)),
@@ -1278,8 +988,11 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
             keyboardType: TextInputType.number,
             validator: (v) => double.tryParse(v!) != null ? null : 'Invalid amount'),
         SizedBox(height: 16.h),
-        _buildTextField(_netDateController, 'Net Worth As Of', 'YYYY-MM-DD', Icons.calendar_today_outlined,
-            validator: _validatePastDate),
+        _buildDateField(
+          label: 'Net Worth As Of',
+          selectedDate: _netDate,
+          onTap: () => _selectDate(context, _netDate, (date) => setState(() => _netDate = date)),
+        ),
         SizedBox(height: 16.h),
         _buildDropdownField('Source of Wealth', _sourceOfWealth, sourceOfWealthOptions, Icons.source_outlined,
                 (v) => setState(() => _sourceOfWealth = v)),
@@ -1299,8 +1012,11 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
         _buildTextField(_nomineeNameController, 'Nominee Name', 'Full name', Icons.person_add_outlined,
             validator: (v) => v!.isEmpty ? 'Required' : null),
         SizedBox(height: 16.h),
-        _buildTextField(_nomineeDobController, 'Nominee DOB', 'YYYY-MM-DD', Icons.calendar_today_outlined,
-            validator: _validatePastDate),
+        _buildDateField(
+          label: 'Nominee Date of Birth',
+          selectedDate: _nomineeDob,
+          onTap: () => _selectDate(context, _nomineeDob, (date) => setState(() => _nomineeDob = date)),
+        ),
         SizedBox(height: 16.h),
         _buildTextField(_nomineePiNoController, 'Nominee PAN/ID', 'PAN or ID proof no.', Icons.credit_card_outlined,
             validator: (v) => v!.isEmpty ? 'Required' : null),
@@ -1331,31 +1047,56 @@ class _CamsCreationScreenState extends State<CamsCreationScreen> with TickerProv
     );
   }
 
-  String? _validateDateOfBirth(String? value) {
-    if (value == null || value.isEmpty) return 'Required';
-    if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(value)) return 'Use YYYY-MM-DD';
-
-    try {
-      final parts = value.split('-');
-      final date = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
-      if (date.isAfter(DateTime.now())) return 'Cannot be future date';
-      if (DateTime.now().year - date.year < 18) return 'Must be 18+ years old';
-      return null;
-    } catch (e) {
-      return 'Invalid date';
-    }
-  }
-
-  String? _validatePastDate(String? value) {
-    if (value == null || value.isEmpty) return 'Required';
-    if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(value)) return 'Use YYYY-MM-DD';
-    try {
-      final date = DateTime.tryParse(value);
-      if (date == null || date.isAfter(DateTime.now())) return 'Cannot be future date';
-      return null;
-    } catch (e) {
-      return 'Invalid date';
-    }
+  Widget _buildDateField({
+    required String label,
+    required DateTime? selectedDate,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12.r),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2)),
+          ],
+        ),
+        child: InputDecorator(
+          decoration: InputDecoration(
+            labelText: label,
+            prefixIcon: Icon(Icons.calendar_today_outlined, color: AppColors.secondaryText, size: 20.sp),
+            suffixIcon: Icon(Icons.arrow_drop_down, color: AppColors.secondaryText),
+            filled: true,
+            fillColor: AppColors.cardBackground,
+            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 18.h),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(color: AppColors.border.withOpacity(0.3), width: 1.5),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(color: AppColors.border.withOpacity(0.3), width: 1.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(color: AppColors.buttonBackground, width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+            ),
+          ),
+          child: Text(
+            selectedDate != null ? _formatDate(selectedDate) : 'Select date',
+            style: TextStyle(
+              color: selectedDate != null ? AppColors.primaryText : AppColors.secondaryText,
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildTextField(
