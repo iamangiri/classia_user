@@ -42,10 +42,15 @@ class _BasketCardState extends State<BasketCard> with SingleTickerProviderStateM
   void _updateHorseAnimation() {
     final double performance = widget.basket.performanceValue;
 
-    // ✅ Calculate race position based on 100% scale
-    // Use absolute value so negative performance also shows movement
-    // 5% performance = 5% of track, 50% performance = 50% of track
-    double racePosition = (performance.abs() / 100).clamp(0.0, 1.0);
+    // ✅ Only move horse for POSITIVE values
+    // For negative values, keep horse at position 0 (start)
+    double racePosition = 0.0;
+
+    if (performance > 0) {
+      // For positive performance, scale to 0-1 range (0% to 100%)
+      racePosition = (performance / 100).clamp(0.0, 1.0);
+    }
+    // else: negative values stay at 0.0 (horse doesn't move)
 
     _horseAnimation = Tween<double>(begin: 0, end: racePosition).animate(
       CurvedAnimation(parent: _horseController, curve: Curves.easeInOut),
@@ -72,7 +77,7 @@ class _BasketCardState extends State<BasketCard> with SingleTickerProviderStateM
   Color _getTypeColor() {
     return widget.basketType == 'INTRADAY'
         ? const Color(0xFFFF9800)
-        : const Color(0xFF9C27B0); // Changed to purple for SWING
+        : const Color(0xFF9C27B0); // Purple for SWING
   }
 
   // Always use green for race - positive color
@@ -82,7 +87,7 @@ class _BasketCardState extends State<BasketCard> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    // Use MediaQuery for better responsiveness instead of hardcoded values
+    // Use MediaQuery for better responsiveness
     final screenWidth = MediaQuery.of(context).size.width;
     final cardWidth = screenWidth - 32; // 16px padding on each side
 
@@ -95,7 +100,7 @@ class _BasketCardState extends State<BasketCard> with SingleTickerProviderStateM
     return Container(
       margin: EdgeInsets.symmetric(
         vertical: 8.h,
-        horizontal: 16.w, // Consistent margin
+        horizontal: 16.w,
       ),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -292,7 +297,7 @@ class _BasketCardState extends State<BasketCard> with SingleTickerProviderStateM
                 ),
                 SizedBox(height: 14.h),
 
-                // Horse Race Animation - Always Green (Positive Color)
+                // Horse Race Animation - Only moves for positive performance
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final availableWidth = constraints.maxWidth;
@@ -300,7 +305,7 @@ class _BasketCardState extends State<BasketCard> with SingleTickerProviderStateM
                     return Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        // Background track
+                        // Background track - Always green
                         Container(
                           width: availableWidth,
                           height: 8.h,
@@ -309,25 +314,26 @@ class _BasketCardState extends State<BasketCard> with SingleTickerProviderStateM
                             color: raceBarColor.withOpacity(0.2),
                           ),
                         ),
-                        // Animated progress bar - Always green
-                        AnimatedBuilder(
-                          animation: _horseAnimation,
-                          builder: (context, child) {
-                            return Container(
-                              width: _horseAnimation.value * availableWidth,
-                              height: 8.h,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(4.r),
-                                gradient: LinearGradient(
-                                  colors: [
-                                    raceBarColor,
-                                    raceBarColor.withOpacity(0.7),
-                                  ],
+                        // Animated progress bar - Only shows for positive performance
+                        if (performance > 0)
+                          AnimatedBuilder(
+                            animation: _horseAnimation,
+                            builder: (context, child) {
+                              return Container(
+                                width: _horseAnimation.value * availableWidth,
+                                height: 8.h,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(4.r),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      raceBarColor,
+                                      raceBarColor.withOpacity(0.7),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
-                        ),
+                              );
+                            },
+                          ),
                         // Horse GIF
                         AnimatedBuilder(
                           animation: _horseAnimation,
@@ -349,6 +355,30 @@ class _BasketCardState extends State<BasketCard> with SingleTickerProviderStateM
                             );
                           },
                         ),
+                        // ✅ Performance indicator at start for negative values
+                        if (performance < 0)
+                          Positioned(
+                            left: 0,
+                            top: 12.h,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 2.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE53935).withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(4.r),
+                              ),
+                              child: Text(
+                                'Loss: ${performance.toStringAsFixed(2)}%',
+                                style: TextStyle(
+                                  fontSize: 10.sp,
+                                  color: const Color(0xFFE53935),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
                       ],
                     );
                   },

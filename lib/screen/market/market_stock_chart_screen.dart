@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import '../../service/apiservice/bajaj_api_service.dart';
-import '../../themes/app_colors.dart';
-import '../../widget/common_app_bar.dart';
-import '../../widget/trade/tradingview_chart.dart';
+import '../../utills/themes/light_app_theme.dart';
 
 
 class MarketStockChartScreen extends StatefulWidget {
@@ -25,125 +25,134 @@ class MarketStockChartScreen extends StatefulWidget {
 }
 
 class _MarketStockChartScreenState extends State<MarketStockChartScreen> {
-  String _selectedInterval = '15'; // Default 15 minutes
-  String _selectedTheme = 'light'; // Default light theme
+  late final WebViewController _controller;
+  String _selectedInterval = '15';
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    // You can set theme based on app theme if needed
-    // _selectedTheme = Provider.of<ThemeProvider>(context, listen: false).isDarkMode ? 'dark' : 'light';
+    _initializeChart();
+  }
+
+  void _initializeChart() {
+    final tradingViewSymbol = _convertToTradingViewSymbol();
+    final url = 'https://www.tradingview.com/chart/?symbol=$tradingViewSymbol&interval=$_selectedInterval';
+
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(Colors.white)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (String url) {
+            setState(() => _isLoading = true);
+          },
+          onPageFinished: (String url) {
+            setState(() => _isLoading = false);
+          },
+          onWebResourceError: (WebResourceError error) {
+            debugPrint('WebView error: ${error.description}');
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(url));
   }
 
   String _convertToTradingViewSymbol() {
     final exchange = widget.exchange.toUpperCase();
     final symbol = widget.symbol.toUpperCase();
 
-    // Handle different exchanges
     switch (exchange) {
-    // Indian Exchanges
       case 'NSE':
         return 'NSE:$symbol';
       case 'BSE':
         return 'BSE:$symbol';
-
-    // US Exchanges
       case 'NYSE':
         return 'NYSE:$symbol';
       case 'NASDAQ':
         return 'NASDAQ:$symbol';
       case 'AMEX':
         return 'AMEX:$symbol';
-
-    // European Exchanges
       case 'LSE':
         return 'LSE:$symbol';
-      case 'FWB':
-      case 'XETRA':
-        return 'XETR:$symbol';
-      case 'EURONEXT':
-        return 'EURONEXT:$symbol';
-
-    // Asian Exchanges
       case 'HKEX':
       case 'HKG':
         return 'HKEX:$symbol';
       case 'TSE':
       case 'TYO':
         return 'TSE:$symbol';
-      case 'SSE':
-        return 'SSE:$symbol';
-      case 'SZSE':
-        return 'SZSE:$symbol';
-      case 'KRX':
-        return 'KRX:$symbol';
-
-    // Australian Exchange
       case 'ASX':
         return 'ASX:$symbol';
-
-    // Canadian Exchange
       case 'TSX':
         return 'TSX:$symbol';
-
-    // Default fallback
       default:
-      // Try to use the exchange as-is
         return '$exchange:$symbol';
     }
   }
 
-  void _showOrderBottomSheet(String buySell) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _OrderBottomSheet(
-        exchange: widget.exchange,
-        symbol: widget.symbol,
-        stockName: widget.stockName ?? widget.symbol,
-        stockLogo: widget.stockLogo ?? '📈',
-        buySell: buySell,
-      ),
-    );
+  void _updateInterval(String interval) {
+    setState(() {
+      _selectedInterval = interval;
+      _isLoading = true;
+    });
+    _initializeChart();
   }
 
   void _showIntervalSelector() {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
       builder: (context) {
         return Container(
-          padding: EdgeInsets.all(16.w),
+          padding: EdgeInsets.all(24.w),
           decoration: BoxDecoration(
-            color: AppColors.screenBackground,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+            color: AppTheme.cardBackground,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Handle bar
               Container(
-                margin: EdgeInsets.only(bottom: 16.h),
                 width: 40.w,
                 height: 4.h,
+                margin: EdgeInsets.only(bottom: 20.h),
                 decoration: BoxDecoration(
-                  color: AppColors.border,
+                  color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(2.r),
                 ),
               ),
-              Text(
-                'Select Time Interval',
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.headingText,
-                ),
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(10.w),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGold.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: FaIcon(
+                      FontAwesomeIcons.clock,
+                      size: 20.sp,
+                      color: AppTheme.primaryGold,
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Text(
+                    'Select Time Interval',
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryDarkBlue,
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(height: 16.h),
+              SizedBox(height: 24.h),
               Wrap(
-                spacing: 8.w,
-                runSpacing: 8.h,
+                spacing: 10.w,
+                runSpacing: 10.h,
                 children: [
                   _buildIntervalChip('1', '1m'),
                   _buildIntervalChip('5', '5m'),
@@ -155,7 +164,7 @@ class _MarketStockChartScreenState extends State<MarketStockChartScreen> {
                   _buildIntervalChip('W', '1W'),
                 ],
               ),
-              SizedBox(height: 16.h),
+              SizedBox(height: 20.h),
             ],
           ),
         );
@@ -165,109 +174,163 @@ class _MarketStockChartScreenState extends State<MarketStockChartScreen> {
 
   Widget _buildIntervalChip(String value, String label) {
     final isSelected = _selectedInterval == value;
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      selectedColor: AppColors.primaryGold,
-      backgroundColor: AppColors.cardBackground,
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.white : AppColors.primaryText,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        fontSize: 13.sp,
-      ),
-      onSelected: (selected) {
-        setState(() {
-          _selectedInterval = value;
-        });
+    return GestureDetector(
+      onTap: () {
+        _updateInterval(value);
         Navigator.pop(context);
       },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primaryGold : AppTheme.lightBackground,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(
+            color: isSelected ? AppTheme.primaryGold : Colors.grey[300]!,
+            width: 1.5,
+          ),
+          boxShadow: isSelected
+              ? [
+            BoxShadow(
+              color: AppTheme.primaryGold.withOpacity(0.3),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : AppTheme.textPrimary,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+            fontSize: 14.sp,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showOrderBottomSheet(String buySell) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (context) => _OrderBottomSheet(
+        exchange: widget.exchange,
+        symbol: widget.symbol,
+        stockName: widget.stockName ?? widget.symbol,
+        stockLogo: widget.stockLogo ?? '📈',
+        buySell: buySell,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Convert exchange and symbol to TradingView format
-    final String tradingViewSymbol = _convertToTradingViewSymbol();
-
     return Scaffold(
-      appBar: CommonAppBar(
-        title: "${widget.exchange} - ${widget.symbol}",
+      backgroundColor: AppTheme.lightBackground,
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: AppTheme.primaryDarkBlue,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: Colors.white, size: 20.sp),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.symbol,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (widget.stockName != null)
+              Text(
+                widget.stockName!,
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+          ],
+        ),
         actions: [
-          // Interval selector button
           IconButton(
-            icon: Icon(Icons.access_time, color: AppColors.primaryGold),
+            icon: Container(
+              padding: EdgeInsets.all(8.w),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryGold.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: FaIcon(
+                FontAwesomeIcons.clock,
+                color: AppTheme.primaryGold,
+                size: 16.sp,
+              ),
+            ),
             onPressed: _showIntervalSelector,
-            tooltip: 'Change Interval',
           ),
-          // Theme toggle button
-
+          SizedBox(width: 8.w),
         ],
       ),
       body: Column(
         children: [
-          // Chart using TradingViewChart widget
-          Expanded(
-            child: Container(
-              color: AppColors.screenBackground,
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: AppColors.border.withOpacity(0.3),
-                    width: 1,
-                  ),
-                  borderRadius: BorderRadius.circular(12.r),
-                  color: _selectedTheme == 'dark'
-                      ? const Color(0xFF1E1E1E)
-                      : Colors.white,
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: TradingViewChart(
-                  symbol: tradingViewSymbol,
-                  interval: _selectedInterval,
-                  theme: _selectedTheme,
-                ),
-              ),
-            ),
-          ),
-
-          // Stock Info Bar
+          // Stock Info Header
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
             decoration: BoxDecoration(
-              color: AppColors.cardBackground,
-              border: Border(
-                top: BorderSide(color: AppColors.border, width: 1),
-              ),
+              color: AppTheme.cardBackground,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
             child: Row(
               children: [
                 if (widget.stockLogo != null) ...[
-                  Text(
-                    widget.stockLogo!,
-                    style: TextStyle(fontSize: 24.sp),
+                  Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGold.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Text(
+                      widget.stockLogo!,
+                      style: TextStyle(fontSize: 28.sp),
+                    ),
                   ),
-                  SizedBox(width: 12.w),
+                  SizedBox(width: 14.w),
                 ],
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         widget.symbol,
                         style: TextStyle(
-                          fontSize: 16.sp,
+                          fontSize: 18.sp,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.headingText,
+                          color: AppTheme.primaryDarkBlue,
                         ),
                       ),
+                      SizedBox(height: 2.h),
                       if (widget.stockName != null)
                         Text(
                           widget.stockName!,
                           style: TextStyle(
-                            fontSize: 12.sp,
-                            color: AppColors.secondaryText,
+                            fontSize: 13.sp,
+                            color: AppTheme.textSecondary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -276,20 +339,22 @@ class _MarketStockChartScreenState extends State<MarketStockChartScreen> {
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryGold.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(4.r),
+                    color: AppTheme.primaryGold.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8.r),
                     border: Border.all(
-                      color: AppColors.primaryGold.withOpacity(0.3),
+                      color: AppTheme.primaryGold,
+                      width: 1.5,
                     ),
                   ),
                   child: Text(
                     widget.exchange,
                     style: TextStyle(
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primaryGold,
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryGold,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
@@ -297,16 +362,66 @@ class _MarketStockChartScreenState extends State<MarketStockChartScreen> {
             ),
           ),
 
-          // Buy/Sell Buttons
+          // Chart Section
+          Expanded(
+            child: Container(
+              margin: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: AppTheme.cardBackground,
+                borderRadius: BorderRadius.circular(16.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 12,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Stack(
+                children: [
+                  WebViewWidget(controller: _controller),
+                  if (_isLoading)
+                    Container(
+                      color: Colors.white,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppTheme.primaryGold,
+                              ),
+                              strokeWidth: 3,
+                            ),
+                            SizedBox(height: 16.h),
+                            Text(
+                              'Loading chart...',
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                color: AppTheme.textSecondary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+
+          // Buy/Sell Action Buttons
           Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: AppColors.screenBackground,
+              color: AppTheme.cardBackground,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, -2),
+                  blurRadius: 12,
+                  offset: Offset(0, -4),
                 ),
               ],
             ),
@@ -318,20 +433,31 @@ class _MarketStockChartScreenState extends State<MarketStockChartScreen> {
                     child: ElevatedButton(
                       onPressed: () => _showOrderBottomSheet('BUY'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.success,
+                        backgroundColor: AppTheme.successGreen,
                         foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                        padding: EdgeInsets.symmetric(vertical: 16.h),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.r),
+                          borderRadius: BorderRadius.circular(12.r),
                         ),
-                        elevation: 2,
+                        elevation: 0,
                       ),
-                      child: Text(
-                        'BUY',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          FaIcon(
+                            FontAwesomeIcons.arrowTrendUp,
+                            size: 16.sp,
+                          ),
+                          SizedBox(width: 8.w),
+                          Text(
+                            'BUY',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -340,20 +466,31 @@ class _MarketStockChartScreenState extends State<MarketStockChartScreen> {
                     child: ElevatedButton(
                       onPressed: () => _showOrderBottomSheet('SELL'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.error,
+                        backgroundColor: AppTheme.errorRed,
                         foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                        padding: EdgeInsets.symmetric(vertical: 16.h),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.r),
+                          borderRadius: BorderRadius.circular(12.r),
                         ),
-                        elevation: 2,
+                        elevation: 0,
                       ),
-                      child: Text(
-                        'SELL',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          FaIcon(
+                            FontAwesomeIcons.arrowTrendDown,
+                            size: 16.sp,
+                          ),
+                          SizedBox(width: 8.w),
+                          Text(
+                            'SELL',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -390,8 +527,8 @@ class _OrderBottomSheetState extends State<_OrderBottomSheet> {
   bool _isLoading = false;
   final TextEditingController _qtyController = TextEditingController(text: '1');
   final TextEditingController _priceController = TextEditingController();
-  String _selectedOrderType = 'RL-M'; // Market Order by default
-  String _selectedProduct = 'I'; // Intraday by default
+  String _selectedOrderType = 'RL-M';
+  String _selectedProduct = 'I';
 
   @override
   void dispose() {
@@ -406,7 +543,6 @@ class _OrderBottomSheetState extends State<_OrderBottomSheet> {
       return;
     }
 
-    // Validate price for LIMIT orders (RL and SL require price)
     if (_selectedOrderType == 'RL' || _selectedOrderType == 'SL') {
       if (_priceController.text.isEmpty || double.tryParse(_priceController.text) == null) {
         _showSnackBar('Please enter valid price', isError: true);
@@ -461,9 +597,12 @@ class _OrderBottomSheetState extends State<_OrderBottomSheet> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? AppColors.error : AppColors.success,
+        backgroundColor: isError ? AppTheme.errorRed : AppTheme.successGreen,
         behavior: SnackBarBehavior.floating,
         duration: Duration(seconds: 3),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.r),
+        ),
       ),
     );
   }
@@ -474,49 +613,54 @@ class _OrderBottomSheetState extends State<_OrderBottomSheet> {
     final showPriceField = _selectedOrderType == 'RL' || _selectedOrderType == 'SL';
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.65,
-      minChildSize: 0.4,
-      maxChildSize: 0.9,
+      initialChildSize: 0.7,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: AppColors.screenBackground,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+            color: AppTheme.cardBackground,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.2),
-                blurRadius: 12,
-                offset: const Offset(0, -2),
+                blurRadius: 20,
+                offset: Offset(0, -4),
               ),
             ],
           ),
           child: Column(
             children: [
-              // Handle bar
               Container(
                 margin: EdgeInsets.only(top: 12.h),
                 width: 40.w,
                 height: 4.h,
                 decoration: BoxDecoration(
-                  color: AppColors.border,
+                  color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(2.r),
                 ),
               ),
               Expanded(
                 child: SingleChildScrollView(
                   controller: scrollController,
-                  padding: EdgeInsets.all(20.w),
+                  padding: EdgeInsets.all(24.w),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header
                       Row(
                         children: [
-                          Text(
-                            widget.stockLogo,
-                            style: TextStyle(fontSize: 32.sp),
+                          Container(
+                            padding: EdgeInsets.all(14.w),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryGold.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(14.r),
+                            ),
+                            child: Text(
+                              widget.stockLogo,
+                              style: TextStyle(fontSize: 32.sp),
+                            ),
                           ),
-                          SizedBox(width: 12.w),
+                          SizedBox(width: 14.w),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -524,16 +668,17 @@ class _OrderBottomSheetState extends State<_OrderBottomSheet> {
                                 Text(
                                   widget.symbol,
                                   style: TextStyle(
-                                    fontSize: 20.sp,
+                                    fontSize: 22.sp,
                                     fontWeight: FontWeight.bold,
-                                    color: AppColors.headingText,
+                                    color: AppTheme.primaryDarkBlue,
                                   ),
                                 ),
+                                SizedBox(height: 2.h),
                                 Text(
                                   widget.stockName,
                                   style: TextStyle(
-                                    fontSize: 13.sp,
-                                    color: AppColors.secondaryText,
+                                    fontSize: 14.sp,
+                                    color: AppTheme.textSecondary,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -543,222 +688,133 @@ class _OrderBottomSheetState extends State<_OrderBottomSheet> {
                           ),
                           Container(
                             padding: EdgeInsets.symmetric(
-                              horizontal: 12.w,
-                              vertical: 6.h,
+                              horizontal: 16.w,
+                              vertical: 8.h,
                             ),
                             decoration: BoxDecoration(
                               color: isBuy
-                                  ? AppColors.success.withOpacity(0.1)
-                                  : AppColors.error.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6.r),
+                                  ? AppTheme.successGreen.withOpacity(0.15)
+                                  : AppTheme.errorRed.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(10.r),
+                              border: Border.all(
+                                color: isBuy ? AppTheme.successGreen : AppTheme.errorRed,
+                                width: 1.5,
+                              ),
                             ),
                             child: Text(
                               widget.buySell,
                               style: TextStyle(
                                 fontSize: 14.sp,
                                 fontWeight: FontWeight.bold,
-                                color: isBuy ? AppColors.success : AppColors.error,
+                                color: isBuy ? AppTheme.successGreen : AppTheme.errorRed,
                               ),
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: 24.h),
-
-                      // Order Details
+                      SizedBox(height: 28.h),
                       Text(
                         'Order Details',
                         style: TextStyle(
-                          fontSize: 16.sp,
+                          fontSize: 18.sp,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.headingText,
+                          color: AppTheme.primaryDarkBlue,
                         ),
                       ),
-                      SizedBox(height: 16.h),
-
-                      // Quantity Input
-                      TextField(
+                      SizedBox(height: 20.h),
+                      _buildInputField(
                         controller: _qtyController,
+                        label: 'Quantity',
+                        hint: 'Enter quantity',
                         keyboardType: TextInputType.number,
-                        style: TextStyle(fontSize: 14.sp),
-                        decoration: InputDecoration(
-                          labelText: 'Quantity',
-                          labelStyle: TextStyle(fontSize: 13.sp),
-                          hintText: 'Enter quantity',
-                          hintStyle: TextStyle(fontSize: 13.sp),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.r),
-                            borderSide: BorderSide(
-                              color: AppColors.focusedBorder,
-                              width: 2,
-                            ),
-                          ),
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 12.w,
-                            vertical: 14.h,
-                          ),
-                        ),
+                        icon: FontAwesomeIcons.hashtag,
                       ),
                       SizedBox(height: 16.h),
-
-                      // Order Type Dropdown
-                      DropdownButtonFormField<String>(
+                      _buildDropdownField(
+                        label: 'Order Type',
                         value: _selectedOrderType,
-                        style: TextStyle(fontSize: 14.sp, color: AppColors.primaryText),
-                        decoration: InputDecoration(
-                          labelText: 'Order Type',
-                          labelStyle: TextStyle(fontSize: 13.sp),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.r),
-                            borderSide: BorderSide(
-                              color: AppColors.focusedBorder,
-                              width: 2,
-                            ),
-                          ),
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 12.w,
-                            vertical: 14.h,
-                          ),
-                        ),
+                        icon: FontAwesomeIcons.listCheck,
                         items: [
-                          DropdownMenuItem(
-                            value: 'RL-M',
-                            child: Text('Market Order', style: TextStyle(fontSize: 14.sp)),
-                          ),
-                          DropdownMenuItem(
-                            value: 'RL',
-                            child: Text('Limit Order', style: TextStyle(fontSize: 14.sp)),
-                          ),
-                          DropdownMenuItem(
-                            value: 'SL',
-                            child: Text('Stop Loss', style: TextStyle(fontSize: 14.sp)),
-                          ),
-                          DropdownMenuItem(
-                            value: 'SL-M',
-                            child: Text('Stop Loss Market', style: TextStyle(fontSize: 14.sp)),
-                          ),
+                          DropdownMenuItem(value: 'RL-M', child: Text('Market Order')),
+                          DropdownMenuItem(value: 'RL', child: Text('Limit Order')),
+                          DropdownMenuItem(value: 'SL', child: Text('Stop Loss')),
+                          DropdownMenuItem(value: 'SL-M', child: Text('Stop Loss Market')),
                         ],
                         onChanged: (value) {
                           setState(() {
                             _selectedOrderType = value!;
-                            // Clear price field for market orders
                             if (value == 'RL-M' || value == 'SL-M') {
                               _priceController.clear();
                             }
                           });
                         },
                       ),
-
-                      // Price field for RL and SL orders
                       if (showPriceField) ...[
                         SizedBox(height: 16.h),
-                        TextField(
+                        _buildInputField(
                           controller: _priceController,
+                          label: _selectedOrderType == 'RL' ? 'Limit Price' : 'Stop Loss Price',
+                          hint: 'Enter price',
                           keyboardType: TextInputType.numberWithOptions(decimal: true),
-                          style: TextStyle(fontSize: 14.sp),
-                          decoration: InputDecoration(
-                            labelText: _selectedOrderType == 'RL'
-                                ? 'Limit Price'
-                                : 'Stop Loss Price',
-                            labelStyle: TextStyle(fontSize: 13.sp),
-                            hintText: 'Enter price',
-                            hintStyle: TextStyle(fontSize: 13.sp),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8.r),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8.r),
-                              borderSide: BorderSide(
-                                color: AppColors.focusedBorder,
-                                width: 2,
-                              ),
-                            ),
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 12.w,
-                              vertical: 14.h,
-                            ),
-                          ),
+                          icon: FontAwesomeIcons.indianRupeeSign,
                         ),
                       ],
                       SizedBox(height: 16.h),
-
-                      // Product Type Dropdown
-                      DropdownButtonFormField<String>(
+                      _buildDropdownField(
+                        label: 'Product Type',
                         value: _selectedProduct,
-                        style: TextStyle(fontSize: 14.sp, color: AppColors.primaryText),
-                        decoration: InputDecoration(
-                          labelText: 'Product Type',
-                          labelStyle: TextStyle(fontSize: 13.sp),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.r),
-                            borderSide: BorderSide(
-                              color: AppColors.focusedBorder,
-                              width: 2,
-                            ),
-                          ),
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 12.w,
-                            vertical: 14.h,
-                          ),
-                        ),
+                        icon: FontAwesomeIcons.boxOpen,
                         items: [
-                          DropdownMenuItem(
-                            value: 'I',
-                            child: Text('Intraday', style: TextStyle(fontSize: 14.sp)),
-                          ),
-                          DropdownMenuItem(
-                            value: 'D',
-                            child: Text('Delivery', style: TextStyle(fontSize: 14.sp)),
-                          ),
-                          DropdownMenuItem(
-                            value: 'MTF',
-                            child: Text('Margin Trading', style: TextStyle(fontSize: 14.sp)),
-                          ),
+                          DropdownMenuItem(value: 'I', child: Text('Intraday')),
+                          DropdownMenuItem(value: 'D', child: Text('Delivery')),
+                          DropdownMenuItem(value: 'MTF', child: Text('Margin Trading')),
                         ],
                         onChanged: (value) {
                           setState(() => _selectedProduct = value!);
                         },
                       ),
-                      SizedBox(height: 24.h),
-
-                      // Place Order Button
+                      SizedBox(height: 28.h),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _placeOrder,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: isBuy ? AppColors.success : AppColors.error,
+                            backgroundColor: isBuy ? AppTheme.successGreen : AppTheme.errorRed,
                             foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(vertical: 14.h),
+                            padding: EdgeInsets.symmetric(vertical: 16.h),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.r),
+                              borderRadius: BorderRadius.circular(12.r),
                             ),
-                            elevation: 2,
+                            elevation: 0,
                           ),
                           child: _isLoading
                               ? SizedBox(
-                            height: 20.h,
-                            width: 20.w,
+                            height: 22.h,
+                            width: 22.w,
                             child: CircularProgressIndicator(
-                              strokeWidth: 2,
+                              strokeWidth: 2.5,
                               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
-                              : Text(
-                            'Place ${widget.buySell} Order',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
+                              : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              FaIcon(
+                                isBuy
+                                    ? FontAwesomeIcons.arrowTrendUp
+                                    : FontAwesomeIcons.arrowTrendDown,
+                                size: 16.sp,
+                              ),
+                              SizedBox(width: 10.w),
+                              Text(
+                                'Place ${widget.buySell} Order',
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -770,6 +826,107 @@ class _OrderBottomSheetState extends State<_OrderBottomSheet> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required TextInputType keyboardType,
+    required IconData icon,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            FaIcon(icon, size: 14.sp, color: AppTheme.primaryGold),
+            SizedBox(width: 8.w),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.primaryDarkBlue,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 8.h),
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          style: TextStyle(fontSize: 15.sp, color: AppTheme.textPrimary),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(fontSize: 14.sp, color: Colors.grey[400]),
+            filled: true,
+            fillColor: AppTheme.lightBackground,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
+            ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String label,
+    required String value,
+    required IconData icon,
+    required List<DropdownMenuItem<String>> items,
+    required Function(String?) onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            FaIcon(icon, size: 14.sp, color: AppTheme.primaryGold),
+            SizedBox(width: 8.w),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.primaryDarkBlue,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 8.h),
+        Container(
+          decoration: BoxDecoration(
+            color: AppTheme.lightBackground,
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: DropdownButtonFormField<String>(
+            value: value,
+            style: TextStyle(fontSize: 15.sp, color: AppTheme.textPrimary),
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            ),
+            items: items,
+            onChanged: onChanged,
+          ),
+        ),
+      ],
     );
   }
 }
