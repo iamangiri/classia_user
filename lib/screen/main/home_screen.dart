@@ -97,9 +97,9 @@ class _HomeScreenState extends State<HomeScreen> {
       case 'Launchpad':
         destination = LaunchpadScreen();
         break;
-      case 'My Reports':
-        destination = const DownloadReportsScreen();
-        break;
+      // case 'My Reports':
+      //   destination = const DownloadReportsScreen();
+      //   break;
       case 'Transactions':
         destination = TransactionScreen();
         break;
@@ -220,9 +220,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
               HomeStockMarketSection(),
               // HomeJockeyTradeSection(),
-              SizedBox(height: 24.h),
+              //SizedBox(height: 24.h),
               // New Section: Learn & Earn
-              HomeLearnSection(),
+            //  HomeLearnSection(),
              // SizedBox(height: 24.h),
            //   HomeTrendingFundWidget(),
               SizedBox(height: 24.h),
@@ -230,8 +230,8 @@ class _HomeScreenState extends State<HomeScreen> {
               SizedBox(height: 24.h),
               // Top Mutual Funds Section
             //  TopMutualFundsSection(),
-              SizedBox(height: 12.h),
-              HomeCertificateSection(),
+             // SizedBox(height: 12.h),
+             // HomeCertificateSection(),
             ],
           ),
         ),

@@ -1,6 +1,5 @@
 import 'package:classia_amc/routes/route.dart';
 import 'package:classia_amc/screen/profile/learn_screen.dart';
-import 'package:classia_amc/service/WithoutLogin/auth_login_check_service.dart' hide UserPoints;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';

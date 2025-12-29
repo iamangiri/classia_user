@@ -69,11 +69,11 @@ class HomeScreenData {
       'icon': FontAwesomeIcons.wallet,
       'color': Color(0xFFFF9800), // orange
     },
-    {
-      'title': 'My Reports',
-      'icon': FontAwesomeIcons.fileDownload,
-      'color': Color(0xFF9C27B0), // purple
-    },
+    // {
+    //   'title': 'My Reports',
+    //   'icon': FontAwesomeIcons.fileDownload,
+    //   'color': Color(0xFF9C27B0), // purple
+    // },
   ];
 
   static List<Map<String, String>> trendingFunds = [

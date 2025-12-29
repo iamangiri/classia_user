@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../service/apiservice/user_service.dart';
 import '../../utills/themes/light_app_theme.dart';
+import '../../widget/common_app_bar.dart';
 
 class LoginHistoryScreen extends StatefulWidget {
   const LoginHistoryScreen({Key? key}) : super(key: key);
@@ -105,21 +106,7 @@ class _LoginHistoryScreenState extends State<LoginHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Login History", style: TextStyle(color: Colors.white)),
-        backgroundColor: AppTheme.lightTheme.primaryColor,
-        centerTitle: true,
-        leading: IconButton(
-          icon: FaIcon(FontAwesomeIcons.arrowLeft, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh, color: Colors.white),
-            onPressed: _loadLoginHistory,
-          ),
-        ],
-      ),
+      appBar:  CommonAppBar(title: 'Login History'),
       body: isLoading
           ? Center(
         child: CircularProgressIndicator(

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
+
+
+
+
+
   // Primary Colors
   static const Color primaryDarkBlue = Color(0xFF0A1F3A);
   static const Color primaryGold = Color(0xFFDAA520);
@@ -8,6 +13,7 @@ class AppTheme {
   // Background Colors
   static const Color lightBackground = Color(0xFFF5F7FA);
   static const Color cardBackground = Color(0xFFFFFFFF);
+  static const Color screenBackground = Color(0xFFF8FAFC);
 
   // Text Colors
   static const Color textPrimary = Color(0xFF0A1F3A);
@@ -16,6 +22,12 @@ class AppTheme {
   // Action Colors
   static const Color successGreen = Color(0xFF10B981);
   static const Color errorRed = Color(0xFFEF4444);
+  static const Color warningOrange = Color(0xFFF59E0B);
+
+  // Border Colors
+  static const Color border = Color(0xFFE5E7EB);
+
+
 
   // Theme Data
   static final ThemeData lightTheme = ThemeData(

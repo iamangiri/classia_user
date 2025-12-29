@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../service/apiservice/user_service.dart';
 import '../../utills/themes/light_app_theme.dart';
+import '../../widget/common_app_bar.dart';
 
 
 class ChangePasswordScreen extends StatefulWidget {
@@ -124,15 +125,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Change Password", style: TextStyle(color: Colors.white)),
-        backgroundColor: AppTheme.lightTheme.primaryColor,
-        centerTitle: true,
-        leading: IconButton(
-          icon: FaIcon(FontAwesomeIcons.arrowLeft, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
+      appBar: CommonAppBar(title: 'Change Password',),
       body: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.all(16),

@@ -1,314 +1,206 @@
-import 'package:classia_amc/utills/constent/user_constant.dart';
-import 'package:classia_amc/widget/common_app_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:classia_amc/themes/app_colors.dart';
+import '../../utills/constent/user_constant.dart';
+import '../../utills/themes/light_app_theme.dart';
+import 'customer_support_screen.dart';
 
-class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({Key? key}) : super(key: key);
+
+class ProfileDetailsScreen extends StatefulWidget {
+  const ProfileDetailsScreen({Key? key}) : super(key: key);
 
   @override
-  _EditProfileScreenState createState() => _EditProfileScreenState();
+  _ProfileDetailsScreenState createState() => _ProfileDetailsScreenState();
 }
 
-class _EditProfileScreenState extends State<EditProfileScreen> {
-  final _formKey = GlobalKey<FormState>();
-  bool _isLoading = false;
+class _ProfileDetailsScreenState extends State<ProfileDetailsScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
-  // Controllers for editable fields only
-  final TextEditingController _fullNameController =
-  TextEditingController(text: UserConstants.NAME);
-  final TextEditingController _addressController =
-  TextEditingController(text: UserConstants.ADDRESS);
-  final TextEditingController _cityController =
-  TextEditingController(text: UserConstants.CITY);
-  final TextEditingController _stateController =
-  TextEditingController(text: UserConstants.STATE);
-  final TextEditingController _pinCodeController =
-  TextEditingController(text: UserConstants.PIN_CODE);
-
-  Future<void> _saveProfile() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
-
-      try {
-        // Simulate API call - replace with actual API call
-        await Future.delayed(const Duration(seconds: 2));
-
-        // Update UserConstants
-        await UserConstants.updateField(
-            UserConstants.NAME_KEY, _fullNameController.text.trim());
-        await UserConstants.updateField(
-            UserConstants.ADDRESS_KEY, _addressController.text.trim());
-        await UserConstants.updateField(
-            UserConstants.CITY_KEY, _cityController.text.trim());
-        await UserConstants.updateField(
-            UserConstants.STATE_KEY, _stateController.text.trim());
-        await UserConstants.updateField(
-            UserConstants.PIN_CODE_KEY, _pinCodeController.text.trim());
-
-        setState(() => _isLoading = false);
-        _showSnackBar("Profile updated successfully!", isError: false);
-        Navigator.pop(context, true); // Return true to indicate success
-      } catch (e) {
-        setState(() => _isLoading = false);
-        _showSnackBar("Failed to update profile: ${e.toString()}",
-            isError: true);
-      }
-    }
-  }
-
-  void _showSnackBar(String message, {required bool isError}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? AppColors.error : AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        shape:
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-      ),
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
     );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+    _animationController.forward();
   }
 
   @override
   void dispose() {
-    _fullNameController.dispose();
-    _addressController.dispose();
-    _cityController.dispose();
-    _stateController.dispose();
-    _pinCodeController.dispose();
+    _animationController.dispose();
     super.dispose();
+  }
+
+  void _navigateToSupport() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const CustomerSupportScreen(showBackButton:true)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.screenBackground,
-      appBar: CommonAppBar(title: 'Edit Profile'),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(20.w),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: AppTheme.screenBackground,
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: CustomScrollView(
+          slivers: [
+            _buildSliverAppBar(),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.all(20.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Profile Avatar Section
+                    _buildProfileAvatarSection(),
+                    SizedBox(height: 24.h),
+
+                    // Info Banner
+                    _buildInfoBanner(),
+                    SizedBox(height: 24.h),
+
+                    // Personal Information Section
+                    _buildSectionCard(
+                      title: 'Personal Information',
+                      icon: Icons.person_outline_rounded,
+                      children: [
+                        _buildDetailItem(
+                          label: "Full Name",
+                          value: UserConstants.NAME,
+                          icon: Icons.badge_outlined,
+                        ),
+                        _buildDetailItem(
+                          label: "Email Address",
+                          value: UserConstants.EMAIL,
+                          icon: Icons.email_outlined,
+                          isVerified: UserConstants.IS_EMAIL_VERIFIED ?? false,
+                        ),
+                        _buildDetailItem(
+                          label: "Phone Number",
+                          value: UserConstants.PHONE,
+                          icon: Icons.phone_outlined,
+                          isVerified: UserConstants.IS_MOBILE_VERIFIED ?? false,
+                          isLast: true,
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 20.h),
+
+
+
+
+                    // KYC Status Section
+                    _buildSectionCard(
+                      title: 'KYC Verification',
+                      icon: Icons.verified_user_outlined,
+                      children: [
+                        _buildKYCStatusCard(
+                          label: "Aadhaar Card",
+                          description: "Government ID verification",
+                          isVerified: UserConstants.IS_AADHAAR_VERIFIED ?? false,
+                          icon: Icons.credit_card_rounded,
+                        ),
+                        SizedBox(height: 12.h),
+                        _buildKYCStatusCard(
+                          label: "PAN Card",
+                          description: UserConstants.maskedPAN.isNotEmpty
+                              ? UserConstants.maskedPAN
+                              : "Tax identification",
+                          isVerified: UserConstants.IS_PAN_VERIFIED ?? false,
+                          icon: Icons.account_balance_wallet_outlined,
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 28.h),
+
+                    // Contact Support Button
+                    _buildContactSupportButton(),
+
+                    SizedBox(height: 30.h),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSliverAppBar() {
+    return SliverAppBar(
+      expandedHeight: 120.h,
+      floating: false,
+      pinned: true,
+      backgroundColor: AppTheme.primaryDarkBlue,
+      elevation: 0,
+      leading: IconButton(
+        icon: Container(
+          padding: EdgeInsets.all(8.w),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18.sp),
+        ),
+        onPressed: () => Navigator.pop(context),
+      ),
+      flexibleSpace: FlexibleSpaceBar(
+        centerTitle: true,
+        title: Text(
+          'My Profile',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18.sp,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppTheme.primaryDarkBlue,
+                AppTheme.primaryDarkBlue.withOpacity(0.85),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Stack(
             children: [
-              // Personal Information Section
-              _buildSectionHeader('Personal Information'),
-              SizedBox(height: 12.h),
-
-              // Full Name (Editable)
-              _buildEditableField(
-                label: "Full Name",
-                hint: "Enter your full name",
-                controller: _fullNameController,
-                icon: Icons.person_outline,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
-                  LengthLimitingTextInputFormatter(50),
-                ],
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return "Please enter your full name";
-                  }
-                  if (value.trim().length < 3) {
-                    return "Name must be at least 3 characters";
-                  }
-                  if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value.trim())) {
-                    return "Name can only contain letters";
-                  }
-                  return null;
-                },
-              ),
-
-              // Email (Read-only)
-              _buildReadOnlyField(
-                label: "Email",
-                value: UserConstants.EMAIL,
-                icon: Icons.email_outlined,
-                isVerified: UserConstants.IS_EMAIL_VERIFIED ?? false,
-              ),
-
-              // Phone Number (Read-only)
-              _buildReadOnlyField(
-                label: "Phone Number",
-                value: UserConstants.PHONE,
-                icon: Icons.phone_outlined,
-                isVerified: UserConstants.IS_MOBILE_VERIFIED ?? false,
-              ),
-
-              SizedBox(height: 24.h),
-
-              // Address Information Section
-              _buildSectionHeader('Address Information'),
-              SizedBox(height: 12.h),
-
-              // Address (Editable)
-              _buildEditableField(
-                label: "Address",
-                hint: "Enter your address",
-                controller: _addressController,
-                icon: Icons.home_outlined,
-                maxLines: 2,
-                inputFormatters: [
-                  LengthLimitingTextInputFormatter(200),
-                ],
-                validator: (value) {
-                  if (value != null && value.trim().isNotEmpty) {
-                    if (value.trim().length < 10) {
-                      return "Address must be at least 10 characters";
-                    }
-                  }
-                  return null;
-                },
-              ),
-
-              // City (Editable)
-              _buildEditableField(
-                label: "City",
-                hint: "Enter your city",
-                controller: _cityController,
-                icon: Icons.location_city_outlined,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
-                  LengthLimitingTextInputFormatter(50),
-                ],
-                validator: (value) {
-                  if (value != null && value.trim().isNotEmpty) {
-                    if (value.trim().length < 2) {
-                      return "City name must be at least 2 characters";
-                    }
-                    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value.trim())) {
-                      return "City name can only contain letters";
-                    }
-                  }
-                  return null;
-                },
-              ),
-
-              // State (Editable)
-              _buildEditableField(
-                label: "State",
-                hint: "Enter your state",
-                controller: _stateController,
-                icon: Icons.map_outlined,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
-                  LengthLimitingTextInputFormatter(50),
-                ],
-                validator: (value) {
-                  if (value != null && value.trim().isNotEmpty) {
-                    if (value.trim().length < 2) {
-                      return "State name must be at least 2 characters";
-                    }
-                    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value.trim())) {
-                      return "State name can only contain letters";
-                    }
-                  }
-                  return null;
-                },
-              ),
-
-              // PIN Code (Editable)
-              _buildEditableField(
-                label: "PIN Code",
-                hint: "Enter 6-digit PIN code",
-                controller: _pinCodeController,
-                icon: Icons.pin_drop_outlined,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(6),
-                ],
-                validator: (value) {
-                  if (value != null && value.trim().isNotEmpty) {
-                    if (value.trim().length != 6) {
-                      return "PIN code must be exactly 6 digits";
-                    }
-                    if (!RegExp(r'^[1-9][0-9]{5}$').hasMatch(value.trim())) {
-                      return "Please enter a valid PIN code";
-                    }
-                  }
-                  return null;
-                },
-              ),
-
-              SizedBox(height: 24.h),
-
-              // KYC Status Section
-              _buildSectionHeader('KYC Status'),
-              SizedBox(height: 12.h),
-
-              // Aadhaar Status (Read-only)
-              _buildKYCStatusCard(
-                label: "Aadhaar Verification",
-                isVerified: UserConstants.IS_AADHAAR_VERIFIED ?? false,
-                icon: Icons.credit_card,
-              ),
-
-              SizedBox(height: 12.h),
-
-              // PAN Status (Read-only)
-              _buildKYCStatusCard(
-                label: "PAN Verification",
-                isVerified: UserConstants.IS_PAN_VERIFIED ?? false,
-                icon: Icons.account_balance_wallet_outlined,
-                value: UserConstants.maskedPAN.isNotEmpty
-                    ? UserConstants.maskedPAN
-                    : null,
-              ),
-
-              SizedBox(height: 30.h),
-
-              // Save Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _saveProfile,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryGold,
-                    padding: EdgeInsets.symmetric(vertical: 16.h),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r)),
-                    elevation: 2,
-                  ),
-                  child: _isLoading
-                      ? SizedBox(
-                    width: 24.w,
-                    height: 24.h,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.buttonText),
-                    ),
-                  )
-                      : Text(
-                    "Save Changes",
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      color: AppColors.buttonText,
-                      fontWeight: FontWeight.bold,
-                    ),
+              Positioned(
+                right: -30.w,
+                top: -30.h,
+                child: Container(
+                  width: 150.w,
+                  height: 150.h,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.05),
                   ),
                 ),
               ),
-
-              SizedBox(height: 12.h),
-
-              // Cancel Button
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    "Cancel",
-                    style: TextStyle(
-                        color: AppColors.secondaryText, fontSize: 16.sp),
+              Positioned(
+                left: -20.w,
+                bottom: -40.h,
+                child: Container(
+                  width: 100.w,
+                  height: 100.h,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppTheme.primaryGold.withOpacity(0.1),
                   ),
                 ),
               ),
-
-              SizedBox(height: 20.h),
             ],
           ),
         ),
@@ -316,195 +208,387 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 18.sp,
-        fontWeight: FontWeight.bold,
-        color: AppColors.primaryText,
+  Widget _buildProfileAvatarSection() {
+    return Center(
+      child: Column(
+        children: [
+          // Avatar without camera icon
+          Container(
+            padding: EdgeInsets.all(4.w),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [AppTheme.primaryGold, Color(0xFFB8860B)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryGold.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Container(
+              width: 100.w,
+              height: 100.w,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppTheme.cardBackground,
+              ),
+              child: Center(
+                child: Text(
+                  _getInitials(),
+                  style: TextStyle(
+                    fontSize: 36.sp,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryDarkBlue,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            UserConstants.NAME.isNotEmpty ? UserConstants.NAME : 'User',
+            style: TextStyle(
+              fontSize: 22.sp,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            UserConstants.EMAIL.isNotEmpty ? UserConstants.EMAIL : 'No email',
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          SizedBox(height: 12.h),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+            decoration: BoxDecoration(
+              color: AppTheme.successGreen.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20.r),
+              border: Border.all(
+                color: AppTheme.successGreen.withOpacity(0.3),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8.w,
+                  height: 8.w,
+                  decoration: BoxDecoration(
+                    color: AppTheme.successGreen,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  'Active Account',
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    color: AppTheme.successGreen,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildEditableField({
-    required String label,
-    required String hint,
-    required TextEditingController controller,
-    required IconData icon,
-    TextInputType keyboardType = TextInputType.text,
-    String? Function(String?)? validator,
-    int maxLines = 1,
-    List<TextInputFormatter>? inputFormatters,
-  }) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 16.h),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: keyboardType,
-        maxLines: maxLines,
-        inputFormatters: inputFormatters,
-        style: TextStyle(color: AppColors.primaryText, fontSize: 15.sp),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle:
-          TextStyle(color: AppColors.secondaryText, fontSize: 14.sp),
-          hintText: hint,
-          hintStyle: TextStyle(
-              color: AppColors.secondaryText.withOpacity(0.5), fontSize: 14.sp),
-          prefixIcon: Icon(icon, color: AppColors.primaryGold, size: 22.sp),
-          filled: true,
-          fillColor: AppColors.cardBackground,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.r),
-            borderSide: BorderSide(color: AppColors.border, width: 1.5),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.r),
-            borderSide: BorderSide(color: AppColors.primaryGold, width: 2),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.r),
-            borderSide: BorderSide(color: AppColors.error, width: 1.5),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.r),
-            borderSide: BorderSide(color: AppColors.error, width: 2),
-          ),
-          contentPadding:
-          EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+  String _getInitials() {
+    if (UserConstants.NAME.isEmpty) return 'U';
+    final names = UserConstants.NAME.split(' ');
+    if (names.length >= 2) {
+      return '${names[0][0]}${names[1][0]}'.toUpperCase();
+    }
+    return names[0][0].toUpperCase();
+  }
+
+  Widget _buildInfoBanner() {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.primaryDarkBlue.withOpacity(0.05),
+            AppTheme.primaryGold.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        validator: validator,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: AppTheme.primaryGold.withOpacity(0.2),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(12.w),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryGold.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Icon(
+              Icons.info_outline_rounded,
+              color: AppTheme.primaryGold,
+              size: 24.sp,
+            ),
+          ),
+          SizedBox(width: 14.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Need to update your profile?',
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  'Please contact our support team for any profile changes.',
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    color: AppTheme.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildReadOnlyField({
+  Widget _buildSectionCard({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(20.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section Header
+          Container(
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: AppTheme.lightBackground,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20.r),
+                topRight: Radius.circular(20.r),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(10.w),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryDarkBlue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: AppTheme.primaryDarkBlue,
+                    size: 22.sp,
+                  ),
+                ),
+                SizedBox(width: 14.w),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Section Content
+          Padding(
+            padding: EdgeInsets.all(20.w),
+            child: Column(children: children),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailItem({
     required String label,
     required String value,
     required IconData icon,
     bool isVerified = false,
+    bool isLast = false,
   }) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 16.h),
-      child: Container(
-        padding: EdgeInsets.all(16.w),
-        decoration: BoxDecoration(
-          color: AppColors.cardBackground.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(12.r),
-          border:
-          Border.all(color: AppColors.border.withOpacity(0.5), width: 1.5),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.secondaryText, size: 22.sp),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: AppColors.secondaryText,
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    value.isEmpty ? "Not provided" : value,
-                    style: TextStyle(
-                      color: AppColors.primaryText,
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isVerified)
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: 12.h),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                padding: EdgeInsets.all(10.w),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6.r),
+                  color: AppTheme.primaryGold.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10.r),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                child: Icon(
+                  icon,
+                  color: AppTheme.primaryGold,
+                  size: 20.sp,
+                ),
+              ),
+              SizedBox(width: 14.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.verified, color: AppColors.success, size: 14.sp),
-                    SizedBox(width: 4.w),
                     Text(
-                      'Verified',
+                      label,
                       style: TextStyle(
-                        color: AppColors.success,
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 13.sp,
+                        color: AppTheme.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      value.isNotEmpty ? value : 'Not provided',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        color: value.isNotEmpty
+                            ? AppTheme.textPrimary
+                            : AppTheme.textSecondary.withOpacity(0.6),
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
-              )
-            else
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryText.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6.r),
-                ),
-                child: Text(
-                  'Locked',
-                  style: TextStyle(
-                    color: AppColors.secondaryText,
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.bold,
+              ),
+              if (isVerified)
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppTheme.successGreen,
+                        AppTheme.successGreen.withOpacity(0.8),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(8.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.successGreen.withOpacity(0.3),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.verified_rounded,
+                        color: Colors.white,
+                        size: 14.sp,
+                      ),
+                      SizedBox(width: 4.w),
+                      Text(
+                        'Verified',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
-      ),
+        if (!isLast)
+          Divider(
+            color: AppTheme.border.withOpacity(0.5),
+            height: 1,
+          ),
+      ],
     );
   }
 
   Widget _buildKYCStatusCard({
     required String label,
+    required String description,
     required bool isVerified,
     required IconData icon,
-    String? value,
   }) {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: isVerified
-            ? AppColors.success.withOpacity(0.1)
-            : AppColors.cardBackground.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(12.r),
+        gradient: isVerified
+            ? LinearGradient(
+          colors: [
+            AppTheme.successGreen.withOpacity(0.05),
+            AppTheme.successGreen.withOpacity(0.1),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        )
+            : null,
+        color: isVerified ? null : AppTheme.lightBackground,
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
           color: isVerified
-              ? AppColors.success.withOpacity(0.3)
-              : AppColors.border.withOpacity(0.5),
+              ? AppTheme.successGreen.withOpacity(0.3)
+              : AppTheme.border,
           width: 1.5,
         ),
       ),
       child: Row(
         children: [
           Container(
-            padding: EdgeInsets.all(10.w),
+            padding: EdgeInsets.all(12.w),
             decoration: BoxDecoration(
               color: isVerified
-                  ? AppColors.success.withOpacity(0.2)
-                  : AppColors.secondaryText.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10.r),
+                  ? AppTheme.successGreen.withOpacity(0.15)
+                  : AppTheme.textSecondary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(14.r),
             ),
             child: Icon(
               icon,
-              color: isVerified ? AppColors.success : AppColors.secondaryText,
-              size: 24.sp,
+              color: isVerified ? AppTheme.successGreen : AppTheme.textSecondary,
+              size: 26.sp,
             ),
           ),
-          SizedBox(width: 12.w),
+          SizedBox(width: 14.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -512,45 +596,61 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 Text(
                   label,
                   style: TextStyle(
-                    color: AppColors.primaryText,
-                    fontSize: 15.sp,
+                    color: AppTheme.textPrimary,
+                    fontSize: 16.sp,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                if (value != null) ...[
-                  SizedBox(height: 4.h),
-                  Text(
-                    value,
-                    style: TextStyle(
-                      color: AppColors.secondaryText,
-                      fontSize: 13.sp,
-                    ),
+                SizedBox(height: 4.h),
+                Text(
+                  description,
+                  style: TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 13.sp,
                   ),
-                ],
+                ),
               ],
             ),
           ),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
             decoration: BoxDecoration(
-              color: isVerified
-                  ? AppColors.success.withOpacity(0.2)
-                  : AppColors.error.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8.r),
+              gradient: isVerified
+                  ? LinearGradient(
+                colors: [
+                  AppTheme.successGreen,
+                  AppTheme.successGreen.withOpacity(0.8),
+                ],
+              )
+                  : LinearGradient(
+                colors: [
+                  AppTheme.warningOrange,
+                  AppTheme.warningOrange.withOpacity(0.8),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(10.r),
+              boxShadow: [
+                BoxShadow(
+                  color: (isVerified ? AppTheme.successGreen : AppTheme.warningOrange)
+                      .withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  isVerified ? Icons.check_circle : Icons.cancel,
-                  color: isVerified ? AppColors.success : AppColors.error,
+                  isVerified ? Icons.check_circle_rounded : Icons.pending_rounded,
+                  color: Colors.white,
                   size: 16.sp,
                 ),
-                SizedBox(width: 4.w),
+                SizedBox(width: 6.w),
                 Text(
-                  isVerified ? 'Verified' : 'Not Verified',
+                  isVerified ? 'Verified' : 'Pending',
                   style: TextStyle(
-                    color: isVerified ? AppColors.success : AppColors.error,
+                    color: Colors.white,
                     fontSize: 12.sp,
                     fontWeight: FontWeight.bold,
                   ),
@@ -559,6 +659,86 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildContactSupportButton() {
+    return GestureDetector(
+      onTap: _navigateToSupport,
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(20.w),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppTheme.primaryDarkBlue,
+              AppTheme.primaryDarkBlue.withOpacity(0.85),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20.r),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primaryDarkBlue.withOpacity(0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(14.w),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryGold.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(14.r),
+              ),
+              child: Icon(
+                Icons.support_agent_rounded,
+                color: AppTheme.primaryGold,
+                size: 28.sp,
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Contact Support',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    'Get help with profile updates & more',
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      color: Colors.white.withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.all(10.w),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: AppTheme.primaryGold,
+                size: 18.sp,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

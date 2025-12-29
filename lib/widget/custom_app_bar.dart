@@ -5,6 +5,7 @@ import '../screen/main/profile_screen.dart';
 import '../screen/profile/customer_support_screen.dart';
 import '../screen/profile/my_wallet_screen.dart';
 import '../themes/app_colors.dart';
+import '../utills/themes/light_app_theme.dart';
 
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -20,7 +21,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: AppColors.primaryColor,
+      backgroundColor: AppTheme.lightTheme.primaryColor,
       title: Text(
         title,
         style: TextStyle(

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utills/themes/light_app_theme.dart';
+import '../../widget/common_app_bar.dart';
 import '../main/profile_screen.dart';
 
 class AboutUsScreen extends StatelessWidget {
@@ -16,27 +17,8 @@ class AboutUsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("About Us", style: TextStyle(color: Colors.white)),
-        backgroundColor: AppTheme.lightTheme.primaryColor,
-        centerTitle: true,
-        leading: showBackButton
-            ? IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white, size: 24),
-          onPressed: () => Navigator.pop(context),
-        )
-            : IconButton(
-          icon: FaIcon(FontAwesomeIcons.userCircle,
-              color: Colors.white, size: 22),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ProfileScreen()),
-            );
-          },
-        ),
-        elevation: 0,
-      ),
+      appBar:CommonAppBar(title: 'About Us'),
+
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

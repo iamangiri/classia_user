@@ -139,7 +139,7 @@ class ProfileScreen extends StatelessWidget {
               icon: Icon(Icons.edit_outlined, color: const Color(0xFFFFD700)),
               onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => EditProfileScreen()),
+                MaterialPageRoute(builder: (_) => ProfileDetailsScreen()),
               ),
             ),
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../utills/themes/light_app_theme.dart';
+import '../../widget/common_app_bar.dart';
 import '../main/profile_screen.dart';
 import 'customer_support_screen.dart';
 
@@ -102,27 +103,8 @@ class PrivacyPolicyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Privacy Policy", style: TextStyle(color: Colors.white)),
-        backgroundColor: AppTheme.lightTheme.primaryColor,
-        centerTitle: true,
-        leading: showBackButton
-            ? IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white, size: 24),
-          onPressed: () => Navigator.pop(context),
-        )
-            : IconButton(
-          icon: FaIcon(FontAwesomeIcons.userCircle,
-              color: Colors.white, size: 22),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ProfileScreen()),
-            );
-          },
-        ),
-        elevation: 0,
-      ),
+      appBar:CommonAppBar(title: 'Privacy Policy'),
+
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
