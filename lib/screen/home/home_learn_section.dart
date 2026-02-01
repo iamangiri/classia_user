@@ -1,9 +1,9 @@
+import 'package:classia_amc/screen/learn/learn_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lottie/lottie.dart';
 import 'dart:ui';
 import '../../themes/app_colors.dart';
-import '../profile/learn_screen.dart';
 
 class HomeLearnSection extends StatefulWidget {
   const HomeLearnSection({super.key});

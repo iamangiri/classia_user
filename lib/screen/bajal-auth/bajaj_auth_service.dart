@@ -13,6 +13,7 @@ class BajajApiService {
   static const String _baseUrl = 'https://bridgelink.bajajbroking.in/api';
   static const String _clientId = '54F97FA8-A45C-48FC-BC5A-F6A6AC81D1A7';
   static const String _clientSecret = 'T039SWyFe6BGyRyQoeVGOA==';
+  static const String _redirectUri = 'https://classiacapital.com/'; // Must match OAuth URL
 
   // Storage Keys
   static const String _tokenKey = 'bajaj_auth_token';
@@ -22,22 +23,31 @@ class BajajApiService {
   /// Exchange authorization code for access token
   Future<TokenResponse> exchangeCodeForToken(String code) async {
     try {
+      debugPrint('=== Token Exchange Request ===');
+      debugPrint('Code: $code');
+      debugPrint('Client ID: $_clientId');
+
+      final requestBody = {
+        "grant_type": "authorization_code",
+        "code": code,
+        "client_id": _clientId,
+        "client_secret": _clientSecret,
+      };
+
+      debugPrint('Request Body: ${jsonEncode(requestBody)}');
+
       final response = await http.post(
-        Uri.parse('$_baseUrl/user/token'),
+        Uri.parse('https://bridgelink.bajajbroking.in/api/user/token'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode({
-          'grant_type': 'authorization_code',
-          'code': code,
-          'client_id': _clientId,
-          'client_secret': _clientSecret,
-        }),
+        body: jsonEncode(requestBody),
       );
 
-      debugPrint('Token Exchange - Status: ${response.statusCode}');
-      debugPrint('Token Exchange - Response: ${response.body}');
+      debugPrint('=== Token Exchange Response ===');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -45,12 +55,13 @@ class BajajApiService {
         if (data['statusCode'] == 0 && data['data'] != null) {
           final tokenData = data['data'];
 
-          // Save tokens to SharedPreferences
           await _saveTokens(
             accessToken: tokenData['access_token'],
             refreshToken: tokenData['refresh_token'],
             expiresIn: tokenData['expires_in'],
           );
+
+          debugPrint('✅ Token exchange successful');
 
           return TokenResponse.success(
             accessToken: tokenData['access_token'],
@@ -59,80 +70,22 @@ class BajajApiService {
           );
         } else {
           return TokenResponse.error(
-            data['message'] ?? 'Login failed. Please try again.',
+            data['message'] ?? 'Login failed',
           );
         }
       } else {
         return TokenResponse.error(
-          'Failed to authenticate. Status: ${response.statusCode}',
+          'HTTP ${response.statusCode}: ${response.body}',
         );
       }
     } catch (e) {
-      debugPrint('Error exchanging token: $e');
+      debugPrint('❌ Exception: $e');
       return TokenResponse.error('Network error: $e');
     }
   }
 
-  /// Refresh access token using refresh token
-  Future<TokenResponse> refreshAccessToken() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final refreshToken = prefs.getString(_refreshTokenKey);
 
-      if (refreshToken == null) {
-        return TokenResponse.error('No refresh token available');
-      }
 
-      final response = await http.post(
-        Uri.parse('$_baseUrl/user/token'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode({
-          'grant_type': 'refresh_token',
-          'refresh_token': refreshToken,
-          'client_id': _clientId,
-          'client_secret': _clientSecret,
-        }),
-      );
-
-      debugPrint('Token Refresh - Status: ${response.statusCode}');
-      debugPrint('Token Refresh - Response: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        if (data['statusCode'] == 0 && data['data'] != null) {
-          final tokenData = data['data'];
-
-          // Save new tokens
-          await _saveTokens(
-            accessToken: tokenData['access_token'],
-            refreshToken: tokenData['refresh_token'],
-            expiresIn: tokenData['expires_in'],
-          );
-
-          return TokenResponse.success(
-            accessToken: tokenData['access_token'],
-            refreshToken: tokenData['refresh_token'],
-            expiresIn: tokenData['expires_in'],
-          );
-        } else {
-          return TokenResponse.error(
-            data['message'] ?? 'Token refresh failed',
-          );
-        }
-      } else {
-        return TokenResponse.error(
-          'Failed to refresh token. Status: ${response.statusCode}',
-        );
-      }
-    } catch (e) {
-      debugPrint('Error refreshing token: $e');
-      return TokenResponse.error('Network error: $e');
-    }
-  }
 
   /// Get current access token
   Future<String?> getAccessToken() async {
@@ -148,11 +101,21 @@ class BajajApiService {
       final expiryTime = prefs.getInt(_expiryTimeKey);
 
       if (token == null || expiryTime == null) {
+        debugPrint('Token validation: No token or expiry time found');
         return false;
       }
 
       final currentTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      return expiryTime > currentTime;
+      final isValid = expiryTime > currentTime;
+
+      if (isValid) {
+        final remainingSeconds = expiryTime - currentTime;
+        debugPrint('Token is valid. Expires in $remainingSeconds seconds');
+      } else {
+        debugPrint('Token has expired');
+      }
+
+      return isValid;
     } catch (e) {
       debugPrint('Error checking token validity: $e');
       return false;
@@ -202,9 +165,9 @@ class BajajApiService {
       await prefs.remove(_tokenKey);
       await prefs.remove(_refreshTokenKey);
       await prefs.remove(_expiryTimeKey);
-      debugPrint('User logged out successfully');
+      debugPrint('✅ User logged out successfully');
     } catch (e) {
-      debugPrint('Error during logout: $e');
+      debugPrint('❌ Error during logout: $e');
     }
   }
 
@@ -229,6 +192,8 @@ class BajajApiService {
     };
 
     final uri = Uri.parse('$_baseUrl/$endpoint');
+
+    debugPrint('Making authenticated $method request to: $endpoint');
 
     switch (method.toUpperCase()) {
       case 'GET':
@@ -266,8 +231,14 @@ class BajajApiService {
     await prefs.setString(_refreshTokenKey, refreshToken);
     await prefs.setInt(_expiryTimeKey, expiryTime);
 
-    debugPrint('Tokens saved successfully. Expires in: $expiresIn seconds');
+    debugPrint('✅ Tokens saved successfully');
+    debugPrint('   Access token length: ${accessToken.length}');
+    debugPrint('   Expires in: $expiresIn seconds (${expiresIn ~/ 60} minutes)');
+    debugPrint('   Expiry time: ${DateTime.fromMillisecondsSinceEpoch(expiryTime * 1000)}');
   }
+
+  /// Get redirect URI (for consistency with OAuth flow)
+  static String get redirectUri => _redirectUri;
 }
 
 /// Token Response Model

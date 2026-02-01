@@ -8,7 +8,6 @@ import 'bajaj_auth_service.dart';
 class BajalLoginScreen extends StatefulWidget {
   static const String routeName = '/bajal-login';
 
-  // Optional parameters to handle navigation after login
   final String? returnRoute;
   final Map<String, dynamic>? returnArguments;
 
@@ -27,7 +26,6 @@ class _BajalLoginScreenState extends State<BajalLoginScreen> {
   String? _errorMessage;
   final _apiService = BajajApiService();
 
-  // OAuth Configuration
   static const String clientId = '54F97FA8-A45C-48FC-BC5A-F6A6AC81D1A7';
   static const String redirectUri = 'https://classiacapital.com/';
   static const String authUrl =
@@ -43,7 +41,6 @@ class _BajalLoginScreenState extends State<BajalLoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Check if token is valid using API service
       final isValid = await _apiService.isTokenValid();
 
       if (isValid) {
@@ -72,8 +69,12 @@ class _BajalLoginScreenState extends State<BajalLoginScreen> {
       ),
     );
 
+    debugPrint('Received code from WebView: $code');
+
     if (code != null && mounted) {
       await _exchangeCodeForToken(code);
+    } else {
+      debugPrint('No code received or widget not mounted');
     }
   }
 
@@ -86,17 +87,17 @@ class _BajalLoginScreenState extends State<BajalLoginScreen> {
     });
 
     try {
-      // Use API service to exchange code for token
+      debugPrint('Exchanging code for token: $code');
       final response = await _apiService.exchangeCodeForToken(code);
 
       if (response.success) {
-        debugPrint('Login successful!');
+        debugPrint('Login successful! Token saved.');
 
-        // Navigate based on return route or default to main
         if (mounted) {
           _navigateAfterLogin();
         }
       } else {
+        debugPrint('Login failed: ${response.error}');
         if (mounted) {
           setState(() {
             _errorMessage = response.error ?? 'Login failed. Please try again.';
@@ -119,13 +120,10 @@ class _BajalLoginScreenState extends State<BajalLoginScreen> {
     }
   }
 
-  /// Navigate after successful login
   void _navigateAfterLogin() {
     if (widget.returnRoute != null) {
-      // If we have a return route, navigate back and pass result
-      Navigator.pop(context, true); // Return true to indicate successful login
+      Navigator.pop(context, true);
     } else {
-      // Default navigation to main page
       context.go('/main?index=0');
     }
   }
@@ -133,10 +131,8 @@ class _BajalLoginScreenState extends State<BajalLoginScreen> {
   void _skipLogin() {
     if (mounted) {
       if (widget.returnRoute != null) {
-        // If called from another screen, just go back
         Navigator.pop(context, false);
       } else {
-        // Default navigation
         context.go('/main?index=0');
       }
     }
@@ -146,7 +142,6 @@ class _BajalLoginScreenState extends State<BajalLoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.screenBackground,
-      // Add AppBar with back button
       appBar: AppBar(
         backgroundColor: AppColors.screenBackground,
         elevation: 0,
@@ -183,7 +178,6 @@ class _BajalLoginScreenState extends State<BajalLoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo Section
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -202,7 +196,6 @@ class _BajalLoginScreenState extends State<BajalLoginScreen> {
                 ),
                 const SizedBox(height: 40),
 
-                // Title
                 const Text(
                   'Classia Capital',
                   style: TextStyle(
@@ -214,7 +207,6 @@ class _BajalLoginScreenState extends State<BajalLoginScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // Subtitle
                 const Text(
                   'Your Trusted Investment Partner',
                   style: TextStyle(
@@ -225,7 +217,6 @@ class _BajalLoginScreenState extends State<BajalLoginScreen> {
                 ),
                 const SizedBox(height: 60),
 
-                // Partner Info Card
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -272,7 +263,6 @@ class _BajalLoginScreenState extends State<BajalLoginScreen> {
                 ),
                 const SizedBox(height: 40),
 
-                // Login Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -306,7 +296,6 @@ class _BajalLoginScreenState extends State<BajalLoginScreen> {
 
                 const SizedBox(height: 16),
 
-                // Skip Button
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
@@ -342,7 +331,6 @@ class _BajalLoginScreenState extends State<BajalLoginScreen> {
 
                 const SizedBox(height: 20),
 
-                // Open Demat Account Link
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -372,7 +360,6 @@ class _BajalLoginScreenState extends State<BajalLoginScreen> {
                   ),
                 ),
 
-                // Error Message
                 if (_errorMessage != null) ...[
                   const SizedBox(height: 24),
                   Container(
@@ -410,7 +397,6 @@ class _BajalLoginScreenState extends State<BajalLoginScreen> {
 
                 const SizedBox(height: 40),
 
-                // Security Info
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: const [
@@ -472,6 +458,7 @@ class _OAuthWebViewState extends State<_OAuthWebView> {
                 _isLoading = true;
               });
             }
+            // Check for redirect on page start (works better on Android)
             _checkForRedirect(url);
           },
           onPageFinished: (String url) {
@@ -481,9 +468,17 @@ class _OAuthWebViewState extends State<_OAuthWebView> {
                 _isLoading = false;
               });
             }
+            // CRITICAL: Also check on page finished (works better on iOS)
+            _checkForRedirect(url);
           },
           onWebResourceError: (WebResourceError error) {
             debugPrint('Web resource error: ${error.description}');
+          },
+          onNavigationRequest: (NavigationRequest request) {
+            debugPrint('Navigation request: ${request.url}');
+            // Also check here for extra safety
+            _checkForRedirect(request.url);
+            return NavigationDecision.navigate;
           },
         ),
       )
@@ -491,21 +486,46 @@ class _OAuthWebViewState extends State<_OAuthWebView> {
   }
 
   void _checkForRedirect(String url) {
-    if (_hasProcessedCode) return;
+    // Prevent multiple processing
+    if (_hasProcessedCode) {
+      debugPrint('Already processed code, ignoring: $url');
+      return;
+    }
 
-    if (url.startsWith('https://classiacapital.com/')) {
-      final uri = Uri.parse(url);
-      final code = uri.queryParameters['code'];
+    debugPrint('Checking URL for redirect: $url');
 
-      debugPrint('Redirect detected: $url');
-      debugPrint('Code: $code');
+    // Check if this is our redirect URL
+    if (url.startsWith('https://classiacapital.com/') ||
+        url.startsWith('http://classiacapital.com/')) {
 
-      if (code != null && code.isNotEmpty) {
-        _hasProcessedCode = true;
+      try {
+        final uri = Uri.parse(url);
+        final code = uri.queryParameters['code'];
+        final state = uri.queryParameters['state'];
 
-        if (mounted) {
-          Navigator.of(context).pop(code);
+        debugPrint('Redirect detected!');
+        debugPrint('URL: $url');
+        debugPrint('Code: $code');
+        debugPrint('State: $state');
+
+        if (code != null && code.isNotEmpty) {
+          debugPrint('Valid code found: $code');
+
+          // Mark as processed to prevent duplicate calls
+          _hasProcessedCode = true;
+
+          // Small delay to ensure WebView is stable before popping
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (mounted && Navigator.of(context).canPop()) {
+              debugPrint('Popping with code: $code');
+              Navigator.of(context).pop(code);
+            }
+          });
+        } else {
+          debugPrint('Code is null or empty in URL');
         }
+      } catch (e) {
+        debugPrint('Error parsing redirect URL: $e');
       }
     }
   }
@@ -514,6 +534,7 @@ class _OAuthWebViewState extends State<_OAuthWebView> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
+        debugPrint('Back button pressed in WebView');
         return true;
       },
       child: Scaffold(
@@ -533,7 +554,10 @@ class _OAuthWebViewState extends State<_OAuthWebView> {
               Icons.arrow_back_ios_new_rounded,
               color: AppColors.onPrimaryColor,
             ),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              debugPrint('Close button pressed in WebView');
+              Navigator.pop(context);
+            },
           ),
         ),
         body: Stack(

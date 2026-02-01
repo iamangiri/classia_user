@@ -1,9 +1,8 @@
 import 'package:classia_amc/routes/route.dart';
-import 'package:classia_amc/screen/profile/learn_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,11 +20,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => UserPoints()),
-      ],
-      child: ScreenUtilInit(
+    return  ScreenUtilInit(
         designSize: const Size(375, 812),
         minTextAdapt: true,
         splitScreenMode: true,
@@ -36,7 +31,6 @@ class MyApp extends StatelessWidget {
             routerConfig: router,
           );
         },
-      ),
     );
   }
 }

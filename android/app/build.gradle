@@ -29,8 +29,8 @@ android {
         applicationId = "com.classia.capital"
         minSdkVersion = flutter.minSdkVersion  // Changed from flutter.minSdkVersion
         targetSdk = 36
-        versionCode = 32
-        versionName = "1.4.1"
+        versionCode = 33
+        versionName = "1.4.2"
 
         ndk {
             abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'

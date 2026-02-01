@@ -1,4 +1,3 @@
-import 'package:classia_amc/screen/homefetures/withdraw_screen.dart';
 import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:classia_amc/widget/common_app_bar.dart';
 import 'package:flutter/material.dart';
@@ -8,18 +7,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../screenutills/mutual_fund_transation.dart';
 import '../can/can_create_screen.dart';
 import '../can/payezz_registration_screen.dart';
+import '../learn/learn_screen.dart';
+import '../learn/my_courses_screen.dart';
+import '../learn/certificates_screen.dart';
 import '../profile/about_us_screen.dart';
 import '../profile/bank_info_screen.dart';
 import '../profile/chnage_password_screen.dart';
 import '../profile/customer_support_screen.dart';
-import '../homefetures/investment_history_screen.dart';
 import '../profile/edit_profile_screen.dart';
 import '../profile/kyc_screen.dart';
 import '../profile/my_wallet_screen.dart';
 import '../profile/privicy_policy.dart';
 import '../profile/demat_account_screen.dart';
 import '../profile/login_history_screen.dart';
-// STOCK SCREENS
 import '../stock/stock_market_fund_screen.dart';
 import '../stock/stock_market_holding_screen.dart';
 import '../stock/order_book_screen.dart';
@@ -42,6 +42,9 @@ class ProfileScreen extends StatelessWidget {
             SizedBox(height: 24.h),
             _buildSectionTitle('Account'),
             _buildAccountOptionsList(context),
+            SizedBox(height: 24.h),
+            _buildSectionTitle('Learning'),
+            _buildLearningOptionsList(context),
             SizedBox(height: 24.h),
             _buildSectionTitle('Transactions'),
             _buildTransactionsOptionsList(context),
@@ -169,9 +172,39 @@ class ProfileScreen extends StatelessWidget {
     final options = [
       {'title': 'KYC', 'icon': Icons.verified_user, 'color': 0xFF4CAF50},
       {'title': 'CAN', 'icon': Icons.account_circle, 'color': 0xFF2196F3},
-      {'title': 'PayZee Registration', 'icon': Icons.payment, 'color': 0xFF9C27B0},
-      {'title': 'Demat Account', 'icon': Icons.account_balance_wallet, 'color': 0xFFFF9800},
-      {'title': 'Bank Info', 'icon': Icons.account_balance, 'color': 0xFF00BCD4},
+      {
+        'title': 'PayZee Registration',
+        'icon': Icons.payment,
+        'color': 0xFF9C27B0
+      },
+      {
+        'title': 'Demat Account',
+        'icon': Icons.account_balance_wallet,
+        'color': 0xFFFF9800
+      },
+      {
+        'title': 'Bank Info',
+        'icon': Icons.account_balance,
+        'color': 0xFF00BCD4
+      },
+    ];
+    return _buildModernOptionsList(options, context);
+  }
+
+  // ------------------ LEARNING OPTIONS ------------------
+  Widget _buildLearningOptionsList(BuildContext context) {
+    final options = [
+      {'title': 'Learn', 'icon': Icons.school_rounded, 'color': 0xFF673AB7},
+      {
+        'title': 'My Courses',
+        'icon': Icons.play_lesson_rounded,
+        'color': 0xFF00BCD4
+      },
+      {
+        'title': 'Certificates',
+        'icon': Icons.workspace_premium,
+        'color': 0xFFD4AF37
+      },
     ];
     return _buildModernOptionsList(options, context);
   }
@@ -179,12 +212,28 @@ class ProfileScreen extends StatelessWidget {
   // ------------------ TRANSACTIONS OPTIONS ------------------
   Widget _buildTransactionsOptionsList(BuildContext context) {
     final options = [
-      {'title': 'My Wallet', 'icon': Icons.account_balance_wallet, 'color': 0xFFFFD700},
-      {'title': 'Stock Market Fund', 'icon': Icons.trending_up, 'color': 0xFF4CAF50},
-      {'title': 'Stock Market Holdings', 'icon': Icons.show_chart, 'color': 0xFF2196F3},
+      {
+        'title': 'My Wallet',
+        'icon': Icons.account_balance_wallet,
+        'color': 0xFFFFD700
+      },
+      {
+        'title': 'Stock Market Fund',
+        'icon': Icons.trending_up,
+        'color': 0xFF4CAF50
+      },
+      {
+        'title': 'Stock Market Holdings',
+        'icon': Icons.show_chart,
+        'color': 0xFF2196F3
+      },
       {'title': 'Order Book', 'icon': Icons.receipt_long, 'color': 0xFFFF5722},
       {'title': 'Trade Book', 'icon': Icons.swap_vert, 'color': 0xFF9C27B0},
-      {'title': 'Mutual Fund Transaction', 'icon': Icons.history, 'color': 0xFF607D8B},
+      {
+        'title': 'Mutual Fund Transaction',
+        'icon': Icons.history,
+        'color': 0xFF607D8B
+      },
     ];
     return _buildModernOptionsList(options, context);
   }
@@ -192,8 +241,11 @@ class ProfileScreen extends StatelessWidget {
   // ------------------ SECURITY OPTIONS ------------------
   Widget _buildSecurityOptionsList(BuildContext context) {
     final options = [
-
-      {'title': 'Change Password', 'icon': Icons.lock_reset, 'color': 0xFFFF9800},
+      {
+        'title': 'Change Password',
+        'icon': Icons.lock_reset,
+        'color': 0xFFFF9800
+      },
       {'title': 'Login History', 'icon': Icons.history, 'color': 0xFF3F51B5},
     ];
     return _buildModernOptionsList(options, context);
@@ -204,13 +256,18 @@ class ProfileScreen extends StatelessWidget {
     final options = [
       {'title': 'About Us', 'icon': Icons.info_outline, 'color': 0xFF2196F3},
       {'title': 'Help Center', 'icon': Icons.help_outline, 'color': 0xFF4CAF50},
-      {'title': 'Privacy Policy', 'icon': Icons.privacy_tip_outlined, 'color': 0xFF9C27B0},
+      {
+        'title': 'Privacy Policy',
+        'icon': Icons.privacy_tip_outlined,
+        'color': 0xFF9C27B0
+      },
     ];
     return _buildModernOptionsList(options, context);
   }
 
   // ------------------ MODERN REUSABLE LIST UI ------------------
-  Widget _buildModernOptionsList(List<Map<String, dynamic>> options, BuildContext context) {
+  Widget _buildModernOptionsList(
+      List<Map<String, dynamic>> options, BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -244,7 +301,9 @@ class ProfileScreen extends StatelessWidget {
               onTap: () => _navigateToOption(context, opt['title'] as String),
               borderRadius: BorderRadius.vertical(
                 top: index == 0 ? Radius.circular(16.r) : Radius.zero,
-                bottom: index == options.length - 1 ? Radius.circular(16.r) : Radius.zero,
+                bottom: index == options.length - 1
+                    ? Radius.circular(16.r)
+                    : Radius.zero,
               ),
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
@@ -296,6 +355,15 @@ class ProfileScreen extends StatelessWidget {
         break;
       case 'PayZee Registration':
         screen = PayZeeRegistrationScreen();
+        break;
+      case 'Learn':
+        screen = const LearnScreen();
+        break;
+      case 'My Courses':
+        screen = const MyCoursesScreen();
+        break;
+      case 'Certificates':
+        screen = const CertificatesScreen();
         break;
       case 'Demat Account':
         screen = DematAccountScreen();
@@ -363,39 +431,48 @@ class ProfileScreen extends StatelessWidget {
               context: context,
               builder: (_) => AlertDialog(
                 backgroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.r)),
                 title: Row(
                   children: [
-                    Icon(Icons.logout, color: const Color(0xFFE53935), size: 24.sp),
+                    Icon(Icons.logout,
+                        color: const Color(0xFFE53935), size: 24.sp),
                     SizedBox(width: 12.w),
                     Text(
                       'Confirm Logout',
-                      style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          fontSize: 18.sp, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
                 content: Text(
                   'Are you sure you want to log out?',
-                  style: TextStyle(fontSize: 15.sp, color: Colors.grey.shade700),
+                  style:
+                      TextStyle(fontSize: 15.sp, color: Colors.grey.shade700),
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
                     child: Text(
                       'Cancel',
-                      style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w600),
                     ),
                   ),
                   ElevatedButton(
                     onPressed: () async {
-                      await SharedPreferences.getInstance().then((p) => p.clear());
+                      await SharedPreferences.getInstance()
+                          .then((p) => p.clear());
                       Navigator.pop(context, true);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFE53935),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r)),
                     ),
-                    child: Text('Logout', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: Text('Logout',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
