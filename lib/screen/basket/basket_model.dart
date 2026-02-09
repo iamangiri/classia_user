@@ -12,10 +12,13 @@ class BasketResponse {
   });
 
   factory BasketResponse.fromJson(Map<String, dynamic> json) => BasketResponse(
-    status: json['status'] as bool? ?? false,
-    message: json['message'] as String? ?? '',
-    data: BasketData.fromJson(json['data'] as Map<String, dynamic>),
-  );
+        status: json['status'] as bool? ?? false,
+        message: json['message'] as String? ?? '',
+        data: json['data'] != null
+            ? BasketData.fromJson(json['data'] as Map<String, dynamic>)
+            : BasketData(
+                totalRecords: 0, totalPages: 0, currentPage: 0, basketList: []),
+      );
 }
 
 class BasketData {
@@ -34,14 +37,70 @@ class BasketData {
   });
 
   factory BasketData.fromJson(Map<String, dynamic> json) {
+    List<Basket> baskets = [];
+
+    // Handle 'baskets' key from /list endpoint
+    if (json['baskets'] != null) {
+      baskets = (json['baskets'] as List<dynamic>)
+          .map((e) => Basket.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+    // Handle 'subscriptions' key from /my-subscriptions endpoint
+    else if (json['subscriptions'] != null) {
+      baskets = (json['subscriptions'] as List<dynamic>).map((e) {
+        // For my-subscriptions, we prioritize the inner 'basket' object
+        // but we need to inject subscription-specific details like basketVersionId and ID (subscription ID)
+        if (e['basket'] != null) {
+          final basketMap = Map<String, dynamic>.from(e['basket'] as Map);
+
+          // Inject subscribed version ID
+          if (e['basketVersionId'] != null) {
+            basketMap['subscribedVersionId'] = e['basketVersionId'];
+          }
+          // Inject subscription ID
+          if (e['ID'] != null) {
+            basketMap['subscriptionId'] = e['ID'];
+          }
+
+          return Basket.fromJson(basketMap);
+        }
+        return Basket.fromJson(e as Map<String, dynamic>);
+      }).toList();
+    }
+    // Fallback for old API structure or direct list
+    else if (json['basketList'] != null) {
+      baskets = (json['basketList'] as List<dynamic>)
+          .map((e) => Basket.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
+    // Pagination mapping
+    int total = 0;
+    int pages = 0;
+    int current = 1;
+
+    if (json['pagination'] != null) {
+      final pag = json['pagination'];
+      total = _safeInt(pag['total']);
+      // Calculate total pages if not provided (GoAPI doesn't seem to provide totalPages directly in pagination object based on example)
+      // Example: "pagination": { "limit": 10, "page": 1, "total": 3 }
+      int limit = _safeInt(pag['limit']);
+      if (limit > 0) {
+        pages = (total / limit).ceil();
+      }
+      current = _safeInt(pag['page']);
+    } else {
+      // Fallback to old keys
+      total = _safeInt(json['totalRecords']);
+      pages = _safeInt(json['totalPages']);
+      current = _safeInt(json['currentPage']);
+    }
+
     return BasketData(
-      totalRecords: _safeInt(json['totalRecords']),
-      totalPages: _safeInt(json['totalPages']),
-      currentPage: _safeInt(json['currentPage']),
-      basketList: (json['basketList'] as List<dynamic>?)
-          ?.map((e) => Basket.fromJson(e as Map<String, dynamic>))
-          .toList() ??
-          [],
+      totalRecords: total,
+      totalPages: pages,
+      currentPage: current,
+      basketList: baskets,
       minInvestment: json['minInvestment'],
     );
   }
@@ -67,6 +126,11 @@ class Basket extends Equatable {
   final String updatedAt;
   final String? deletedAt;
 
+  // New Fields for Versioning
+  final int? versionId; // The current version ID of the basket
+  final int? subscribedVersionId; // The version ID the user is subscribed to
+  final int? subscriptionId; // The ID of the subscription
+
   const Basket({
     required this.id,
     required this.basketName,
@@ -86,31 +150,173 @@ class Basket extends Equatable {
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
+    this.versionId,
+    this.subscribedVersionId,
+    this.subscriptionId,
   });
 
-  factory Basket.fromJson(Map<String, dynamic> json) => Basket(
-    id: _safeInt(json['id']),
-    basketName: json['basketName']?.toString() ?? 'Unknown',
-    subscriptionAmount: json['subscriptionAmount']?.toString() ?? '0',
-    raName: json['raName']?.toString() ?? 'Unknown',
-    expectedReturn: json['expectedReturn']?.toString() ?? '0',
-    subscryptionType: json['subscryptionType']?.toString() ?? 'FREE',
-    volatility: json['volatility']?.toString() ?? 'LOW',
-    status: json['status']?.toString() ?? 'INACTIVE',
-    type: json['type']?.toString() ?? 'DELIVERY',
-    action: json['action']?.toString() ?? 'BUY',
-    basketInitialPrice: json['basketInitialPrice']?.toString(),
-    basketCurrentPrice: json['basketCurrentPrice'],
-    holdings: (json['holdings'] as List<dynamic>?)
-        ?.map((e) => Holding.fromJson(e as Map<String, dynamic>))
-        .toList() ??
-        [],
-    createdBy: json['createdBy'],
-    isDeleted: json['isDeleted'] as bool? ?? false,
-    createdAt: json['createdAt']?.toString() ?? '',
-    updatedAt: json['updatedAt']?.toString() ?? '',
-    deletedAt: json['deletedAt'] as String?,
-  );
+  factory Basket.fromJson(Map<String, dynamic> json) {
+    // Determine if using New API (GoAPI) keys or Old API keys
+    // New API uses uppercase ID, old uses id.
+    // Also new API uses 'name', old 'basketName'.
+
+    // ID MAPPING
+    final id = _safeInt(json['ID'] ?? json['id']);
+
+    // NAME MAPPING
+    final basketName =
+        json['name']?.toString() ?? json['basketName']?.toString() ?? 'Unknown';
+
+    // SUBSCRIPTION AMOUNT
+    final subscriptionAmount = json['subscriptionFee']?.toString() ??
+        json['subscriptionAmount']?.toString() ??
+        '0';
+
+    // RA NAME (Missing in New API, Defaulting)
+    final raName = json['raName']?.toString() ?? 'Classia Capital';
+
+    // EXPECTED RETURN (Missing in New API, Defaulting)
+    final expectedReturn = json['expectedReturn']?.toString() ?? '0';
+
+    // SUBSCRIPTION TYPE (Derived from isFeeBased in New API)
+    String subType = 'FREE';
+    if (json.containsKey('isFeeBased')) {
+      subType = (json['isFeeBased'] == true) ? 'PAID' : 'FREE';
+    } else {
+      subType = json['subscryptionType']?.toString() ?? 'FREE';
+    }
+
+    // VOLATILITY (Missing in New API, Defaulting)
+    final volatility = json['volatility']?.toString() ?? 'LOW';
+
+    // STATUS
+    // In new API, status might be in 'versions' or 'currentVersion'.
+    // Root object doesn't seem to have status in /list, but subscriptions has 'status': 'ACTIVE'
+    // fallback to 'ACTIVE' if not found in root.
+    final status = json['status']?.toString() ?? 'ACTIVE';
+
+    // TYPE
+    final type = json['basketType']?.toString() ??
+        json['type']?.toString() ??
+        'DELIVERY';
+
+    // ACTION (Missing in New API, Defaulting)
+    final action = json['action']?.toString() ?? 'BUY';
+
+    // PRICES
+    final initialPrice = json['initialPrice']?.toString() ??
+        json['basketInitialPrice']?.toString();
+    final currentPrice = json['currentPrice'] ?? json['basketCurrentPrice'];
+
+    // VERSION INFO
+    final versionId = _safeInt(json['currentVersionId']);
+    final subscribedVersionId =
+        _safeInt(json['subscribedVersionId']); // Injected from wrapper
+    final subscriptionId =
+        _safeInt(json['subscriptionId']); // Injected from wrapper
+
+    // HOLDINGS / STOCKS
+    // Old API: 'holdings'
+    // New API: 'versions' (List) -> each version has 'stocks'. Or 'currentVersion' (Obj) -> 'stocks'.
+    List<Holding> holdingsList = [];
+
+    if (json['currentVersion'] != null &&
+        json['currentVersion']['stocks'] != null) {
+      holdingsList = (json['currentVersion']['stocks'] as List<dynamic>)
+          .map((e) => Holding.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } else if (json['versions'] != null &&
+        (json['versions'] as List).isNotEmpty) {
+      // Try to find published version or take the first one?
+      // Assuming existing logic, we just check if any version has stocks (unlikely in list view based on example, but safe to check)
+      // The example for /list showed versions but no stocks inside.
+      // If stocks are missing, list will be empty.
+      final v = json['versions'][0];
+      if (v['stocks'] != null) {
+        holdingsList = (v['stocks'] as List<dynamic>)
+            .map((e) => Holding.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+    } else if (json['holdings'] != null) {
+      holdingsList = (json['holdings'] as List<dynamic>)
+          .map((e) => Holding.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
+    return Basket(
+      id: id,
+      basketName: basketName,
+      subscriptionAmount: subscriptionAmount,
+      raName: raName,
+      expectedReturn: expectedReturn,
+      subscryptionType: subType,
+      volatility: volatility,
+      status: status,
+      type: type,
+      action: action,
+      basketInitialPrice: initialPrice,
+      basketCurrentPrice: currentPrice,
+      holdings: holdingsList,
+      createdBy: json['createdBy'], // might be missing in new API
+      isDeleted: json['isDeleted'] as bool? ?? false,
+      createdAt:
+          json['CreatedAt']?.toString() ?? json['createdAt']?.toString() ?? '',
+      updatedAt:
+          json['UpdatedAt']?.toString() ?? json['updatedAt']?.toString() ?? '',
+      deletedAt: json['DeletedAt']?.toString() ?? json['deletedAt']?.toString(),
+      versionId: versionId,
+      subscribedVersionId: subscribedVersionId,
+      subscriptionId: subscriptionId,
+    );
+  }
+
+  Basket copyWith({
+    int? id,
+    String? basketName,
+    String? subscriptionAmount,
+    String? raName,
+    String? expectedReturn,
+    String? subscryptionType,
+    String? volatility,
+    String? status,
+    String? type,
+    String? action,
+    String? basketInitialPrice,
+    dynamic basketCurrentPrice,
+    List<Holding>? holdings,
+    dynamic createdBy,
+    bool? isDeleted,
+    String? createdAt,
+    String? updatedAt,
+    String? deletedAt,
+    int? versionId,
+    int? subscribedVersionId,
+    int? subscriptionId,
+  }) {
+    return Basket(
+      id: id ?? this.id,
+      basketName: basketName ?? this.basketName,
+      subscriptionAmount: subscriptionAmount ?? this.subscriptionAmount,
+      raName: raName ?? this.raName,
+      expectedReturn: expectedReturn ?? this.expectedReturn,
+      subscryptionType: subscryptionType ?? this.subscryptionType,
+      volatility: volatility ?? this.volatility,
+      status: status ?? this.status,
+      type: type ?? this.type,
+      action: action ?? this.action,
+      basketInitialPrice: basketInitialPrice ?? this.basketInitialPrice,
+      basketCurrentPrice: basketCurrentPrice ?? this.basketCurrentPrice,
+      holdings: holdings ?? this.holdings,
+      createdBy: createdBy ?? this.createdBy,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      versionId: versionId ?? this.versionId,
+      subscribedVersionId: subscribedVersionId ?? this.subscribedVersionId,
+      subscriptionId: subscriptionId ?? this.subscriptionId,
+    );
+  }
 
   // Safe Getters
   double get expectedReturnValue => double.tryParse(expectedReturn) ?? 0.0;
@@ -162,10 +368,8 @@ class Basket extends Equatable {
     return _cleanPrice(parsed);
   }
 
-
   double get initialPriceValue => _rawInitialPrice.roundToDouble();
   double get currentPriceValue => _rawCurrentPrice.roundToDouble();
-
 
   double get priceChangePercentage {
     final initial = initialPriceValue;
@@ -252,19 +456,25 @@ class Holding extends Equatable {
   });
 
   factory Holding.fromJson(Map<String, dynamic> json) => Holding(
-    id: _safeInt(json['id']),
-    isin: json['isin']?.toString() ?? '',
-    token: _safeInt(json['token']),
-    units: json['units']?.toString() ?? '1',
-    exchId: json['exchId']?.toString() ?? 'NSE',
-    symbol: json['symbol']?.toString() ?? '',
-    slPrice: json['slPrice']?.toString() ?? '0',
-    tgtPrice: json['tgtPrice']?.toString() ?? '0',
-    stockId: _safeInt(json['stockId']),
-    fullName: json['fullName']?.toString() ?? 'Unknown Stock',
-    holdinPercentage: json['holdinPercentage']?.toString() ?? '0',
-    orderType: json['orderType']?.toString() ?? 'MARKET',
-  );
+        id: _safeInt(json['ID'] ?? json['id']),
+        isin: json['isin']?.toString() ?? '',
+        token: _safeInt(json['token']),
+        units: json['units']?.toString() ?? '1',
+        exchId: json['exchId']?.toString() ?? 'NSE',
+        symbol: json['symbol']?.toString() ?? '',
+        slPrice: json['stopLossPrice']?.toString() ??
+            json['slPrice']?.toString() ??
+            '0',
+        tgtPrice: json['targetPrice']?.toString() ??
+            json['tgtPrice']?.toString() ??
+            '0',
+        stockId: _safeInt(json['stockId']),
+        fullName: json['stockName']?.toString() ?? 'Unknown Stock',
+        holdinPercentage: json['weightage']?.toString() ??
+            json['holdinPercentage']?.toString() ??
+            '0',
+        orderType: json['orderType']?.toString() ?? 'MARKET',
+      );
 
   // Safe numeric values
   int get unitsValue => int.tryParse(units) ?? 1;

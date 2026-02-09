@@ -1,4 +1,3 @@
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:classia_amc/themes/app_colors.dart';
 import 'package:classia_amc/service/apiservice/wallet_service.dart';
@@ -140,7 +139,8 @@ class _WalletScreenState extends State<WalletScreen> {
             child: Text(
               tabName,
               style: TextStyle(
-                color: isSelected ? AppColors.buttonText : AppColors.primaryText,
+                color:
+                    isSelected ? AppColors.buttonText : AppColors.primaryText,
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w600,
               ),
@@ -172,8 +172,7 @@ class _WalletScreenState extends State<WalletScreen> {
             GestureDetector(
               onTap: () => _showFilterOptions(context),
               child: Container(
-                padding:
-                EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                 decoration: BoxDecoration(
                   color: AppColors.cardBackground,
                   borderRadius: BorderRadius.circular(8.r),
@@ -309,11 +308,13 @@ class _WalletScreenState extends State<WalletScreen> {
 
   Widget _buildBalanceSection() {
     final totalInvested = transactions
-        .where((txn) => txn['TransactionType'] == 'DEPOSIT')
-        .fold<double>(0, (sum, txn) => sum + (txn['Amount'] as int).toDouble());
+        .where((txn) => txn['transactionType'] == 'DEPOSIT')
+        .fold<double>(0, (sum, txn) => sum + (txn['amount'] ?? 0).toDouble());
     final totalWithdrawn = transactions
-        .where((txn) => txn['TransactionType'] == 'WITHDRAW')
-        .fold<double>(0, (sum, txn) => sum + (txn['Amount'] as int).toDouble());
+        .where((txn) =>
+            txn['transactionType'] == 'WITHDRAW' ||
+            txn['transactionType'] == 'SUBSCRIPTION')
+        .fold<double>(0, (sum, txn) => sum + (txn['amount'] ?? 0).toDouble());
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -365,10 +366,11 @@ class _WalletScreenState extends State<WalletScreen> {
 
   Widget _buildInvestmentWithdrawList(BuildContext context) {
     List<Map<String, dynamic>> filteredTransactions =
-    transactions.where((transaction) {
+        transactions.where((transaction) {
       if (selectedFilter == "All") return true;
 
-      DateTime transactionDate = DateTime.parse(transaction['CreatedAt']);
+      DateTime transactionDate = DateTime.parse(
+          transaction['transactionDate'] ?? transaction['CreatedAt']);
       DateTime now = DateTime.now();
 
       if (selectedFilter == "1 Day") {
@@ -418,26 +420,26 @@ class _WalletScreenState extends State<WalletScreen> {
             padding: EdgeInsets.symmetric(vertical: 16.h),
             child: _isListLoading
                 ? Center(
-              child: CircularProgressIndicator(
-                valueColor:
-                AlwaysStoppedAnimation<Color>(AppColors.primaryGold),
-              ),
-            )
+                    child: CircularProgressIndicator(
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(AppColors.primaryGold),
+                    ),
+                  )
                 : ElevatedButton(
-              onPressed: _fetchTransactions,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryGold,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.r)),
-              ),
-              child: Text(
-                'Load More',
-                style: TextStyle(
-                  color: AppColors.buttonText,
-                  fontSize: 14.sp,
-                ),
-              ),
-            ),
+                    onPressed: _fetchTransactions,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryGold,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r)),
+                    ),
+                    child: Text(
+                      'Load More',
+                      style: TextStyle(
+                        color: AppColors.buttonText,
+                        fontSize: 14.sp,
+                      ),
+                    ),
+                  ),
           );
         }
         return _buildTransactionItem(context, filteredTransactions[index]);
@@ -447,13 +449,27 @@ class _WalletScreenState extends State<WalletScreen> {
 
   Widget _buildTransactionItem(
       BuildContext context, Map<String, dynamic> transaction) {
-    bool isInvestment = transaction['TransactionType'] == 'DEPOSIT';
+    final String type = (transaction['transactionType'] ?? '').toString();
+    bool isPositive = type == 'DEPOSIT';
     const mockLogo = 'https://via.placeholder.com/50';
-    final mockName =
-        '${isInvestment ? 'Deposit' : 'Withdrawal'} #${transaction['ID']}';
-    final amount = (transaction['Amount'] as int).toDouble().toStringAsFixed(2);
-    final date =
-    DateTime.parse(transaction['CreatedAt']).toString().split('.')[0];
+
+    final title =
+        transaction['description'] ?? (isPositive ? 'Deposit' : 'Withdrawal');
+    final subtitle = transaction['referenceName'] != null &&
+            transaction['referenceName'].toString().isNotEmpty
+        ? transaction['referenceName']
+        : (transaction['transactionDate'] != null
+            ? transaction['transactionDate'].toString().split('T')[0]
+            : '');
+
+    final amount = (transaction['amount'] ?? 0).toDouble().toStringAsFixed(2);
+    final date = transaction['transactionDate'] != null
+        ? DateTime.parse(transaction['transactionDate'].toString())
+            .toString()
+            .split('.')[0]
+        : DateTime.parse(transaction['CreatedAt'].toString())
+            .toString()
+            .split('.')[0];
 
     return InkWell(
       onTap: () {
@@ -463,10 +479,10 @@ class _WalletScreenState extends State<WalletScreen> {
             builder: (context) => TradingDetailsScreen(
               id: 0,
               logo: mockLogo,
-              name: mockName,
               value: 0,
               fundName: "",
-              projection:  0,
+              projection: 0,
+              name: '',
             ),
           ),
         );
@@ -485,47 +501,64 @@ class _WalletScreenState extends State<WalletScreen> {
           ],
         ),
         child: ListTile(
-          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-          leading: ClipOval(
-            child: CachedNetworkImage(
-              imageUrl: mockLogo,
-              width: 40.w,
-              height: 40.h,
-              fit: BoxFit.cover,
-              errorWidget: (context, url, error) => Container(
-                width: 40.w,
-                height: 40.h,
-                color: AppColors.border,
-                child: Icon(
-                  Icons.image,
-                  color: AppColors.disabled,
-                  size: 24.sp,
+          contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+          leading: Container(
+            width: 36.w,
+            height: 36.h,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.border.withOpacity(0.5)),
+            ),
+            child: ClipOval(
+              child: CachedNetworkImage(
+                imageUrl: mockLogo,
+                fit: BoxFit.cover,
+                errorWidget: (context, url, error) => Container(
+                  color: AppColors.border.withOpacity(0.1),
+                  child: Icon(
+                    Icons.image,
+                    color: AppColors.disabled,
+                    size: 16.sp,
+                  ),
                 ),
               ),
             ),
           ),
           title: Text(
-            mockName,
+            title,
             style: TextStyle(
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: AppColors.primaryText,
-              fontSize: 16.sp,
+              fontSize: 13.sp,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           subtitle: Text(
-            date,
+            subtitle,
             style: TextStyle(
-              fontSize: 12.sp,
-              color: AppColors.secondaryText,
+              fontSize: 11.sp,
+              color: AppColors.secondaryText.withOpacity(0.8),
             ),
           ),
-          trailing: Text(
-            '₹$amount',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: isInvestment ? AppColors.success : AppColors.error,
-              fontSize: 16.sp,
-            ),
+          trailing: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${isPositive ? '+' : '-'}₹$amount',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: isPositive ? AppColors.success : AppColors.error,
+                  fontSize: 14.sp,
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 10.sp,
+                color: AppColors.secondaryText.withOpacity(0.2),
+              ),
+            ],
           ),
         ),
       ),

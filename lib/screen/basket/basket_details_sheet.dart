@@ -7,6 +7,313 @@ import 'basket_invest_screen.dart';
 import 'basket_model.dart';
 import 'basket_api_service.dart';
 import 'my_basket_screen.dart';
+import '../../service/apiservice/wallet_service.dart';
+import '../../utills/constent/user_constant.dart';
+
+class SubscriptionBottomSheet extends StatefulWidget {
+  final Basket basket;
+  final BasketApiService apiService;
+  final VoidCallback onSubscribeSuccess;
+
+  const SubscriptionBottomSheet({
+    Key? key,
+    required this.basket,
+    required this.apiService,
+    required this.onSubscribeSuccess,
+  }) : super(key: key);
+
+  @override
+  State<SubscriptionBottomSheet> createState() =>
+      _SubscriptionBottomSheetState();
+}
+
+class _SubscriptionBottomSheetState extends State<SubscriptionBottomSheet> {
+  late WalletService _walletService;
+  bool _isLoading = false;
+  bool _isFetchingBalance = true;
+  double _walletBalance = 0.0;
+  String _selectedPeriod = 'MONTHLY'; // Default period
+
+  @override
+  void initState() {
+    super.initState();
+    _walletService = WalletService(token: UserConstants.TOKEN ?? '');
+    _fetchWalletBalance();
+  }
+
+  Future<void> _fetchWalletBalance() async {
+    if (!mounted) return;
+    setState(() {
+      _isFetchingBalance = true;
+    });
+
+    try {
+      final response = await _walletService.getWalletBalance();
+      if (mounted && response['status'] == true && response['data'] != null) {
+        setState(() {
+          _walletBalance = (response['data']['balance'] ?? 0).toDouble();
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching wallet balance: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isFetchingBalance = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleConfirmSubscription() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await widget.apiService.subscribeBasket(
+        widget.basket.id,
+        period: _selectedPeriod,
+      );
+
+      if (!mounted) return;
+
+      final bool isSuccess = response['status'] == true;
+      final String message = response['message'] ??
+          (isSuccess ? 'Successfully subscribed' : 'Subscription failed');
+
+      Navigator.pop(context); // Close bottom sheet
+
+      if (isSuccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        widget.onSubscribeSuccess();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to subscribe: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final subscriptionAmount = widget.basket.subscriptionAmountValue.toDouble();
+    // Assuming yearly might have a discount or just x12, for now simplistic logic
+    // or if the model supported specific prices per period.
+    // The user prompt only specified Monthly/Yearly options.
+    // We'll display the same amount for now unless logic dictates otherwise.
+    // Actually, usually Yearly = Monthly * 12. Let's assume standard pricing for now.
+    final displayPrice = _selectedPeriod == 'YEARLY'
+        ? subscriptionAmount * 12
+        : subscriptionAmount;
+
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: AppColors.screenBackground,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Confirm Subscription',
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryColor,
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.close, color: Colors.grey),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+
+          // Wallet Balance
+          Container(
+            padding: EdgeInsets.all(12.w),
+            decoration: BoxDecoration(
+              color: AppColors.primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10.r),
+              border:
+                  Border.all(color: AppColors.primaryColor.withOpacity(0.3)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Wallet Balance',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                _isFetchingBalance
+                    ? SizedBox(
+                        width: 16.w,
+                        height: 16.w,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primaryColor,
+                        ),
+                      )
+                    : Text(
+                        '₹${_walletBalance.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primaryColor,
+                        ),
+                      ),
+              ],
+            ),
+          ),
+          SizedBox(height: 20.h),
+
+          // Period Selection
+          Text(
+            'Select Period',
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+          SizedBox(height: 10.h),
+          Row(
+            children: [
+              _buildPeriodOption('Monthly', 'MONTHLY'),
+              SizedBox(width: 12.w),
+              _buildPeriodOption('Yearly', 'YEARLY'),
+            ],
+          ),
+          SizedBox(height: 24.h),
+
+          // Price Summary
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Total Amount',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                '₹${displayPrice.toStringAsFixed(2)}',
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryColor,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 24.h),
+
+          // Subscribe Button
+          SizedBox(
+            width: double.infinity,
+            height: 50.h,
+            child: ElevatedButton(
+              onPressed: _isLoading || _isFetchingBalance
+                  ? null
+                  : _handleConfirmSubscription,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryGold,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+              ),
+              child: _isLoading
+                  ? SizedBox(
+                      width: 24.w,
+                      height: 24.w,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      'Confirm Subscription',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+            ),
+          ),
+          SizedBox(height: 16.h),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPeriodOption(String label, String value) {
+    final isSelected = _selectedPeriod == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedPeriod = value;
+          });
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 12.h),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primaryGold : Colors.transparent,
+            borderRadius: BorderRadius.circular(8.r),
+            border: Border.all(
+              color: isSelected ? AppColors.primaryGold : Colors.grey[400]!,
+            ),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+              color: isSelected ? Colors.white : Colors.grey[700],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 /// Bottom sheet widget that displays detailed information about a basket
 /// including price performance, holdings, and subscription/investment options
@@ -38,7 +345,45 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
   final TextEditingController _amountController = TextEditingController();
   final BasketApiService _apiService = BasketApiService();
   bool _isLoading = false;
+  bool _isFetchingDetails = false;
+  late Basket _currentBasket;
   static const String _tokenKey = 'bajaj_auth_token';
+
+  @override
+  void initState() {
+    super.initState();
+    _currentBasket = widget.basket;
+    // If holdings are empty, try to fetch full details (in case List API returned lean object)
+    if (_currentBasket.holdings.isEmpty) {
+      _fetchBasketDetails();
+    }
+  }
+
+  Future<void> _fetchBasketDetails() async {
+    setState(() {
+      _isFetchingDetails = true;
+    });
+    try {
+      final fullBasket = await _apiService.fetchBasketById(_currentBasket.id);
+      if (mounted) {
+        setState(() {
+          // Preserve subscription details from the previous state
+          _currentBasket = fullBasket.copyWith(
+            subscribedVersionId: _currentBasket.subscribedVersionId,
+            subscriptionId: _currentBasket.subscriptionId,
+          );
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching basket details: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isFetchingDetails = false;
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -75,8 +420,8 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
             builder: (context) => BajalLoginScreen(
               returnRoute: 'basket_invest',
               returnArguments: {
-                'basketId': widget.basket.id,
-                'basket': widget.basket,
+                'basketId': _currentBasket.id,
+                'basket': _currentBasket,
               },
             ),
           ),
@@ -89,8 +434,8 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
             context,
             MaterialPageRoute(
               builder: (context) => BasketInvestScreen(
-                basketId: widget.basket.id,
-                basket: widget.basket,
+                basketId: _currentBasket.id,
+                basket: _currentBasket,
               ),
             ),
           );
@@ -107,8 +452,8 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
           context,
           MaterialPageRoute(
             builder: (context) => BasketInvestScreen(
-              basketId: widget.basket.id,
-              basket: widget.basket,
+              basketId: _currentBasket.id,
+              basket: _currentBasket,
             ),
           ),
         );
@@ -130,61 +475,25 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
     }
   }
 
-  Future<void> _handleSubscribe() async {
-    setState(() {
-      _isLoading = true;
-    });
+  void _handleSubscribe() {
+    _showSubscriptionBottomSheet();
+  }
 
-    try {
-      final response = await _apiService.subscribeBasket(widget.basket.id);
-
-      if (!mounted) return;
-
-      final bool isSuccess = response['status'] == true;
-      final String message = response['message'] ??
-          (isSuccess ? 'Successfully subscribed' : 'Subscription failed');
-
-      Navigator.pop(context);
-
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      if (!mounted) return;
-
-      if (isSuccess) {
-        _showSnackBar(
-          message: 'Successfully subscribed to ${widget.basket.basketName}',
-          icon: Icons.check_circle,
-          backgroundColor: AppColors.success,
-        );
-        widget.onSubscribe();
-      } else {
-        _showSnackBar(
-          message: message,
-          icon: Icons.error_outline,
-          backgroundColor: AppColors.error,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.pop(context);
-
-        await Future.delayed(const Duration(milliseconds: 100));
-
-        if (mounted) {
-          _showSnackBar(
-            message: 'Failed to subscribe: ${e.toString()}',
-            icon: Icons.warning_amber_rounded,
-            backgroundColor: AppColors.error,
-          );
-        }
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
+  void _showSubscriptionBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SubscriptionBottomSheet(
+        basket: _currentBasket,
+        apiService: _apiService,
+        onSubscribeSuccess: () {
+          widget.onSubscribe();
+          // Optionally refresh details
+          _fetchBasketDetails();
+        },
+      ),
+    );
   }
 
   void _showSnackBar({
@@ -218,11 +527,11 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final double initialPrice = widget.basket.initialPriceValue;
-    final double currentPrice = widget.basket.currentPriceValue;
-    final double performance = widget.basket.performanceValue;
+    final double initialPrice = _currentBasket.initialPriceValue;
+    final double currentPrice = _currentBasket.currentPriceValue;
+    final double performance = _currentBasket.performanceValue;
     final bool isPositive = performance >= 0;
-    final bool hasPriceData = widget.basket.hasPriceData;
+    final bool hasPriceData = _currentBasket.hasPriceData;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.75,
@@ -258,10 +567,16 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
               Expanded(
                 child: ListView(
                   controller: controller,
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
                   children: [
                     _buildBasketInfoSection(),
-                    if (widget.navigateToInvest) _buildHoldingsSection(),
+                    if (widget.navigateToInvest)
+                      _isFetchingDetails
+                          ? Center(
+                              child: CircularProgressIndicator(
+                                  color: AppColors.primaryGold))
+                          : _buildHoldingsSection(),
                     SizedBox(height: 80.h),
                   ],
                 ),
@@ -314,7 +629,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
             children: [
               Expanded(
                 child: Text(
-                  widget.basket.basketName,
+                  _currentBasket.basketName,
                   style: TextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.bold,
@@ -324,7 +639,12 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (widget.isSubscribed) _buildSubscribedBadge(),
+              if (widget.isSubscribed) ...[
+                _buildSubscribedBadge(),
+                if (_currentBasket.subscribedVersionId != null &&
+                    _currentBasket.subscribedVersionId != 0)
+                  _buildVersionBadge(_currentBasket.subscribedVersionId!),
+              ],
             ],
           ),
           SizedBox(height: 14.h),
@@ -376,6 +696,25 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildVersionBadge(int versionId) {
+    return Container(
+      margin: EdgeInsets.only(left: 8.w),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+      decoration: BoxDecoration(
+        color: Colors.blueGrey,
+        borderRadius: BorderRadius.circular(20.r),
+      ),
+      child: Text(
+        'v$versionId',
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 12.sp,
+        ),
       ),
     );
   }
@@ -438,7 +777,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
               ),
               SizedBox(width: 4.w),
               Text(
-                '(₹${widget.basket.priceChangeAmount.toStringAsFixed(2)})',
+                '(₹${_currentBasket.priceChangeAmount.toStringAsFixed(2)})',
                 style: TextStyle(
                   fontSize: 12.sp,
                   color: (isPositive ? AppColors.success : AppColors.error)
@@ -593,10 +932,11 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
           ),
         ),
         SizedBox(height: 12.h),
-        _buildInfoRow('Subscription Type', widget.basket.subscryptionType),
-        _buildInfoRow('Volatility', widget.basket.volatility),
-        _buildInfoRow('Subscription Amount', '₹${widget.basket.subscriptionAmount}'),
-        _buildInfoRow('Research Analyst', widget.basket.raName),
+        _buildInfoRow('Subscription Type', _currentBasket.subscryptionType),
+        _buildInfoRow('Volatility', _currentBasket.volatility),
+        _buildInfoRow(
+            'Subscription Amount', '₹${_currentBasket.subscriptionAmount}'),
+        _buildInfoRow('Research Analyst', _currentBasket.raName),
       ],
     );
   }
@@ -638,7 +978,7 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
   }
 
   Widget _buildHoldingsSection() {
-    final holdings = widget.basket.holdings;
+    final holdings = _currentBasket.holdings;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -924,8 +1264,8 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
         top: false,
         child: widget.isSubscribed
             ? (widget.navigateToInvest
-            ? _buildInvestButton()
-            : _buildSubscriptionSuccessCard())
+                ? _buildInvestButton()
+                : _buildSubscriptionSuccessCard())
             : _buildSubscribeButton(),
       ),
     );
@@ -938,13 +1278,13 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
         onPressed: _isLoading ? null : _navigateToInvestScreen,
         icon: _isLoading
             ? SizedBox(
-          width: 18.w,
-          height: 18.h,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: AppColors.onPrimaryColor,
-          ),
-        )
+                width: 18.w,
+                height: 18.h,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.onPrimaryColor,
+                ),
+              )
             : Icon(Icons.add_circle_outline, size: 18.sp),
         label: Text(
           _isLoading ? 'Checking...' : 'Invest',
@@ -1044,13 +1384,13 @@ class _BasketDetailSheetState extends State<BasketDetailSheet> {
         onPressed: _isLoading ? null : _handleSubscribe,
         icon: _isLoading
             ? SizedBox(
-          width: 20.w,
-          height: 20.h,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: AppColors.onPrimaryColor,
-          ),
-        )
+                width: 20.w,
+                height: 20.h,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.onPrimaryColor,
+                ),
+              )
             : Icon(Icons.check_circle, size: 20.sp),
         label: Text(
           _isLoading ? 'Subscribing...' : 'Subscribe to Basket',

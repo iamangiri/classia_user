@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../service/apiservice/wallet_service.dart';
 import '../../utills/themes/light_app_theme.dart';
-import '../../widget/common_app_bar.dart';
+import '../../utills/constent/user_constant.dart';
 import 'transaction_details_screen.dart';
-
+import 'add_money_screen.dart';
 
 class MyWalletScreen extends StatefulWidget {
   const MyWalletScreen({Key? key}) : super(key: key);
@@ -15,8 +14,8 @@ class MyWalletScreen extends StatefulWidget {
   _MyWalletScreenState createState() => _MyWalletScreenState();
 }
 
-class _MyWalletScreenState extends State<MyWalletScreen> with SingleTickerProviderStateMixin {
-  late Razorpay _razorpay;
+class _MyWalletScreenState extends State<MyWalletScreen>
+    with SingleTickerProviderStateMixin {
   late WalletService _walletService;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -28,8 +27,6 @@ class _MyWalletScreenState extends State<MyWalletScreen> with SingleTickerProvid
   String selectedFilter = "All";
   final List<String> filters = ["All", "Deposit", "Withdraw"];
 
-  final TextEditingController _amountController = TextEditingController();
-  bool _isProcessingPayment = false;
   bool _isLoadingTransactions = false;
   bool _isLoadingBalance = false;
   int _currentPage = 1;
@@ -38,8 +35,7 @@ class _MyWalletScreenState extends State<MyWalletScreen> with SingleTickerProvid
   @override
   void initState() {
     super.initState();
-    _walletService = WalletService(token: '');
-    _initializeRazorpay();
+    _walletService = WalletService(token: UserConstants.TOKEN ?? '');
     _loadWalletData();
 
     _animationController = AnimationController(
@@ -50,13 +46,6 @@ class _MyWalletScreenState extends State<MyWalletScreen> with SingleTickerProvid
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
     _animationController.forward();
-  }
-
-  void _initializeRazorpay() {
-    _razorpay = Razorpay();
-    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
-    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
-    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
   }
 
   Future<void> _loadWalletData() async {
@@ -76,7 +65,7 @@ class _MyWalletScreenState extends State<MyWalletScreen> with SingleTickerProvid
 
       if (result['status'] == true && result['data'] != null) {
         final data = result['data'];
-        final balance = data['mainBalance'];
+        final balance = data['balance'];
         setState(() {
           walletBalance = double.tryParse(balance?.toString() ?? '0') ?? 0.0;
           _isLoadingBalance = false;
@@ -97,28 +86,20 @@ class _MyWalletScreenState extends State<MyWalletScreen> with SingleTickerProvid
     setState(() => _isLoadingTransactions = true);
 
     try {
-      final result = await WalletService.TransactionList(
-        page: _currentPage,
-        sizePerPage: _sizePerPage,
+      final result = await _walletService.getTransactionList(
+        _currentPage,
+        _sizePerPage,
       );
 
-      if (result['status'] == true && result['data'] != null) {
-        final data = result['data'];
-        final transactionList = List<Map<String, dynamic>>.from(
-            data['transactionList'] ?? []
-        );
+      final transactionList =
+          List<Map<String, dynamic>>.from(result['transactions'] ?? []);
 
-        setState(() {
-          transactions = transactionList;
-          paginationData = {
-            'totalRecords': data['totalRecords'],
-            'totalPages': data['totalPages'],
-            'currentPage': data['currentPage'],
-          };
-          _applyFilter();
-          _isLoadingTransactions = false;
-        });
-      }
+      setState(() {
+        transactions = transactionList;
+        paginationData = result['pagination'];
+        _applyFilter();
+        _isLoadingTransactions = false;
+      });
     } catch (e) {
       print('Error loading transactions: $e');
       setState(() => _isLoadingTransactions = false);
@@ -153,516 +134,26 @@ class _MyWalletScreenState extends State<MyWalletScreen> with SingleTickerProvid
           ),
           backgroundColor: AppTheme.errorRed,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
           margin: EdgeInsets.all(16.w),
         ),
       );
     }
   }
 
-  void _showSuccessSnackBar(String message) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.check_circle_outline, color: Colors.white, size: 20.sp),
-              SizedBox(width: 12.w),
-              Expanded(child: Text(message)),
-            ],
-          ),
-          backgroundColor: AppTheme.successGreen,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-          margin: EdgeInsets.all(16.w),
-        ),
-      );
-    }
-  }
-
-  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
-    if (_isProcessingPayment) return;
-
-    setState(() => _isProcessingPayment = true);
-
-    final amount = double.parse(_amountController.text);
-
-    try {
-      final depositResponse = await _walletService.depositMoney(
-        amount: amount,
-        depositDetails: {
-          'paymentId': response.paymentId ?? '',
-          'orderId': response.orderId ?? '',
-          'signature': response.signature ?? '',
-          'timestamp': DateTime.now().toIso8601String(),
-          'method': 'razorpay',
-        },
-      );
-
-      _amountController.clear();
-      await _loadWalletData();
-      _showSuccessSnackBar('₹$amount added successfully!');
-    } catch (e) {
-      print('Error calling deposit API: $e');
-      _showErrorSnackBar('Payment successful but failed to update wallet');
-    } finally {
-      setState(() => _isProcessingPayment = false);
-    }
-  }
-
-  void _handlePaymentError(PaymentFailureResponse response) {
-    setState(() => _isProcessingPayment = false);
-    _showErrorSnackBar('Payment Failed: ${response.message ?? "Unknown error"}');
-  }
-
-  void _handleExternalWallet(ExternalWalletResponse response) {
-    _showSuccessSnackBar('External Wallet: ${response.walletName}');
-  }
-
-  void _openRazorpayCheckout(double amount) {
-    var options = {
-      'key': 'rzp_test_1DP5mmOlF5G5ag',
-      'amount': (amount * 100).toInt(),
-      'name': 'Classia Capital',
-      'description': 'Wallet Recharge',
-      'prefill': {'contact': '8888888888', 'email': 'test@razorpay.com'},
-      'external': {'wallets': ['paytm']},
-      'theme': {'color': '#DAA520'}
-    };
-
-    try {
-      _razorpay.open(options);
-    } catch (e) {
-      _showErrorSnackBar('Failed to open payment gateway');
-    }
-  }
-
-  // ✅ Fixed: Using StatefulBuilder and SingleChildScrollView to prevent overflow
-  void _showAddMoneyDialog() {
-    _amountController.clear();
-    int? selectedAmount;
-
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
-            child: SingleChildScrollView(
-              // ✅ Prevents overflow when keyboard opens
-              child: Container(
-                constraints: BoxConstraints(maxWidth: 400.w),
-                decoration: BoxDecoration(
-                  color: AppTheme.cardBackground,
-                  borderRadius: BorderRadius.circular(28.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primaryDarkBlue.withOpacity(0.12),
-                      blurRadius: 40,
-                      offset: const Offset(0, 16),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Header
-                    _buildDialogHeader(),
-
-                    // Content
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(24.w, 28.h, 24.w, 24.h),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Amount Input
-                          _buildAmountInput(),
-
-                          SizedBox(height: 24.h),
-
-                          // Quick Select
-                          _buildQuickSelectSection(selectedAmount, (amt) {
-                            setDialogState(() {
-                              selectedAmount = amt;
-                              _amountController.text = amt.toString();
-                            });
-                          }),
-
-                          SizedBox(height: 32.h),
-
-                          // Action Buttons
-                          _buildDialogActions(dialogContext),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildDialogHeader() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 32.h, horizontal: 24.w),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.primaryDarkBlue,
-            AppTheme.primaryDarkBlue.withOpacity(0.85),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(28.r),
-          topRight: Radius.circular(28.r),
+  void _navigateToAddMoney() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddMoneyScreen(
+          currentBalance: walletBalance,
+          onPaymentSuccess: () {
+            // Reload wallet data when coming back
+            _loadWalletData();
+          },
         ),
       ),
-      child: Column(
-        children: [
-          // Animated Icon Container
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.0, end: 1.0),
-            duration: const Duration(milliseconds: 600),
-            builder: (context, value, child) {
-              return Transform.scale(
-                scale: value,
-                child: Container(
-                  padding: EdgeInsets.all(18.w),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryGold.withOpacity(0.15),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppTheme.primaryGold.withOpacity(0.3),
-                      width: 2,
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.account_balance_wallet_rounded,
-                    color: AppTheme.primaryGold,
-                    size: 36.sp,
-                  ),
-                ),
-              );
-            },
-          ),
-          SizedBox(height: 20.h),
-          Text(
-            'Add Money',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24.sp,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20.r),
-            ),
-            child: Text(
-              'Top up your wallet balance',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAmountInput() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(6.w),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryGold.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Icon(
-                Icons.currency_rupee,
-                color: AppTheme.primaryGold,
-                size: 16.sp,
-              ),
-            ),
-            SizedBox(width: 10.w),
-            Text(
-              'Enter Amount',
-              style: TextStyle(
-                color: AppTheme.textPrimary,
-                fontSize: 15.sp,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 12.h),
-        Container(
-          decoration: BoxDecoration(
-            color: AppTheme.lightBackground,
-            borderRadius: BorderRadius.circular(20.r),
-            border: Border.all(
-              color: AppTheme.primaryGold.withOpacity(0.2),
-              width: 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.primaryGold.withOpacity(0.05),
-                blurRadius: 20,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: TextField(
-            controller: _amountController,
-            keyboardType: TextInputType.number,
-            style: TextStyle(
-              color: AppTheme.textPrimary,
-              fontSize: 32.sp,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-            decoration: InputDecoration(
-              prefixIcon: Container(
-                width: 60.w,
-                alignment: Alignment.center,
-                child: Text(
-                  '₹',
-                  style: TextStyle(
-                    color: AppTheme.primaryGold,
-                    fontSize: 32.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              hintText: '0',
-              hintStyle: TextStyle(
-                color: AppTheme.textSecondary.withOpacity(0.4),
-                fontSize: 32.sp,
-                fontWeight: FontWeight.bold,
-              ),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 20.w,
-                vertical: 24.h,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickSelectSection(int? selectedAmount, Function(int) onSelect) {
-    final amounts = [100, 500, 1000, 2000, 5000];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(6.w),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryDarkBlue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Icon(
-                Icons.touch_app_rounded,
-                color: AppTheme.primaryDarkBlue,
-                size: 16.sp,
-              ),
-            ),
-            SizedBox(width: 10.w),
-            Text(
-              'Quick Select',
-              style: TextStyle(
-                color: AppTheme.textPrimary,
-                fontSize: 15.sp,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 16.h),
-        Wrap(
-          spacing: 10.w,
-          runSpacing: 10.h,
-          children: amounts.map((amt) {
-            final isSelected = _amountController.text == amt.toString();
-            return GestureDetector(
-              onTap: () => onSelect(amt),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeOutCubic,
-                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
-                decoration: BoxDecoration(
-                  gradient: isSelected
-                      ? LinearGradient(
-                    colors: [AppTheme.primaryGold, AppTheme.primaryGold.withOpacity(0.85)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                      : null,
-                  color: isSelected ? null : AppTheme.lightBackground,
-                  borderRadius: BorderRadius.circular(14.r),
-                  border: Border.all(
-                    color: isSelected
-                        ? AppTheme.primaryGold
-                        : AppTheme.textSecondary.withOpacity(0.15),
-                    width: isSelected ? 2 : 1.5,
-                  ),
-                  boxShadow: isSelected
-                      ? [
-                    BoxShadow(
-                      color: AppTheme.primaryGold.withOpacity(0.35),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ]
-                      : null,
-                ),
-                child: Text(
-                  '₹$amt',
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : AppTheme.textPrimary,
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDialogActions(BuildContext dialogContext) {
-    return Row(
-      children: [
-        Expanded(
-          child: TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.symmetric(vertical: 18.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.r),
-                side: BorderSide(
-                  color: AppTheme.textSecondary.withOpacity(0.25),
-                  width: 1.5,
-                ),
-              ),
-            ),
-            child: Text(
-              'Cancel',
-              style: TextStyle(
-                color: AppTheme.textSecondary,
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
-        SizedBox(width: 14.w),
-        Expanded(
-          flex: 2,
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppTheme.primaryGold, Color(0xFFB8860B)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16.r),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primaryGold.withOpacity(0.4),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: ElevatedButton(
-              onPressed: _isProcessingPayment
-                  ? null
-                  : () {
-                if (_amountController.text.isNotEmpty) {
-                  final amount = double.tryParse(_amountController.text);
-                  if (amount != null && amount > 0) {
-                    Navigator.pop(dialogContext);
-                    _openRazorpayCheckout(amount);
-                  } else {
-                    _showErrorSnackBar('Please enter a valid amount');
-                  }
-                } else {
-                  _showErrorSnackBar('Please enter an amount');
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                shadowColor: Colors.transparent,
-                padding: EdgeInsets.symmetric(vertical: 18.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
-              ),
-              child: _isProcessingPayment
-                  ? SizedBox(
-                width: 24.w,
-                height: 24.h,
-                child: const CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: Colors.white,
-                ),
-              )
-                  : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Proceed to Pay',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(width: 10.w),
-                  Container(
-                    padding: EdgeInsets.all(4.w),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: Icon(
-                      Icons.arrow_forward_rounded,
-                      color: Colors.white,
-                      size: 18.sp,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -729,7 +220,10 @@ class _MyWalletScreenState extends State<MyWalletScreen> with SingleTickerProvid
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.primaryDarkBlue, AppTheme.primaryDarkBlue.withOpacity(0.85)],
+          colors: [
+            AppTheme.primaryDarkBlue,
+            AppTheme.primaryDarkBlue.withOpacity(0.85)
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -805,7 +299,8 @@ class _MyWalletScreenState extends State<MyWalletScreen> with SingleTickerProvid
                       ],
                     ),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                       decoration: BoxDecoration(
                         color: AppTheme.successGreen.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20.r),
@@ -837,39 +332,37 @@ class _MyWalletScreenState extends State<MyWalletScreen> with SingleTickerProvid
                 SizedBox(height: 24.h),
                 _isLoadingBalance
                     ? SizedBox(
-                  height: 48.h,
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      color: AppTheme.primaryGold,
-                      strokeWidth: 3,
-                    ),
-                  ),
-                )
+                        height: 48.h,
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            color: AppTheme.primaryGold,
+                            strokeWidth: 3,
+                          ),
+                        ),
+                      )
                     : Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '₹',
-                      style: TextStyle(
-                        fontSize: 28.sp,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryGold,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '₹',
+                            style: TextStyle(
+                              fontSize: 28.sp,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryGold,
+                            ),
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            walletBalance.toStringAsFixed(2),
+                            style: TextStyle(
+                              fontSize: 42.sp,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      walletBalance.toStringAsFixed(2),
-                      style: TextStyle(
-                        fontSize: 42.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ],
-                ),
-
-
               ],
             ),
           ),
@@ -878,47 +371,9 @@ class _MyWalletScreenState extends State<MyWalletScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildStatItem(IconData icon, Color color, String value, String label) {
-    return Expanded(
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(8.w),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(10.r),
-            ),
-            child: Icon(icon, color: color, size: 18.sp),
-          ),
-          SizedBox(width: 12.w),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  color: Colors.white.withOpacity(0.7),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildQuickActions() {
     return GestureDetector(
-      onTap: _isProcessingPayment ? null : _showAddMoneyDialog,
+      onTap: _navigateToAddMoney,
       child: Container(
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
@@ -1032,11 +487,11 @@ class _MyWalletScreenState extends State<MyWalletScreen> with SingleTickerProvid
                 size: 20.sp,
               ),
             ),
-            SizedBox(width: 12.w),
+            SizedBox(width: 6.w),
             Text(
               'Transaction History',
               style: TextStyle(
-                fontSize: 18.sp,
+                fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textPrimary,
               ),
@@ -1061,7 +516,8 @@ class _MyWalletScreenState extends State<MyWalletScreen> with SingleTickerProvid
             ),
             child: Row(
               children: [
-                Icon(Icons.filter_list_rounded, size: 18.sp, color: AppTheme.primaryGold),
+                Icon(Icons.filter_list_rounded,
+                    size: 18.sp, color: AppTheme.primaryGold),
                 SizedBox(width: 6.w),
                 Text(
                   selectedFilter,
@@ -1072,7 +528,8 @@ class _MyWalletScreenState extends State<MyWalletScreen> with SingleTickerProvid
                   ),
                 ),
                 SizedBox(width: 4.w),
-                Icon(Icons.keyboard_arrow_down, size: 18.sp, color: AppTheme.primaryGold),
+                Icon(Icons.keyboard_arrow_down,
+                    size: 18.sp, color: AppTheme.primaryGold),
               ],
             ),
           ),
@@ -1132,13 +589,18 @@ class _MyWalletScreenState extends State<MyWalletScreen> with SingleTickerProvid
                         decoration: BoxDecoration(
                           gradient: isSelected
                               ? LinearGradient(
-                            colors: [AppTheme.primaryGold, Color(0xFFB8860B)],
-                          )
+                                  colors: [
+                                    AppTheme.primaryGold,
+                                    Color(0xFFB8860B)
+                                  ],
+                                )
                               : null,
                           color: isSelected ? null : AppTheme.lightBackground,
                           borderRadius: BorderRadius.circular(14.r),
                           border: Border.all(
-                            color: isSelected ? AppTheme.primaryGold : AppTheme.border,
+                            color: isSelected
+                                ? AppTheme.primaryGold
+                                : AppTheme.border,
                             width: 1.5,
                           ),
                         ),
@@ -1146,7 +608,9 @@ class _MyWalletScreenState extends State<MyWalletScreen> with SingleTickerProvid
                           filter,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: isSelected ? Colors.white : AppTheme.textPrimary,
+                            color: isSelected
+                                ? Colors.white
+                                : AppTheme.textPrimary,
                             fontSize: 15.sp,
                             fontWeight: FontWeight.w600,
                           ),
@@ -1230,22 +694,26 @@ class _MyWalletScreenState extends State<MyWalletScreen> with SingleTickerProvid
       physics: const NeverScrollableScrollPhysics(),
       itemCount: filteredTransactions.length,
       separatorBuilder: (_, __) => SizedBox(height: 12.h),
-      itemBuilder: (context, index) => _buildTransactionItem(filteredTransactions[index]),
+      itemBuilder: (context, index) =>
+          _buildTransactionItem(filteredTransactions[index]),
     );
   }
 
   Widget _buildTransactionItem(Map<String, dynamic> txn) {
     final type = txn['transactionType']?.toString().toUpperCase() ?? '';
     final isDeposit = type == 'DEPOSIT';
-    final displayAmount = double.tryParse(txn['amount']?.toString() ?? '0') ?? 0.0;
+    final displayAmount =
+        double.tryParse(txn['amount']?.toString() ?? '0') ?? 0.0;
 
-    final transactionData = txn['transactionData'];
+    // Extract payment method from different possible locations
     String method = 'WALLET';
-    if (transactionData != null && transactionData is Map<String, dynamic>) {
-      method = transactionData['method']?.toString() ?? 'WALLET';
+    if (txn['paymentGateway'] != null && txn['paymentGateway'].toString().isNotEmpty) {
+      method = txn['paymentGateway'].toString();
+    } else if (txn['paymentMethod'] != null && txn['paymentMethod'].toString().isNotEmpty) {
+      method = txn['paymentMethod'].toString();
     }
 
-    final dateStr = txn['createdAt'];
+    final dateStr = txn['createdAt'] ?? txn['CreatedAt'];
     DateTime date;
     try {
       date = dateStr != null ? DateTime.parse(dateStr) : DateTime.now();
@@ -1263,110 +731,127 @@ class _MyWalletScreenState extends State<MyWalletScreen> with SingleTickerProvid
         );
       },
       child: Container(
-        padding: EdgeInsets.all(16.w),
+        padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
           color: AppTheme.cardBackground,
-          borderRadius: BorderRadius.circular(16.r),
+          borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
             color: isDeposit
-                ? AppTheme.successGreen.withOpacity(0.2)
-                : AppTheme.errorRed.withOpacity(0.2),
+                ? AppTheme.successGreen.withOpacity(0.1)
+                : AppTheme.errorRed.withOpacity(0.1),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Icon
             Container(
-              padding: EdgeInsets.all(12.w),
+              padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: (isDeposit ? AppTheme.successGreen : AppTheme.errorRed).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(14.r),
+                color: (isDeposit ? AppTheme.successGreen : AppTheme.errorRed)
+                    .withOpacity(0.08),
+                borderRadius: BorderRadius.circular(10.r),
               ),
               child: Icon(
                 isDeposit ? Icons.south_west_rounded : Icons.north_east_rounded,
                 color: isDeposit ? AppTheme.successGreen : AppTheme.errorRed,
-                size: 22.sp,
+                size: 18.sp,
               ),
             ),
-            SizedBox(width: 14.w),
+            SizedBox(width: 12.w),
 
-            // Details
+            // Details - Takes remaining space
             Expanded(
+              flex: 3,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    isDeposit ? 'Wallet Deposit' : 'Basket Subscription',
+                    txn['description'] ??
+                        (isDeposit ? 'Wallet Deposit' : 'Basket Subscription'),
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      fontSize: 15.sp,
+                      fontSize: 13.5.sp,
                       color: AppTheme.textPrimary,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 6.h),
+                  SizedBox(height: 4.h),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         Icons.access_time_rounded,
-                        size: 12.sp,
+                        size: 10.sp,
                         color: AppTheme.textSecondary,
                       ),
                       SizedBox(width: 4.w),
-                      Text(
-                        DateFormat('dd MMM yyyy, hh:mm a').format(date),
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: AppTheme.textSecondary,
+                      Flexible(
+                        child: Text(
+                          DateFormat('dd MMM, yyyy').format(date),
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: AppTheme.textSecondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
-                  ),
-                  SizedBox(height: 4.h),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
-                    decoration: BoxDecoration(
-                      color: AppTheme.lightBackground,
-                      borderRadius: BorderRadius.circular(6.r),
-                    ),
-                    child: Text(
-                      method.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 10.sp,
-                        color: AppTheme.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                   ),
                 ],
               ),
             ),
 
-            // Amount & Arrow
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '${isDeposit ? '+' : '-'}₹${displayAmount.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 17.sp,
-                    color: isDeposit ? AppTheme.successGreen : AppTheme.errorRed,
+            SizedBox(width: 8.w),
+
+            // Amount Section - Fixed width constraint
+            Expanded(
+              flex: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${isDeposit ? '+' : '-'}₹${displayAmount.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14.sp,
+                      color:
+                          isDeposit ? AppTheme.successGreen : AppTheme.errorRed,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                SizedBox(height: 8.h),
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 14.sp,
-                  color: AppTheme.textSecondary.withOpacity(0.5),
-                ),
-              ],
+                  SizedBox(height: 4.h),
+                  Text(
+                    method.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 9.sp,
+                      color: AppTheme.textSecondary.withOpacity(0.7),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            
+            SizedBox(width: 6.w),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 12.sp,
+              color: AppTheme.textSecondary.withOpacity(0.3),
             ),
           ],
         ),
@@ -1376,8 +861,6 @@ class _MyWalletScreenState extends State<MyWalletScreen> with SingleTickerProvid
 
   @override
   void dispose() {
-    _razorpay.clear();
-    _amountController.dispose();
     _animationController.dispose();
     super.dispose();
   }

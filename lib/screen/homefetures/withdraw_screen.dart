@@ -210,7 +210,7 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
 // Calculate total withdrawn from transactions
     final totalWithdrawn = transactions.fold<double>(
       0,
-      (sum, txn) => sum + (txn['Amount'] as int).toDouble(),
+      (sum, txn) => sum + (txn['amount'] ?? 0).toDouble(),
     );
     return Container(
       width: double.infinity,
@@ -248,7 +248,8 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
         transactions.where((transaction) {
       if (selectedFilter == 'All') return true;
 
-      DateTime transactionDate = DateTime.parse(transaction['CreatedAt']);
+      DateTime transactionDate = DateTime.parse(
+          transaction['transactionDate'] ?? transaction['CreatedAt']);
       DateTime now = DateTime.now();
 
       if (selectedFilter == '1 Day') {
@@ -329,10 +330,16 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
       BuildContext context, Map<String, dynamic> transaction) {
 // Mock logo and name since API doesn't provide them
     const mockLogo = 'https://via.placeholder.com/50';
-    final mockName = 'Withdrawal #${transaction['ID']}';
-    final amount = (transaction['Amount'] as int).toDouble().toStringAsFixed(2);
-    final date =
-        DateTime.parse(transaction['CreatedAt']).toString().split('.')[0];
+    final mockName =
+        transaction['description'] ?? 'Withdrawal #${transaction['ID']}';
+    final amount = (transaction['amount'] ?? 0).toDouble().toStringAsFixed(2);
+    final date = transaction['transactionDate'] != null
+        ? DateTime.parse(transaction['transactionDate'].toString())
+            .toString()
+            .split('.')[0]
+        : DateTime.parse(transaction['CreatedAt'].toString())
+            .toString()
+            .split('.')[0];
 
     return InkWell(
       onTap: () {
@@ -364,21 +371,25 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
           ],
         ),
         child: ListTile(
-          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-          leading: ClipOval(
-            child: CachedNetworkImage(
-              imageUrl: mockLogo,
-              width: 40.w,
-              height: 40.h,
-              fit: BoxFit.cover,
-              errorWidget: (context, url, error) => Container(
-                width: 40.w,
-                height: 40.h,
-                color: AppColors.border,
-                child: Icon(
-                  Icons.image,
-                  color: AppColors.disabled,
-                  size: 24.sp,
+          contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+          leading: Container(
+            width: 36.w,
+            height: 36.h,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.border.withOpacity(0.5)),
+            ),
+            child: ClipOval(
+              child: CachedNetworkImage(
+                imageUrl: mockLogo,
+                fit: BoxFit.cover,
+                errorWidget: (context, url, error) => Container(
+                  color: AppColors.border.withOpacity(0.1),
+                  child: Icon(
+                    Icons.image,
+                    color: AppColors.disabled,
+                    size: 16.sp,
+                  ),
                 ),
               ),
             ),
@@ -386,25 +397,38 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
           title: Text(
             mockName,
             style: TextStyle(
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: AppColors.primaryText,
-              fontSize: 16.sp,
+              fontSize: 13.sp,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           subtitle: Text(
             date,
             style: TextStyle(
-              fontSize: 12.sp,
-              color: AppColors.secondaryText,
+              fontSize: 11.sp,
+              color: AppColors.secondaryText.withOpacity(0.8),
             ),
           ),
-          trailing: Text(
-            '₹$amount',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: AppColors.error,
-              fontSize: 16.sp,
-            ),
+          trailing: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '₹$amount',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.error,
+                  fontSize: 14.sp,
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 10.sp,
+                color: AppColors.secondaryText.withOpacity(0.2),
+              ),
+            ],
           ),
         ),
       ),

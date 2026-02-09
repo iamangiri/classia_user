@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:classia_amc/utills/constent/app_constant.dart';
 import 'package:classia_amc/utills/constent/user_constant.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,7 +7,6 @@ import '../../service/WithoutLogin/auth_login_check_service.dart';
 import 'basket_model.dart';
 
 class BasketApiService {
-  static const String _baseUrl = 'https://nodeapi.classiacapital.com/basket';
   static const String _tokenKey = 'bajaj_auth_token';
 
   // Get Bajaj access token
@@ -20,17 +20,10 @@ class BasketApiService {
     }
   }
 
-  // 🔥 Helper: Builds URI with or without accessToken
-  Future<Uri> _buildUri(String path, Map<String, dynamic> params) async {
-    final token = await _getBajajAccessToken();
-
-    if (token != null) {
-      params['accessToken'] = token;
-    } else {
-      print("Bajaj access token not found → calling API without token");
-    }
-
-    return Uri.parse("$_baseUrl/$path").replace(queryParameters: params);
+  // 🔥 Helper: Builds URI without accessToken query param
+  Uri _buildUri(String path, Map<String, dynamic> params) {
+    return Uri.parse("${AppConstant.API_URL}/basket/$path")
+        .replace(queryParameters: params);
   }
 
   // ================================
@@ -38,16 +31,18 @@ class BasketApiService {
   // ================================
   Future<List<Basket>> fetchBaskets({
     int page = 1,
-    int sizePerPage = 100,
+    int sizePerPage = 100, // kept arg name for compatibility, mapped to limit
   }) async {
-    final uri = await _buildUri("list", {
+    final uri = _buildUri("list", {
       "page": page.toString(),
-      "sizePerPage": sizePerPage.toString(),
+      "limit": sizePerPage.toString(),
     });
+
+    print("Fetch Baskets URL: $uri");
 
     final response = await http.get(
       uri,
-      headers: {'Authorization': '${UserConstants.TOKEN}'},
+      headers: {'Authorization': 'Bearer ${UserConstants.TOKEN}'},
     );
 
     print("Fetch Baskets Response: ${response.body}");
@@ -65,13 +60,17 @@ class BasketApiService {
   // 2️⃣ Fetch Basket By ID
   // ================================
   Future<Basket> fetchBasketById(int basketId) async {
-    final uri = await _buildUri("list", {
+    // Assuming /list supports filtering by id or there's no specific detail endpoint mentioned yet.
+    // Preserving behavior of filtering list by ID.
+    final uri = _buildUri("list", {
       "id": basketId.toString(),
     });
 
+    print("Fetch Basket By ID URL: $uri");
+
     final response = await http.get(
       uri,
-      headers: {'Authorization': '${UserConstants.TOKEN}'},
+      headers: {'Authorization': 'Bearer ${UserConstants.TOKEN}'},
     );
 
     print("Fetch Basket By ID Response: ${response.body}");
@@ -93,11 +92,14 @@ class BasketApiService {
   // 3️⃣ Fetch My Subscribed Baskets
   // ================================
   Future<List<Basket>> fetchMyBaskets() async {
-    final uri = await _buildUri("my-basket", {});
+    // Updated endpoint to my-basket from my-basket
+    final uri = _buildUri("my-basket", {});
+
+    print("Fetch My Baskets URL: $uri");
 
     final response = await http.get(
       uri,
-      headers: {'Authorization': '${UserConstants.TOKEN}'},
+      headers: {'Authorization': 'Bearer ${UserConstants.TOKEN}'},
     );
 
     print("Fetch My Baskets Response: ${response.body}");
@@ -105,8 +107,17 @@ class BasketApiService {
     await checkValidUserWithRouter(response.statusCode);
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
-      final List<dynamic> dataList = json['data'];
-      return dataList.map((i) => Basket.fromJson(i)).toList();
+
+      // The new API return structure is wrapped in data -> subscriptions
+      // We rely on BasketResponse / BasketData to parse this
+      if (json['data'] != null && json['data']['subscriptions'] != null) {
+        return BasketResponse.fromJson(json).data.basketList;
+      }
+
+      // Fallback: if structure is different or direct list
+      // existing code logic was: return dataList.map((i) => Basket.fromJson(i)).toList();
+      // But now we use our updated model logic
+      return BasketResponse.fromJson(json).data.basketList;
     } else {
       throw Exception("Failed to load my baskets: ${response.statusCode}");
     }
@@ -115,21 +126,26 @@ class BasketApiService {
   // ================================
   // Subscribe
   // ================================
-  Future<Map<String, dynamic>> subscribeBasket(int basketId) async {
-    final uri = Uri.parse('$_baseUrl/subscribe-basket');
+  Future<Map<String, dynamic>> subscribeBasket(int basketId,
+      {String period = "MONTHLY"}) async {
+    // Updated endpoint to subscribe (was subscribe-basket)
+    final uri = Uri.parse('${AppConstant.API_URL}/basket/subscribe');
+
+    print("Subscribe URL: $uri");
+    final payload = {"basketId": basketId, "period": period};
+    print("Subscribe Payload: ${jsonEncode(payload)}");
 
     final response = await http.post(
       uri,
       headers: {
-        'Authorization': '${UserConstants.TOKEN}',
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Bearer ${UserConstants.TOKEN}',
+        'Content-Type': 'application/json', // Payload is JSON now
       },
-      body: {"basketId": basketId.toString()},
+      // Updated body to be JSON string
+      body: jsonEncode(payload),
     );
 
     print("Subscribe Response: ${response.body}");
     return jsonDecode(response.body);
   }
-
-
 }

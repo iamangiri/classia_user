@@ -6,47 +6,59 @@ import 'package:http/http.dart' as http;
 import '../WithoutLogin/auth_login_check_service.dart';
 
 class WalletService {
-
   final String token;
-  static const String _baseUrl = 'https://nodeapi.classiacapital.com/basket';
+
 
   WalletService({required this.token});
 
-  Future<Map<String, dynamic>> getTransactionList(int page, int limit, {String? transactionType}) async {
+  // Get transaction history
+  Future<Map<String, dynamic>> getTransactionList(int page, int limit,
+      {String? transactionType}) async {
+    final uri = Uri.parse(
+        '${AppConstant.API_URL}/wallet/history?page=$page&limit=$limit');
+
+    print('Fetching Transactions from: $uri');
+
     final response = await http.get(
-      Uri.parse('${AppConstant.API_URL}/user/transaction/list?page=$page&limit=$limit'),
+      uri,
       headers: {
         'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
       },
     );
 
+    print('Transaction List Response: ${response.body}');
     final data = jsonDecode(response.body);
     await checkValidUserWithRouter(response.statusCode);
+
     if (response.statusCode == 200 && data['status'] == true) {
+      final allTransactions =
+          List<Map<String, dynamic>>.from(data['data']['transactions']);
+
       // Filter transactions by transactionType if provided
-      final transactions = List<Map<String, dynamic>>.from(data['data']['transactions'])
-          .where((txn) => transactionType == null || txn['TransactionType'] == transactionType)
+      final filteredTransactions = allTransactions
+          .where((txn) =>
+              transactionType == null ||
+              txn['transactionType'] == transactionType)
           .toList();
+
       return {
         'pagination': data['data']['pagination'],
-        'transactions': transactions,
+        'transactions': filteredTransactions,
       };
     } else {
       throw Exception(data['message'] ?? 'Failed to fetch transactions');
     }
   }
 
-  Future<void> deposit(int amount,int amcId) async {
+  Future<void> deposit(int amount, int amcId) async {
     final response = await http.post(
       Uri.parse('${AppConstant.API_URL}/user/deposit/amount'),
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': 'Bearer $token',
       },
-      body: {
-        'amount': amount.toString(),
-        'amcId' : amcId.toString()
-      },
+      body: {'amount': amount.toString(), 'amcId': amcId.toString()},
     );
     print(response.body);
     print(response.statusCode);
@@ -59,7 +71,7 @@ class WalletService {
     }
   }
 
-  Future<void> withdraw(int amount ,int amcId) async {
+  Future<void> withdraw(int amount, int amcId) async {
     final response = await http.post(
       Uri.parse('${AppConstant.API_URL}/user/withdraw/amount'),
       headers: {
@@ -68,7 +80,7 @@ class WalletService {
       },
       body: {
         'amount': amount.toString(),
-        'amcId' : amcId.toString(),
+        'amcId': amcId.toString(),
       },
     );
     print(response.body);
@@ -82,32 +94,26 @@ class WalletService {
     }
   }
 
-
   // Deposit money to wallet
-  Future<Map<String, dynamic>> depositMoney({
-    required double amount,
-    required Map<String, dynamic> depositDetails,
-  }) async {
-    final uri = Uri.parse('$_baseUrl/deposit');
+  Future<Map<String, dynamic>> depositMoney(
+      Map<String, dynamic> payload) async {
+    final uri = Uri.parse('${AppConstant.API_URL}/wallet/deposit');
 
-    final requestBody = {
-      'amount': amount,
-      'depositDetails': depositDetails,
-    };
-
-    print('Deposit Request Body: ${jsonEncode(requestBody)}');
+    print('Deposit Request Body: ${jsonEncode(payload)}');
 
     final response = await http.post(
       uri,
       headers: {
-        'Authorization': '${UserConstants.TOKEN}',
+        'Authorization': 'Bearer ${UserConstants.TOKEN}',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode(requestBody),
+      body: jsonEncode(payload),
     );
 
     print('Deposit Response: ${response.body}');
     print('Status Code: ${response.statusCode}');
+
+    await checkValidUserWithRouter(response.statusCode);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -119,20 +125,22 @@ class WalletService {
 
   // Get wallet balance from API
   Future<Map<String, dynamic>> getWalletBalance() async {
-    final uri = Uri.parse('$_baseUrl/balance');
+    final uri = Uri.parse('${AppConstant.API_URL}/wallet/balance');
 
     print('Fetching Wallet Balance from: $uri');
 
     final response = await http.get(
       uri,
       headers: {
-        'Authorization': '${UserConstants.TOKEN}',
+        'Authorization': 'Bearer ${UserConstants.TOKEN}',
         'Content-Type': 'application/json',
       },
     );
 
     print('Wallet Balance Response: ${response.body}');
     print('Status Code: ${response.statusCode}');
+
+    await checkValidUserWithRouter(response.statusCode);
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -143,8 +151,10 @@ class WalletService {
   }
 
   // Get transaction history
-  static Future<Map<String, dynamic>> TransactionList({int page = 1, int sizePerPage = 10}) async {
-    final url = Uri.parse('${AppConstant.NODE_API_URL}/payez/transaction-list?page=$page&sizePerPage=$sizePerPage');
+  static Future<Map<String, dynamic>> TransactionList(
+      {int page = 1, int sizePerPage = 10}) async {
+    final url = Uri.parse(
+        '${AppConstant.NODE_API_URL}/payez/transaction-list?page=$page&sizePerPage=$sizePerPage');
     try {
       final response = await http.get(
         url,

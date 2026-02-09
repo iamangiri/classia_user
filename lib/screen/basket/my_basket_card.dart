@@ -24,7 +24,8 @@ class MyBasketCard extends StatefulWidget {
   State<MyBasketCard> createState() => _MyBasketCardState();
 }
 
-class _MyBasketCardState extends State<MyBasketCard> with SingleTickerProviderStateMixin {
+class _MyBasketCardState extends State<MyBasketCard>
+    with SingleTickerProviderStateMixin {
   late AnimationController _horseController;
   late Animation<double> _horseAnimation;
 
@@ -89,7 +90,7 @@ class _MyBasketCardState extends State<MyBasketCard> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     // Use MediaQuery for better responsiveness
     final screenWidth = MediaQuery.of(context).size.width;
-    final cardWidth = screenWidth - 32; // 16px margin on each side
+    // final cardWidth = screenWidth - 32; // Unused
 
     final String action = widget.basket.action;
     final double performance = widget.basket.performanceValue;
@@ -190,8 +191,10 @@ class _MyBasketCardState extends State<MyBasketCard> with SingleTickerProviderSt
                                 ),
                                 decoration: BoxDecoration(
                                   color: action.toUpperCase() == 'BUY'
-                                      ? const Color(0xFF4CAF50).withOpacity(0.15)
-                                      : const Color(0xFFE53935).withOpacity(0.15),
+                                      ? const Color(0xFF4CAF50)
+                                          .withOpacity(0.15)
+                                      : const Color(0xFFE53935)
+                                          .withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(4.r),
                                 ),
                                 child: Row(
@@ -363,7 +366,8 @@ class _MyBasketCardState extends State<MyBasketCard> with SingleTickerProviderSt
                                 vertical: 2.h,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFE53935).withOpacity(0.15),
+                                color:
+                                    const Color(0xFFE53935).withOpacity(0.15),
                                 borderRadius: BorderRadius.circular(4.r),
                               ),
                               child: Text(
@@ -450,6 +454,12 @@ class _MyBasketCardState extends State<MyBasketCard> with SingleTickerProviderSt
                       '${widget.basket.holdingsCount} Holdings',
                       const Color(0xFF9C27B0),
                     ),
+                    if (widget.basket.subscribedVersionId != null &&
+                        widget.basket.subscribedVersionId != 0)
+                      _miniChip(
+                        'v${widget.basket.subscribedVersionId}',
+                        Colors.blueGrey,
+                      ),
                   ],
                 ),
               ],

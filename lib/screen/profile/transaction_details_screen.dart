@@ -26,33 +26,48 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
   String get _transactionType => widget.transaction['transactionType']?.toString().toUpperCase() ?? '';
   bool get _isDeposit => _transactionType == 'DEPOSIT';
   double get _amount => double.tryParse(widget.transaction['amount']?.toString() ?? '0') ?? 0.0;
+  
+  double get _balanceBefore => double.tryParse(widget.transaction['balanceBefore']?.toString() ?? '0') ?? 0.0;
+  double get _balanceAfter => double.tryParse(widget.transaction['balanceAfter']?.toString() ?? '0') ?? 0.0;
+  
+  String get _status => widget.transaction['status']?.toString() ?? 'PENDING';
+  String get _description => widget.transaction['description']?.toString() ?? 'Transaction';
 
   DateTime get _transactionDate {
     try {
-      final dateStr = widget.transaction['createdAt'];
+      final dateStr = widget.transaction['createdAt'] ?? widget.transaction['CreatedAt'];
       return dateStr != null ? DateTime.parse(dateStr) : DateTime.now();
     } catch (e) {
       return DateTime.now();
     }
   }
 
-  String get _paymentId {
-    final transactionData = widget.transaction['transactionData'];
-    if (transactionData != null && transactionData is Map<String, dynamic>) {
-      return transactionData['paymentId']?.toString() ?? 'N/A';
+  DateTime get _updatedDate {
+    try {
+      final dateStr = widget.transaction['updatedAt'] ?? widget.transaction['UpdatedAt'];
+      return dateStr != null ? DateTime.parse(dateStr) : _transactionDate;
+    } catch (e) {
+      return _transactionDate;
     }
-    return 'N/A';
   }
 
-  String get _paymentMethod {
-    final transactionData = widget.transaction['transactionData'];
-    if (transactionData != null && transactionData is Map<String, dynamic>) {
-      return transactionData['method']?.toString() ?? 'WALLET';
-    }
-    return 'WALLET';
-  }
+  String get _paymentId => widget.transaction['paymentId']?.toString() ?? 'N/A';
+  String get _paymentOrderId => widget.transaction['paymentOrderId']?.toString() ?? 'N/A';
+  String get _paymentSignature => widget.transaction['paymentSignature']?.toString() ?? 'N/A';
+  String get _paymentGateway => widget.transaction['paymentGateway']?.toString() ?? 'WALLET';
+  String get _paymentMethod => widget.transaction['paymentMethod']?.toString() ?? 'WALLET';
+  String get _paymentStatus => widget.transaction['paymentStatus']?.toString() ?? 'N/A';
+  
+  String get _referenceType => widget.transaction['referenceType']?.toString() ?? '';
+  String get _referenceName => widget.transaction['referenceName']?.toString() ?? '';
+  int get _referenceId => widget.transaction['referenceId'] ?? 0;
 
-  String get _transactionId => widget.transaction['id']?.toString() ?? 'N/A';
+  String get _transactionId {
+    final id = widget.transaction['id'] ?? widget.transaction['ID'];
+    return id?.toString() ?? 'N/A';
+  }
+  
+  int get _userId => widget.transaction['userId'] ?? 0;
 
   Future<void> _generateAndDownloadInvoice() async {
     setState(() {
@@ -114,6 +129,15 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Container(
+              width: 40.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: AppColors.secondaryText.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+            SizedBox(height: 16.h),
             Text(
               'Invoice Generated',
               style: TextStyle(
@@ -182,9 +206,6 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
 
   Future<pw.Document> _createInvoicePDF() async {
     final pdf = pw.Document();
-
-    // Load logo
-    final Uint8List? logoData = await _loadLogo();
 
     pdf.addPage(
       pw.Page(
@@ -302,19 +323,78 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                 child: pw.Column(
                   children: [
                     _buildDetailRow('Transaction ID:', _transactionId, isHeader: true),
-                    _buildDetailRow('Transaction Type:', _isDeposit ? 'Wallet Deposit' : 'Basket Subscription'),
-                    _buildDetailRow('Payment Method:', _paymentMethod.toUpperCase()),
-                    if (_paymentId != 'N/A' && _paymentId != 'null')
+                    _buildDetailRow('User ID:', _userId.toString()),
+                    _buildDetailRow('Transaction Type:', _description),
+                    _buildDetailRow('Status:', _status, highlight: true),
+                    if (_paymentGateway != 'WALLET' && _paymentGateway.isNotEmpty)
+                      _buildDetailRow('Payment Gateway:', _paymentGateway.toUpperCase()),
+                    if (_paymentMethod.isNotEmpty && _paymentMethod != 'null')
+                      _buildDetailRow('Payment Method:', _paymentMethod.toUpperCase()),
+                    if (_paymentId != 'N/A' && _paymentId.isNotEmpty && _paymentId != 'null')
                       _buildDetailRow('Payment ID:', _paymentId),
+                    if (_paymentOrderId != 'N/A' && _paymentOrderId.isNotEmpty && _paymentOrderId != 'null')
+                      _buildDetailRow('Order ID:', _paymentOrderId),
+                    if (_paymentStatus != 'N/A' && _paymentStatus.isNotEmpty && _paymentStatus != 'null')
+                      _buildDetailRow('Payment Status:', _paymentStatus.toUpperCase()),
+                    if (_referenceType.isNotEmpty && _referenceId > 0)
+                      _buildDetailRow('Reference:', '$_referenceName (${_referenceType.toUpperCase()} #$_referenceId)'),
                     _buildDetailRow('Transaction Date:', DateFormat('dd MMM yyyy, hh:mm a').format(_transactionDate)),
-                    _buildDetailRow('Status:', 'COMPLETED', highlight: true),
+                    if (_updatedDate != _transactionDate)
+                      _buildDetailRow('Updated At:', DateFormat('dd MMM yyyy, hh:mm a').format(_updatedDate)),
                   ],
                 ),
               ),
 
-              pw.SizedBox(height: 24),
+              pw.SizedBox(height: 20),
 
-              // Amount Section
+              // Balance Information
+              pw.Container(
+                padding: pw.EdgeInsets.all(16),
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.blue50,
+                  borderRadius: pw.BorderRadius.circular(8),
+                  border: pw.Border.all(color: PdfColors.blue200, width: 1),
+                ),
+                child: pw.Column(
+                  children: [
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text('Balance Before:', style: pw.TextStyle(fontSize: 12)),
+                        pw.Text('₹${_balanceBefore.toStringAsFixed(2)}', 
+                          style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+                      ],
+                    ),
+                    pw.SizedBox(height: 8),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text('Transaction Amount:', style: pw.TextStyle(fontSize: 12)),
+                        pw.Text('${_isDeposit ? '+' : '-'} ₹${_amount.toStringAsFixed(2)}', 
+                          style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold,
+                            color: _isDeposit ? PdfColors.green900 : PdfColors.red900)),
+                      ],
+                    ),
+                    pw.SizedBox(height: 8),
+                    pw.Divider(color: PdfColors.blue200),
+                    pw.SizedBox(height: 8),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text('Balance After:', 
+                          style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold)),
+                        pw.Text('₹${_balanceAfter.toStringAsFixed(2)}', 
+                          style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold, 
+                            color: PdfColors.blue900)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              pw.SizedBox(height: 20),
+
+              // Amount Section - Main Highlight
               pw.Container(
                 padding: pw.EdgeInsets.all(20),
                 decoration: pw.BoxDecoration(
@@ -355,7 +435,7 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                       ],
                     ),
                     pw.Text(
-                      '${_isDeposit ? '+' : '-'} ${_amount.toStringAsFixed(2)}',
+                      '${_isDeposit ? '+' : '-'} ₹${_amount.toStringAsFixed(2)}',
                       style: pw.TextStyle(
                         fontSize: 28,
                         fontWeight: pw.FontWeight.bold,
@@ -486,27 +566,20 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
               color: PdfColors.grey800,
             ),
           ),
-          pw.Text(
-            value,
-            style: pw.TextStyle(
-              fontSize: 11,
-              fontWeight: isHeader || highlight ? pw.FontWeight.bold : pw.FontWeight.normal,
-              color: highlight ? PdfColors.green900 : PdfColors.grey900,
+          pw.Expanded(
+            child: pw.Text(
+              value,
+              textAlign: pw.TextAlign.right,
+              style: pw.TextStyle(
+                fontSize: 11,
+                fontWeight: isHeader || highlight ? pw.FontWeight.bold : pw.FontWeight.normal,
+                color: highlight ? PdfColors.green900 : PdfColors.grey900,
+              ),
             ),
           ),
         ],
       ),
     );
-  }
-
-  Future<Uint8List?> _loadLogo() async {
-    try {
-      final ByteData data = await rootBundle.load('assets/logo/logo.jpg');
-      return data.buffer.asUint8List();
-    } catch (e) {
-      print('Failed to load logo: $e');
-      return null;
-    }
   }
 
   @override
@@ -573,7 +646,7 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                       borderRadius: BorderRadius.circular(20.r),
                     ),
                     child: Text(
-                      'COMPLETED',
+                      _status.toUpperCase(),
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 12.sp,
@@ -582,6 +655,49 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                       ),
                     ),
                   ),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 24.h),
+
+            // Balance Information Card
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(20.w),
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground,
+                borderRadius: BorderRadius.circular(16.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10.r,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Balance Information',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primaryText,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  _buildBalanceItem('Balance Before', _balanceBefore),
+                  Divider(height: 24.h),
+                  _buildBalanceItem(
+                    'Transaction', 
+                    _amount, 
+                    isTransaction: true,
+                    isCredit: _isDeposit,
+                  ),
+                  Divider(height: 24.h),
+                  _buildBalanceItem('Balance After', _balanceAfter, isAfter: true),
                 ],
               ),
             ),
@@ -616,15 +732,30 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                   ),
                   SizedBox(height: 16.h),
                   _buildDetailItem('Transaction ID', _transactionId),
-                  _buildDetailItem('Type', _isDeposit ? 'Wallet Deposit' : 'Basket Subscription'),
-                  _buildDetailItem('Payment Method', _paymentMethod.toUpperCase()),
-                  if (_paymentId != 'N/A' && _paymentId != 'null')
+                  _buildDetailItem('User ID', _userId.toString()),
+                  _buildDetailItem('Type', _description),
+                  _buildDetailItem('Status', _status),
+                  if (_paymentGateway != 'WALLET' && _paymentGateway.isNotEmpty)
+                    _buildDetailItem('Payment Gateway', _paymentGateway.toUpperCase()),
+                  if (_paymentMethod.isNotEmpty && _paymentMethod != 'null')
+                    _buildDetailItem('Payment Method', _paymentMethod.toUpperCase()),
+                  if (_paymentId != 'N/A' && _paymentId.isNotEmpty && _paymentId != 'null')
                     _buildDetailItem('Payment ID', _paymentId),
+                  if (_paymentOrderId != 'N/A' && _paymentOrderId.isNotEmpty && _paymentOrderId != 'null')
+                    _buildDetailItem('Order ID', _paymentOrderId),
+                  if (_paymentStatus != 'N/A' && _paymentStatus.isNotEmpty && _paymentStatus != 'null')
+                    _buildDetailItem('Payment Status', _paymentStatus.toUpperCase()),
+                  if (_referenceType.isNotEmpty && _referenceId > 0)
+                    _buildDetailItem('Reference', '$_referenceName\n(${_referenceType.toUpperCase()} #$_referenceId)'),
                   _buildDetailItem(
                     'Date & Time',
                     DateFormat('dd MMM yyyy, hh:mm a').format(_transactionDate),
                   ),
-                  _buildDetailItem('Amount', '₹${_amount.toStringAsFixed(2)}', isAmount: true),
+                  if (_updatedDate != _transactionDate)
+                    _buildDetailItem(
+                      'Updated At',
+                      DateFormat('dd MMM yyyy, hh:mm a').format(_updatedDate),
+                    ),
                 ],
               ),
             ),
@@ -705,11 +836,40 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
     );
   }
 
+  Widget _buildBalanceItem(String label, double amount, {bool isTransaction = false, bool isCredit = false, bool isAfter = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14.sp,
+            color: AppColors.secondaryText,
+            fontWeight: isAfter ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+        Text(
+          isTransaction 
+            ? '${isCredit ? '+' : '-'} ₹${amount.toStringAsFixed(2)}'
+            : '₹${amount.toStringAsFixed(2)}',
+          style: TextStyle(
+            fontSize: isAfter ? 18.sp : 16.sp,
+            fontWeight: FontWeight.bold,
+            color: isTransaction 
+              ? (isCredit ? AppColors.success : AppColors.error)
+              : (isAfter ? AppColors.primaryGold : AppColors.primaryText),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildDetailItem(String label, String value, {bool isAmount = false}) {
     return Padding(
       padding: EdgeInsets.only(bottom: 16.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
@@ -718,12 +878,16 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
               color: AppColors.secondaryText,
             ),
           ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: isAmount ? 18.sp : 14.sp,
-              fontWeight: isAmount ? FontWeight.bold : FontWeight.w600,
-              color: isAmount ? AppColors.primaryGold : AppColors.primaryText,
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: isAmount ? 18.sp : 14.sp,
+                fontWeight: isAmount ? FontWeight.bold : FontWeight.w600,
+                color: isAmount ? AppColors.primaryGold : AppColors.primaryText,
+              ),
             ),
           ),
         ],
