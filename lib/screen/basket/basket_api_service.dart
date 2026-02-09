@@ -93,7 +93,7 @@ class BasketApiService {
   // ================================
   Future<List<Basket>> fetchMyBaskets() async {
     // Updated endpoint to my-basket from my-basket
-    final uri = _buildUri("my-basket", {});
+    final uri = _buildUri("my-subscriptions", {});
 
     print("Fetch My Baskets URL: $uri");
 

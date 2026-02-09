@@ -361,7 +361,7 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
                         pw.Text('Balance Before:', style: pw.TextStyle(fontSize: 12)),
-                        pw.Text('₹${_balanceBefore.toStringAsFixed(2)}', 
+                        pw.Text(' ${_balanceBefore.toStringAsFixed(2)}', 
                           style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
                       ],
                     ),
@@ -370,7 +370,7 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
                         pw.Text('Transaction Amount:', style: pw.TextStyle(fontSize: 12)),
-                        pw.Text('${_isDeposit ? '+' : '-'} ₹${_amount.toStringAsFixed(2)}', 
+                        pw.Text('${_isDeposit ? '+' : '-'}  ${_amount.toStringAsFixed(2)}', 
                           style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold,
                             color: _isDeposit ? PdfColors.green900 : PdfColors.red900)),
                       ],
@@ -383,7 +383,7 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                       children: [
                         pw.Text('Balance After:', 
                           style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold)),
-                        pw.Text('₹${_balanceAfter.toStringAsFixed(2)}', 
+                        pw.Text('${_balanceAfter.toStringAsFixed(2)}', 
                           style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold, 
                             color: PdfColors.blue900)),
                       ],
@@ -435,7 +435,7 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                       ],
                     ),
                     pw.Text(
-                      '${_isDeposit ? '+' : '-'} ₹${_amount.toStringAsFixed(2)}',
+                      '${_isDeposit ? '+' : '-'} ${_amount.toStringAsFixed(2)}',
                       style: pw.TextStyle(
                         fontSize: 28,
                         fontWeight: pw.FontWeight.bold,
@@ -631,7 +631,7 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    '${_isDeposit ? '+' : '-'}₹${_amount.toStringAsFixed(2)}',
+                    '${_isDeposit ? '+' : '-'} ${_amount.toStringAsFixed(2)}',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 36.sp,
@@ -850,8 +850,8 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
         ),
         Text(
           isTransaction 
-            ? '${isCredit ? '+' : '-'} ₹${amount.toStringAsFixed(2)}'
-            : '₹${amount.toStringAsFixed(2)}',
+            ? '${isCredit ? '+' : '-'}  ${amount.toStringAsFixed(2)}'
+            : ' ${amount.toStringAsFixed(2)}',
           style: TextStyle(
             fontSize: isAfter ? 18.sp : 16.sp,
             fontWeight: FontWeight.bold,
