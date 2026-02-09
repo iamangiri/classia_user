@@ -16,6 +16,7 @@ import '../profile/chnage_password_screen.dart';
 import '../profile/customer_support_screen.dart';
 import '../profile/edit_profile_screen.dart';
 import '../profile/kyc_screen.dart';
+import '../profile/my_subscriptions_screen.dart';
 import '../profile/my_wallet_screen.dart';
 import '../profile/privicy_policy.dart';
 import '../profile/demat_account_screen.dart';
@@ -24,6 +25,7 @@ import '../stock/stock_market_fund_screen.dart';
 import '../stock/stock_market_holding_screen.dart';
 import '../stock/order_book_screen.dart';
 import '../stock/trade_book_screen.dart';
+
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -45,6 +47,9 @@ class ProfileScreen extends StatelessWidget {
             SizedBox(height: 24.h),
             _buildSectionTitle('Learning'),
             _buildLearningOptionsList(context),
+            SizedBox(height: 24.h),
+            _buildSectionTitle('Investments'),
+            _buildInvestmentsOptionsList(context),
             SizedBox(height: 24.h),
             _buildSectionTitle('Transactions'),
             _buildTransactionsOptionsList(context),
@@ -209,6 +214,18 @@ class ProfileScreen extends StatelessWidget {
     return _buildModernOptionsList(options, context);
   }
 
+  // ------------------ INVESTMENTS OPTIONS (NEW SECTION) ------------------
+  Widget _buildInvestmentsOptionsList(BuildContext context) {
+    final options = [
+      {
+        'title': 'My Subscriptions',
+        'icon': Icons.shopping_basket_rounded,
+        'color': 0xFFD4AF37
+      },
+    ];
+    return _buildModernOptionsList(options, context);
+  }
+
   // ------------------ TRANSACTIONS OPTIONS ------------------
   Widget _buildTransactionsOptionsList(BuildContext context) {
     final options = [
@@ -365,6 +382,9 @@ class ProfileScreen extends StatelessWidget {
       case 'Certificates':
         screen = const CertificatesScreen();
         break;
+      case 'My Subscriptions':
+        screen = const MySubscriptionsScreen();
+        break;
       case 'Demat Account':
         screen = DematAccountScreen();
         break;
@@ -448,7 +468,7 @@ class ProfileScreen extends StatelessWidget {
                 content: Text(
                   'Are you sure you want to log out?',
                   style:
-                      TextStyle(fontSize: 15.sp, color: Colors.grey.shade700),
+                  TextStyle(fontSize: 15.sp, color: Colors.grey.shade700),
                 ),
                 actions: [
                   TextButton(

@@ -124,6 +124,30 @@ class BasketApiService {
   }
 
   // ================================
+  // 4️⃣ Fetch My Basket Subscriptions (NEW)
+  // ================================
+  Future<Map<String, dynamic>> fetchMyBasket() async {
+    final uri = Uri.parse('${AppConstant.API_URL}/basket/my-basket');
+
+    print("Fetch My Basket URL: $uri");
+
+    final response = await http.get(
+      uri,
+      headers: {'Authorization': 'Bearer ${UserConstants.TOKEN}'},
+    );
+
+    print("Fetch My Basket Response: ${response.body}");
+    print("Status Code: ${response.statusCode}");
+    await checkValidUserWithRouter(response.statusCode);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Failed to load my basket: ${response.statusCode}");
+    }
+  }
+
+  // ================================
   // Subscribe
   // ================================
   Future<Map<String, dynamic>> subscribeBasket(int basketId,
